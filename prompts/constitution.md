@@ -5,7 +5,8 @@ Create a constitution for a modern web application with the following specificat
 - **Language**: TypeScript 5 with strict mode enabled
 - **Deployment**: AWS SAM (Serverless Application Model) for serverless deployment
 - **Database**: Amazon DynamoDB
-- **Runtime**: Node.js 20.x LTS
+- **Runtime**: Node.js 24.x LTS
+- **Local Development**: Colima for Docker runtime (Docker Desktop is NOT supported)
 
 ## Architecture Principles
 - Server-side rendering (SSR) and static generation (SSG) where appropriate

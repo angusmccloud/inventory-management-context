@@ -170,11 +170,14 @@ Follow-up TODOs: None - all templates are aligned with constitution principles
 - **Frontend Framework**: Next.js 16 with App Router
 - **Build Tool**: Vite (for frontend builds and development)
 - **Language**: TypeScript 5 with strict mode enabled
-- **Runtime**: Node.js 20.x LTS
+- **Runtime**: Node.js 24.x LTS
 - **Backend Deployment**: AWS SAM (Serverless Application Model)
 - **Frontend Deployment**: AWS S3 + CloudFront (static site hosting with CDN)
 - **Database**: Amazon DynamoDB
 - **Testing**: Jest and React Testing Library
+- **Local Development**: Docker Engine (required for AWS SAM local testing)
+  - Docker Desktop MUST NOT be used in this environment
+  - Use Docker Engine directly via package manager (apt, yum, homebrew)
 
 ### Development Standards
 
