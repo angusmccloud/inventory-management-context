@@ -44,3 +44,15 @@ This file provides guidance for Code mode when implementing features in this pro
 - All configuration via environment variables
 - Never hardcode secrets, API keys, or connection strings
 - Use `.env.local` for local development (never commit)
+
+## Agent Context Synchronization
+
+When adding shared context that should apply to all AI agents:
+
+1. **Edit the shared source**: `.specify/memory/agent-shared-context.md`
+2. **Run the sync script**: `.specify/scripts/bash/sync-agent-contexts.sh`
+
+This ensures Cursor, Roo Code, and GitHub Copilot all receive the same guidelines.
+
+**Quick Reference**: See `.specify/AGENT-SYNC-QUICK-REFERENCE.md`
+**Full Documentation**: See `.specify/docs/agent-context-sync.md`

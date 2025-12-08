@@ -18,7 +18,7 @@ This is the **authoritative source** for manual additions that should be shared 
 
 Three agent files are kept in sync:
 
-1. **`CLAUDE.md`** - Roo Code (Claude-based)
+1. **`AGENTS.md`** - Roo Code
 2. **`.cursor/rules/specify-rules.mdc`** - Cursor IDE
 3. **`.github/agents/copilot-instructions.md`** - GitHub Copilot
 
@@ -99,7 +99,7 @@ vim .specify/memory/agent-shared-context.md
 **Use this when**: You accidentally edited an agent file directly and want to preserve the changes
 
 ```bash
-# 1. You edited CLAUDE.md or another agent file directly
+# 1. You edited AGENTS.md or another agent file directly
 # (Content between <!-- MANUAL ADDITIONS START --> and <!-- MANUAL ADDITIONS END -->)
 
 # 2. Extract and sync
@@ -150,7 +150,7 @@ This file is the **single source of truth** for manual additions...
 
 ### Agent File Structure
 
-Each agent file (e.g., `CLAUDE.md`) has this structure:
+Each agent file (e.g., `AGENTS.md`) has this structure:
 
 ```markdown
 # inventory-management-context Development Guidelines
@@ -219,7 +219,7 @@ cat .specify/memory/agent-shared-context.md
 
 # If not, you need to extract it first (if you have a backup)
 # Restore your agent file from git
-git checkout CLAUDE.md
+git checkout AGENTS.md
 
 # Extract to shared source
 .specify/scripts/bash/sync-agent-contexts.sh --extract
@@ -250,7 +250,7 @@ vim .specify/memory/agent-shared-context.md
 .specify/scripts/bash/sync-agent-contexts.sh
 
 # Check if the MANUAL ADDITIONS markers exist in agent files
-grep -n "MANUAL ADDITIONS" CLAUDE.md .cursor/rules/specify-rules.mdc .github/agents/copilot-instructions.md
+grep -n "MANUAL ADDITIONS" AGENTS.md .cursor/rules/specify-rules.mdc .github/agents/copilot-instructions.md
 ```
 
 ## Scripts Reference
@@ -378,7 +378,7 @@ EOF
 
 # 3. Verify
 echo "=== Cursor ===" && grep -A 5 "Authentication" .cursor/rules/specify-rules.mdc
-echo "=== Roo ===" && grep -A 5 "Authentication" CLAUDE.md
+echo "=== Roo ===" && grep -A 5 "Authentication" AGENTS.md
 echo "=== Copilot ===" && grep -A 5 "Authentication" .github/agents/copilot-instructions.md
 ```
 

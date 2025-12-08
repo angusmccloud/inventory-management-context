@@ -58,8 +58,7 @@ eval $(get_feature_paths)
 NEW_PLAN="$IMPL_PLAN"  # Alias for compatibility with existing code
 AGENT_TYPE="${1:-}"
 
-# Agent-specific file paths  
-CLAUDE_FILE="$REPO_ROOT/CLAUDE.md"
+# Agent-specific file paths
 GEMINI_FILE="$REPO_ROOT/GEMINI.md"
 COPILOT_FILE="$REPO_ROOT/.github/agents/copilot-instructions.md"
 CURSOR_FILE="$REPO_ROOT/.cursor/rules/specify-rules.mdc"
@@ -583,7 +582,7 @@ update_specific_agent() {
     
     case "$agent_type" in
         claude)
-            update_agent_file "$CLAUDE_FILE" "Claude Code"
+            update_agent_file "$AGENTS_FILE" "Roo Code"
             ;;
         gemini)
             update_agent_file "$GEMINI_FILE" "Gemini CLI"
@@ -645,8 +644,8 @@ update_all_existing_agents() {
     local found_agent=false
     
     # Check each possible agent file and update if it exists
-    if [[ -f "$CLAUDE_FILE" ]]; then
-        update_agent_file "$CLAUDE_FILE" "Claude Code"
+    if [[ -f "$AGENTS_FILE" ]]; then
+        update_agent_file "$AGENTS_FILE" "Roo Code"
         found_agent=true
     fi
     
@@ -720,10 +719,10 @@ update_all_existing_agents() {
         found_agent=true
     fi
     
-    # If no agent files exist, create a default Claude file
+    # If no agent files exist, create a default AGENTS.md file
     if [[ "$found_agent" == false ]]; then
-        log_info "No existing agent files found, creating default Claude file..."
-        update_agent_file "$CLAUDE_FILE" "Claude Code"
+        log_info "No existing agent files found, creating default AGENTS.md file..."
+        update_agent_file "$AGENTS_FILE" "Roo Code"
     fi
 }
 print_summary() {

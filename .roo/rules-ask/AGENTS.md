@@ -41,6 +41,18 @@ Bash scripts are in `.specify/scripts/bash/`:
 - `setup-plan.sh` - Set up implementation plan
 - `update-agent-context.sh` - Update agent context files
 
+## Agent Context Synchronization
+
+When adding shared context that should apply to all AI agents:
+
+1. **Edit the shared source**: `.specify/memory/agent-shared-context.md`
+2. **Run the sync script**: `.specify/scripts/bash/sync-agent-contexts.sh`
+
+This ensures Cursor, Roo Code, and GitHub Copilot all receive the same guidelines.
+
+**Quick Reference**: See `.specify/AGENT-SYNC-QUICK-REFERENCE.md`
+**Full Documentation**: See `.specify/docs/agent-context-sync.md`
+
 ## Key Gotchas to Remember
 
 1. This is a **context repository**, NOT the application codebase

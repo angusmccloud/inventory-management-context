@@ -43,7 +43,7 @@ vim .specify/memory/agent-shared-context.md
 | File | Purpose |
 |------|---------|
 | `.specify/memory/agent-shared-context.md` | **EDIT THIS** - Single source of truth |
-| `CLAUDE.md` | Auto-synced (Roo Code) |
+| `AGENTS.md` | Auto-synced (Roo Code) |
 | `.cursor/rules/specify-rules.mdc` | Auto-synced (Cursor IDE) |
 | `.github/agents/copilot-instructions.md` | Auto-synced (GitHub Copilot) |
 
