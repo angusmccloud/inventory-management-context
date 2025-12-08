@@ -1,0 +1,24 @@
+# Cursor Rules - ATL Inventory Management System
+
+## Constitution
+Follow all guidelines defined in `inventory-management-context/.github/agents/constitution.md`
+
+## Quick Reference
+- Framework: Next.js 16 with App Router
+- Language: TypeScript 5 (strict mode)
+- Database: DynamoDB (single-table design pattern)
+- Deployment: AWS SAM (serverless)
+- Runtime: Node.js 20.x LTS
+
+## When coding:
+1. Check constitution for architecture decisions
+2. Use TypeScript with no implicit any
+3. Follow Next.js 16 best practices
+4. Implement proper error handling
+5. Use AWS SDK v3 modular imports
+
+## Before generating code, always:
+- Review the constitution in inventory-management-context/.github/agents/
+- Ensure TypeScript strict mode compliance
+- Follow DynamoDB best practices
+- Structure for serverless deployment
