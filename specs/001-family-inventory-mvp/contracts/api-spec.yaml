@@ -1,0 +1,1559 @@
+openapi: 3.0.3
+info:
+  title: Family Inventory Management API
+  description: |
+    RESTful API for managing family household inventory, shopping lists, and notifications.
+    Supports multi-user access with role-based permissions (admin/suggester).
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: https://api.inventory-mgmt.example.com/v1
+    description: Production server
+  - url: https://api-staging.inventory-mgmt.example.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Local development server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Families
+    description: Family account management
+  - name: Members
+    description: Family member management
+  - name: Inventory
+    description: Inventory item operations
+  - name: Shopping List
+    description: Shopping list management
+  - name: Notifications
+    description: Notification and alert management
+  - name: Suggestions
+    description: Suggester request management
+  - name: Reference Data
+    description: Storage locations and stores
+
+paths:
+  # ==================== FAMILIES ====================
+  /families:
+    post:
+      tags: [Families]
+      summary: Create a new family
+      description: Creates a new family account with the authenticated user as the admin
+      operationId: createFamily
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFamilyRequest'
+      responses:
+        '201':
+          description: Family created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /families/{familyId}:
+    get:
+      tags: [Families]
+      summary: Get family details
+      description: Retrieve details for the authenticated user's family
+      operationId: getFamily
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      responses:
+        '200':
+          description: Family details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Families]
+      summary: Update family details
+      description: Update family name and settings (admin only)
+      operationId: updateFamily
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFamilyRequest'
+      responses:
+        '200':
+          description: Family updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== MEMBERS ====================
+  /families/{familyId}/members:
+    get:
+      tags: [Members]
+      summary: List family members
+      description: Retrieve all members of the family
+      operationId: listMembers
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      responses:
+        '200':
+          description: List of family members
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  members:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MemberResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Members]
+      summary: Add a new family member
+      description: Add a new member to the family (admin only)
+      operationId: addMember
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMemberRequest'
+      responses:
+        '201':
+          description: Member added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /families/{familyId}/members/{memberId}:
+    delete:
+      tags: [Members]
+      summary: Remove a family member
+      description: Remove a member from the family (admin only). Cannot remove last admin.
+      operationId: removeMember
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '204':
+          description: Member removed successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== INVENTORY ====================
+  /families/{familyId}/inventory:
+    get:
+      tags: [Inventory]
+      summary: List inventory items
+      description: Retrieve all active inventory items for the family
+      operationId: listInventoryItems
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - name: status
+          in: query
+          description: Filter by item status
+          schema:
+            type: string
+            enum: [active, archived]
+            default: active
+        - name: lowStock
+          in: query
+          description: Filter to show only low-stock items
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of inventory items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Inventory]
+      summary: Create inventory item
+      description: Add a new item to the family inventory (admin only)
+      operationId: createInventoryItem
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInventoryItemRequest'
+      responses:
+        '201':
+          description: Inventory item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /families/{familyId}/inventory/{itemId}:
+    get:
+      tags: [Inventory]
+      summary: Get inventory item details
+      description: Retrieve details for a specific inventory item
+      operationId: getInventoryItem
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '200':
+          description: Inventory item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Inventory]
+      summary: Update inventory item
+      description: Update item details (admin only)
+      operationId: updateInventoryItem
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ItemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInventoryItemRequest'
+      responses:
+        '200':
+          description: Inventory item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Inventory]
+      summary: Delete inventory item
+      description: Permanently delete an inventory item (admin only)
+      operationId: deleteInventoryItem
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '204':
+          description: Inventory item deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /families/{familyId}/inventory/{itemId}/quantity:
+    patch:
+      tags: [Inventory]
+      summary: Adjust item quantity
+      description: Increase or decrease item quantity (admin only)
+      operationId: adjustInventoryQuantity
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ItemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustQuantityRequest'
+      responses:
+        '200':
+          description: Quantity adjusted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /families/{familyId}/inventory/{itemId}/archive:
+    post:
+      tags: [Inventory]
+      summary: Archive inventory item
+      description: Archive an item (admin only)
+      operationId: archiveInventoryItem
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '200':
+          description: Item archived successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== SHOPPING LIST ====================
+  /families/{familyId}/shopping-list:
+    get:
+      tags: [Shopping List]
+      summary: Get shopping list
+      description: Retrieve all shopping list items, optionally filtered by store
+      operationId: getShoppingList
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - name: storeId
+          in: query
+          description: Filter by store
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          description: Filter by purchase status
+          schema:
+            type: string
+            enum: [pending, purchased]
+            default: pending
+      responses:
+        '200':
+          description: Shopping list retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ShoppingListItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Shopping List]
+      summary: Add item to shopping list
+      description: Add an inventory item or free-text item to the shopping list (admin only)
+      operationId: addToShoppingList
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddToShoppingListRequest'
+      responses:
+        '201':
+          description: Item added to shopping list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /families/{familyId}/shopping-list/{shoppingItemId}:
+    patch:
+      tags: [Shopping List]
+      summary: Update shopping list item
+      description: Mark item as purchased or update details (admin only)
+      operationId: updateShoppingListItem
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ShoppingItemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateShoppingListItemRequest'
+      responses:
+        '200':
+          description: Shopping list item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Shopping List]
+      summary: Remove item from shopping list
+      description: Delete a shopping list item (admin only)
+      operationId: removeFromShoppingList
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ShoppingItemId'
+      responses:
+        '204':
+          description: Item removed from shopping list
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== NOTIFICATIONS ====================
+  /families/{familyId}/notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications
+      description: Retrieve all notifications for the family
+      operationId: listNotifications
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - name: status
+          in: query
+          description: Filter by notification status
+          schema:
+            type: string
+            enum: [active, resolved, acknowledged]
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NotificationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /families/{familyId}/notifications/{notificationId}/acknowledge:
+    post:
+      tags: [Notifications]
+      summary: Acknowledge notification
+      description: Mark a notification as acknowledged (admin only)
+      operationId: acknowledgeNotification
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/NotificationId'
+      responses:
+        '200':
+          description: Notification acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== SUGGESTIONS ====================
+  /families/{familyId}/suggestions:
+    get:
+      tags: [Suggestions]
+      summary: List suggestions
+      description: Retrieve all suggestions (admins see all, suggesters see only their own)
+      operationId: listSuggestions
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - name: status
+          in: query
+          description: Filter by suggestion status
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+            default: pending
+      responses:
+        '200':
+          description: List of suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SuggestionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Suggestions]
+      summary: Create suggestion
+      description: Submit a suggestion (suggester role only)
+      operationId: createSuggestion
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSuggestionRequest'
+      responses:
+        '201':
+          description: Suggestion created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /families/{familyId}/suggestions/{suggestionId}/approve:
+    post:
+      tags: [Suggestions]
+      summary: Approve suggestion
+      description: Approve a suggestion and execute the requested action (admin only)
+      operationId: approveSuggestion
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/SuggestionId'
+      responses:
+        '200':
+          description: Suggestion approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /families/{familyId}/suggestions/{suggestionId}/reject:
+    post:
+      tags: [Suggestions]
+      summary: Reject suggestion
+      description: Reject a suggestion without taking action (admin only)
+      operationId: rejectSuggestion
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/SuggestionId'
+      responses:
+        '200':
+          description: Suggestion rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================== REFERENCE DATA ====================
+  /families/{familyId}/locations:
+    get:
+      tags: [Reference Data]
+      summary: List storage locations
+      description: Retrieve all storage locations for the family
+      operationId: listLocations
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      responses:
+        '200':
+          description: List of storage locations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  locations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StorageLocationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Reference Data]
+      summary: Create storage location
+      description: Add a new storage location (admin only)
+      operationId: createLocation
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLocationRequest'
+      responses:
+        '201':
+          description: Location created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageLocationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /families/{familyId}/locations/{locationId}:
+    put:
+      tags: [Reference Data]
+      summary: Update storage location
+      description: Update a storage location (admin only)
+      operationId: updateLocation
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/LocationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLocationRequest'
+      responses:
+        '200':
+          description: Location updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageLocationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Reference Data]
+      summary: Delete storage location
+      description: Delete a storage location (admin only)
+      operationId: deleteLocation
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/LocationId'
+      responses:
+        '204':
+          description: Location deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /families/{familyId}/stores:
+    get:
+      tags: [Reference Data]
+      summary: List stores
+      description: Retrieve all stores for the family
+      operationId: listStores
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      responses:
+        '200':
+          description: List of stores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stores:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StoreResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Reference Data]
+      summary: Create store
+      description: Add a new store (admin only)
+      operationId: createStore
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStoreRequest'
+      responses:
+        '201':
+          description: Store created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /families/{familyId}/stores/{storeId}:
+    put:
+      tags: [Reference Data]
+      summary: Update store
+      description: Update a store (admin only)
+      operationId: updateStore
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/StoreId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStoreRequest'
+      responses:
+        '200':
+          description: Store updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Reference Data]
+      summary: Delete store
+      description: Delete a store (admin only)
+      operationId: deleteStore
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/StoreId'
+      responses:
+        '204':
+          description: Store deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+# ==================== COMPONENTS ====================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: AWS Cognito JWT token
+
+  parameters:
+    FamilyId:
+      name: familyId
+      in: path
+      required: true
+      description: Family UUID
+      schema:
+        type: string
+        format: uuid
+
+    MemberId:
+      name: memberId
+      in: path
+      required: true
+      description: Member UUID
+      schema:
+        type: string
+        format: uuid
+
+    ItemId:
+      name: itemId
+      in: path
+      required: true
+      description: Inventory item UUID
+      schema:
+        type: string
+        format: uuid
+
+    ShoppingItemId:
+      name: shoppingItemId
+      in: path
+      required: true
+      description: Shopping list item UUID
+      schema:
+        type: string
+        format: uuid
+
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      description: Notification UUID
+      schema:
+        type: string
+        format: uuid
+
+    SuggestionId:
+      name: suggestionId
+      in: path
+      required: true
+      description: Suggestion UUID
+      schema:
+        type: string
+        format: uuid
+
+    LocationId:
+      name: locationId
+      in: path
+      required: true
+      description: Storage location UUID
+      schema:
+        type: string
+        format: uuid
+
+    StoreId:
+      name: storeId
+      in: path
+      required: true
+      description: Store UUID
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # ========== REQUEST SCHEMAS ==========
+    CreateFamilyRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Smith Family"
+
+    UpdateFamilyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Smith Household"
+
+    AddMemberRequest:
+      type: object
+      required:
+        - email
+        - name
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: "jane@example.com"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Jane Smith"
+        role:
+          type: string
+          enum: [admin, suggester]
+          example: "admin"
+
+    CreateInventoryItemRequest:
+      type: object
+      required:
+        - name
+        - quantity
+        - threshold
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Paper Towels"
+        quantity:
+          type: integer
+          minimum: 0
+          example: 10
+        threshold:
+          type: integer
+          minimum: 0
+          example: 5
+        locationId:
+          type: string
+          format: uuid
+          nullable: true
+        preferredStoreId:
+          type: string
+          format: uuid
+          nullable: true
+        alternateStoreIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          default: []
+
+    UpdateInventoryItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        quantity:
+          type: integer
+          minimum: 0
+        threshold:
+          type: integer
+          minimum: 0
+        locationId:
+          type: string
+          format: uuid
+          nullable: true
+        preferredStoreId:
+          type: string
+          format: uuid
+          nullable: true
+        alternateStoreIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    AdjustQuantityRequest:
+      type: object
+      required:
+        - adjustment
+      properties:
+        adjustment:
+          type: integer
+          description: Positive to increase, negative to decrease
+          example: -2
+
+    AddToShoppingListRequest:
+      type: object
+      required:
+        - name
+      properties:
+        itemId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Link to inventory item (null for free-text items)
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Milk"
+        storeId:
+          type: string
+          format: uuid
+          nullable: true
+        quantity:
+          type: integer
+          minimum: 1
+          nullable: true
+        notes:
+          type: string
+          maxLength: 200
+          nullable: true
+
+    UpdateShoppingListItemRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, purchased]
+        quantity:
+          type: integer
+          minimum: 1
+          nullable: true
+        notes:
+          type: string
+          maxLength: 200
+          nullable: true
+
+    CreateSuggestionRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [add_to_shopping, create_item]
+        itemId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Required if type is add_to_shopping
+        proposedItemName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          nullable: true
+          description: Required if type is create_item
+        proposedQuantity:
+          type: integer
+          minimum: 0
+          nullable: true
+        proposedThreshold:
+          type: integer
+          minimum: 0
+          nullable: true
+        notes:
+          type: string
+          maxLength: 200
+          nullable: true
+
+    CreateLocationRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "Pantry"
+        description:
+          type: string
+          maxLength: 200
+          nullable: true
+
+    UpdateLocationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 200
+          nullable: true
+
+    CreateStoreRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Whole Foods"
+        address:
+          type: string
+          maxLength: 200
+          nullable: true
+
+    UpdateStoreRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        address:
+          type: string
+          maxLength: 200
+          nullable: true
+
+    # ========== RESPONSE SCHEMAS ==========
+    FamilyResponse:
+      type: object
+      required:
+        - familyId
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        familyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MemberResponse:
+      type: object
+      required:
+        - memberId
+        - familyId
+        - email
+        - name
+        - role
+        - status
+        - createdAt
+      properties:
+        memberId:
+          type: string
+          format: uuid
+        familyId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, suggester]
+        status:
+          type: string
+          enum: [active, removed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    InventoryItemResponse:
+      type: object
+      required:
+        - itemId
+        - familyId
+        - name
+        - quantity
+        - threshold
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        itemId:
+          type: string
+          format: uuid
+        familyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        quantity:
+          type: integer
+          minimum: 0
+        threshold:
+          type: integer
+          minimum: 0
+        locationId:
+          type: string
+          format: uuid
+          nullable: true
+        preferredStoreId:
+          type: string
+          format: uuid
+          nullable: true
+        alternateStoreIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        status:
+          type: string
+          enum: [active, archived]
+        isLowStock:
+          type: boolean
+          description: True if quantity < threshold
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ShoppingListItemResponse:
+      type: object
+      required:
+        - shoppingItemId
+        - familyId
+        - name
+        - status
+        - createdAt
+      properties:
+        shoppingItemId:
+          type: string
+          format: uuid
+        familyId:
+          type: string
+          format: uuid
+        itemId:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+        storeId:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          type: string
+          enum: [pending, purchased]
+        quantity:
+          type: integer
+          minimum: 1
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        addedBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    NotificationResponse:
+      type: object
+      required:
+        - notificationId
+        - familyId
+        - itemId
+        - itemName
+        - type
+        - status
+        - currentQuantity
+        - threshold
+        - createdAt
+      properties:
+        notificationId:
+          type: string
+          format: uuid
+        familyId:
+          type: string
+          format: uuid
+        itemId:
+          type: string
+          format: uuid
+        itemName:
+          type: string
+        type:
+          type: string
+          enum: [low_stock]
+        status:
+          type: string
+          enum: [active, resolved, acknowledged]
+        currentQuantity:
+          type: integer
+          minimum: 0
+        threshold:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    SuggestionResponse:
+      type: object
+      required:
+        - suggestionId
+        - familyId
+        - suggestedBy
+        - type
+        - status
+        - createdAt
+      properties:
+        suggestionId:
+          type: string
+          format: uuid
+        familyId:
+          type: string
+          format: uuid
+        suggestedBy:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [add_to_shopping, create_item]
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        itemId:
+          type: string
+          format: uuid
+          nullable: true
+        proposedItemName:
+          type: string
+          nullable: true
+        proposedQuantity:
+          type: integer
+          minimum: 0
+          nullable: true
+        proposedThreshold:
+          type: integer
+          minimum: 0
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        reviewedBy:
+          type: string
+          format: uuid
+          nullable: true
+        reviewedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    StorageLocationResponse:
+      type: object
+      required:
+        - locationId
+        - familyId
+        - name
+        - createdAt
+      properties:
+        locationId:
+          type: string
+          format: uuid
+        familyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    StoreResponse:
+      type: object
+      required:
+        - storeId
+        - familyId
+        - name
+        - createdAt
+      properties:
+        storeId:
+          type: string
+          format: uuid
+        familyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        address:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "BadRequest"
+        message:
+          type: string
+          example: "Validation failed"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+

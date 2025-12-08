@@ -1,6 +1,37 @@
 <!--
 SYNC IMPACT REPORT
 ===================
+Version Change: 1.0.0 → 1.1.0
+Rationale: Codify build tool and deployment strategy for consistency across all features
+Date: 2025-12-08
+
+Changes Made:
+1. Added Vite as mandatory build tool for frontend (Core Technologies)
+2. Specified AWS S3 + CloudFront for frontend deployment (Core Technologies)
+3. Added Vite-specific development standards (environment variables, output directory)
+4. Expanded Deployment Process with detailed frontend deployment requirements
+5. Explicitly prohibited third-party deployment platforms (Vercel, Netlify)
+
+Impact:
+- All future features MUST use Vite for frontend builds
+- All frontend deployments MUST go to AWS S3 + CloudFront
+- Ensures cost control (~$6.50/month vs Vercel ~$20/month)
+- Maintains AWS-native architecture across entire stack
+- Provides clear guidance for developer onboarding
+
+Templates Impact:
+- plan-template.md: ✅ No changes needed (already validates against constitution)
+- spec-template.md: ✅ No changes needed
+- tasks-template.md: ✅ No changes needed
+- All templates will automatically enforce new build/deployment standards
+
+Breaking Changes: None (this is first implementation of feature 001)
+Migration Required: No (documentation-only change for new project)
+
+---
+
+PREVIOUS VERSION: 1.0.0
+===================
 Version Change: INITIAL → 1.0.0
 Rationale: Initial constitution creation for Inventory Management System
 
@@ -137,9 +168,11 @@ Follow-up TODOs: None - all templates are aligned with constitution principles
 ### Core Technologies
 
 - **Frontend Framework**: Next.js 16 with App Router
+- **Build Tool**: Vite (for frontend builds and development)
 - **Language**: TypeScript 5 with strict mode enabled
 - **Runtime**: Node.js 20.x LTS
-- **Deployment**: AWS SAM (Serverless Application Model)
+- **Backend Deployment**: AWS SAM (Serverless Application Model)
+- **Frontend Deployment**: AWS S3 + CloudFront (static site hosting with CDN)
 - **Database**: Amazon DynamoDB
 - **Testing**: Jest and React Testing Library
 
@@ -149,7 +182,10 @@ Follow-up TODOs: None - all templates are aligned with constitution principles
 - Error handling MUST be comprehensive with appropriate error boundaries
 - Logging MUST be structured and include relevant context
 - Next.js data fetching and caching best practices MUST be followed
+- Vite MUST be used for frontend builds (NOT Webpack or other bundlers)
+- Vite build output MUST go to `dist/` directory
 - Environment variables MUST be used for all configuration
+- Frontend environment variables MUST be prefixed with `NEXT_PUBLIC_` or `VITE_`
 - Code MUST follow consistent formatting (use Prettier or similar)
 
 ## Development Workflow
@@ -177,6 +213,19 @@ Follow-up TODOs: None - all templates are aligned with constitution principles
 - Deployments MUST follow blue-green or canary patterns for production
 - Rollback procedures MUST be documented and tested
 
+**Frontend Deployment** (AWS S3 + CloudFront):
+- Frontend MUST be deployed to AWS S3 as static assets
+- CloudFront MUST be used for CDN and HTTPS
+- CloudFront cache MUST be invalidated after each deployment
+- S3 bucket MUST be configured for static website hosting
+- SPA routing MUST be handled via CloudFront error pages (404 → index.html)
+- Third-party platforms (e.g., Vercel, Netlify) MUST NOT be used
+
+**Backend Deployment** (AWS SAM):
+- Backend MUST be deployed via `sam deploy` command
+- Lambda functions MUST be tested locally with `sam local` before deployment
+- API Gateway configurations MUST be reviewed for CORS and security headers
+
 ## Governance
 
 This constitution supersedes all other development practices and guidelines. All code reviews, architectural decisions, and feature implementations MUST align with these principles.
@@ -193,4 +242,4 @@ This constitution supersedes all other development practices and guidelines. All
 - Technical debt MUST be tracked and addressed systematically
 - Regular constitutional reviews MUST occur quarterly
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-08 | **Last Amended**: 2025-12-08
+**Version**: 1.1.0 | **Ratified**: 2025-12-08 | **Last Amended**: 2025-12-08

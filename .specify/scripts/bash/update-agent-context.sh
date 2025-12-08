@@ -783,6 +783,20 @@ main() {
     # Print summary
     print_summary
     
+    # Sync shared context to all agent files to ensure consistency
+    if [[ "$success" == true ]]; then
+        log_info "Syncing shared context across all agent files..."
+        if [[ -f "$SCRIPT_DIR/sync-agent-contexts.sh" ]]; then
+            if "$SCRIPT_DIR/sync-agent-contexts.sh" sync; then
+                log_success "Agent context synchronized across all files"
+            else
+                log_warning "Failed to sync shared context, but update succeeded"
+            fi
+        else
+            log_warning "Sync script not found, skipping synchronization"
+        fi
+    fi
+    
     if [[ "$success" == true ]]; then
         log_success "Agent context update completed successfully"
         exit 0
