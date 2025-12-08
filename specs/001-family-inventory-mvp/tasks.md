@@ -20,25 +20,25 @@
 
 **Backend Setup:**
 
-- [ ] T001 [P] Create backend project structure: `inventory-management-backend/` with src/, tests/, template.yaml
-- [ ] T002 [P] Initialize backend package.json with TypeScript 5, AWS SDK v3, Jest dependencies
-- [ ] T003 [P] Configure TypeScript strict mode in inventory-management-backend/tsconfig.json
-- [ ] T004 [P] Configure Jest for backend in inventory-management-backend/jest.config.js
-- [ ] T005 [P] Setup ESLint and Prettier in inventory-management-backend/.eslintrc.json
+- [X] T001 [P] Create backend project structure: `inventory-management-backend/` with src/, tests/, template.yaml
+- [X] T002 [P] Initialize backend package.json with TypeScript 5, AWS SDK v3, Jest dependencies
+- [X] T003 [P] Configure TypeScript strict mode in inventory-management-backend/tsconfig.json
+- [X] T004 [P] Configure Jest for backend in inventory-management-backend/jest.config.js
+- [X] T005 [P] Setup ESLint and Prettier in inventory-management-backend/.eslintrc.json
 
 **Frontend Setup:**
 
-- [ ] T006 [P] Create frontend project structure: `inventory-management-frontend/` with app/, components/, lib/, public/
-- [ ] T007 [P] Initialize frontend package.json with Next.js 16, React 18, Vite, TypeScript dependencies
-- [ ] T008 [P] Configure Vite build tool in inventory-management-frontend/vite.config.ts
-- [ ] T009 [P] Configure TypeScript strict mode in inventory-management-frontend/tsconfig.json
-- [ ] T010 [P] Configure Jest + React Testing Library in inventory-management-frontend/jest.config.js
-- [ ] T011 [P] Setup ESLint and Prettier in inventory-management-frontend/.eslintrc.json
+- [X] T006 [P] Create frontend project structure: `inventory-management-frontend/` with app/, components/, lib/, public/
+- [X] T007 [P] Initialize frontend package.json with Next.js 16, React 18, Vite, TypeScript dependencies
+- [X] T008 [P] Configure Vite build tool in inventory-management-frontend/vite.config.ts (N/A - Next.js uses built-in build system)
+- [X] T009 [P] Configure TypeScript strict mode in inventory-management-frontend/tsconfig.json
+- [X] T010 [P] Configure Jest + React Testing Library in inventory-management-frontend/jest.config.js
+- [X] T011 [P] Setup ESLint and Prettier in inventory-management-frontend/.eslintrc.json
 
 **Environment Configuration:**
 
-- [ ] T012 [P] Create backend environment template in inventory-management-backend/.env.example
-- [ ] T013 [P] Create frontend environment template in inventory-management-frontend/.env.example
+- [X] T012 [P] Create backend environment template in inventory-management-backend/.env.example
+- [X] T013 [P] Create frontend environment template in inventory-management-frontend/.env.example
 
 ---
 
@@ -50,24 +50,24 @@
 
 **Backend Foundation:**
 
-- [ ] T014 Create AWS SAM template in inventory-management-backend/template.yaml with DynamoDB table definition
-- [ ] T015 [P] Define shared TypeScript types in inventory-management-backend/src/types/entities.ts
-- [ ] T016 [P] Define Zod validation schemas in inventory-management-backend/src/types/schemas.ts
-- [ ] T017 [P] Create DynamoDB client utility in inventory-management-backend/src/lib/dynamodb.ts
-- [ ] T018 [P] Create UUID generator utility in inventory-management-backend/src/lib/uuid.ts
-- [ ] T019 [P] Create structured logging utility in inventory-management-backend/src/lib/logger.ts
-- [ ] T020 [P] Create API response helpers in inventory-management-backend/src/lib/response.ts
-- [ ] T021 Implement Lambda authorizer for Cognito JWT in inventory-management-backend/src/handlers/authorizer.ts
-- [ ] T022 Add Lambda authorizer to SAM template in inventory-management-backend/template.yaml
+- [X] T014 Create AWS SAM template in inventory-management-backend/template.yaml with DynamoDB table definition
+- [X] T015 [P] Define shared TypeScript types in inventory-management-backend/src/types/entities.ts
+- [X] T016 [P] Define Zod validation schemas in inventory-management-backend/src/types/schemas.ts
+- [X] T017 [P] Create DynamoDB client utility in inventory-management-backend/src/lib/dynamodb.ts
+- [X] T018 [P] Create UUID generator utility in inventory-management-backend/src/lib/uuid.ts
+- [X] T019 [P] Create structured logging utility in inventory-management-backend/src/lib/logger.ts
+- [X] T020 [P] Create API response helpers in inventory-management-backend/src/lib/response.ts
+- [X] T021 Implement Lambda authorizer for Cognito JWT in inventory-management-backend/src/handlers/authorizer.ts
+- [X] T022 Add Lambda authorizer to SAM template in inventory-management-backend/template.yaml
 
 **Frontend Foundation:**
 
-- [ ] T023 [P] Create shared TypeScript types in inventory-management-frontend/types/entities.ts
-- [ ] T024 [P] Create API client base in inventory-management-frontend/lib/api-client.ts
-- [ ] T025 [P] Create authentication helpers in inventory-management-frontend/lib/auth.ts
-- [ ] T026 [P] Create Zod validation utilities in inventory-management-frontend/lib/validation.ts
-- [ ] T027 Create root layout component in inventory-management-frontend/app/layout.tsx
-- [ ] T028 Create landing page in inventory-management-frontend/app/page.tsx
+- [X] T023 [P] Create shared TypeScript types in inventory-management-frontend/types/entities.ts
+- [X] T024 [P] Create API client base in inventory-management-frontend/lib/api-client.ts
+- [X] T025 [P] Create authentication helpers in inventory-management-frontend/lib/auth.ts
+- [X] T026 [P] Create Zod validation utilities in inventory-management-frontend/lib/validation.ts
+- [X] T027 Create root layout component in inventory-management-frontend/app/layout.tsx
+- [X] T028 Create landing page in inventory-management-frontend/app/page.tsx
 
 **Infrastructure Setup:**
 

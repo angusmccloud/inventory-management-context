@@ -17,11 +17,15 @@ This separation allows for clear boundaries between configuration/tooling, backe
 Before you begin, ensure you have the following installed:
 
 ### Required Software
-- **Node.js 20.x LTS** - [Download here](https://nodejs.org/)
+- **Node.js 24.x LTS** - [Download here](https://nodejs.org/)
 - **Git** - [Download here](https://git-scm.com/)
 - **Visual Studio Code** - [Download here](https://code.visualstudio.com/)
 - **AWS CLI** (for deployment) - [Installation guide](https://aws.amazon.com/cli/)
 - **AWS SAM CLI** (for local testing) - [Installation guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
+- **Colima** (macOS) or **Docker Engine** (Linux) - Docker runtime for SAM local testing
+  - **Note**: Docker Desktop is NOT supported in this environment
+  - macOS: `brew install colima` ([Colima docs](https://github.com/abiosoft/colima))
+  - Linux: Use Docker Engine via package manager
 
 ### Recommended VSCode Extensions
 Install these extensions for the best development experience:
@@ -264,6 +268,26 @@ cd inventory-management-frontend
 npm run dev
 ```
 
+### Running the Backend Locally
+
+**Prerequisites**: Start Colima first (if using Colima for Docker):
+```bash
+colima start
+```
+
+Then run the local API:
+```bash
+cd inventory-management-backend
+npm run build        # Compile TypeScript to dist/
+npm run sam:build    # Package for SAM
+npm run sam:local    # Start local API Gateway at http://localhost:3001
+```
+
+Test the health endpoint:
+```bash
+curl http://localhost:3001/health
+```
+
 ### Running Backend Tests
 
 ```bash
@@ -329,6 +353,35 @@ sam deploy --guided
 3. **Task Format**: Use format `- [ ] [TaskID] [P?] [Story?] Description with file path`
 4. **No Implicit Any**: TypeScript strict mode is NON-NEGOTIABLE - all types must be explicit
 5. **Test First**: Write tests before implementation for all critical functionality
+6. **ES Module Imports**: Node.js 24.x requires `.js` extensions in all relative imports:
+   ```typescript
+   // ❌ Wrong
+   import { logger } from './lib/logger';
+   
+   // ✅ Correct
+   import { logger } from './lib/logger.js';
+   ```
+7. **Colima Docker Socket**: If using Colima, SAM CLI needs `DOCKER_HOST`:
+   ```bash
+   export DOCKER_HOST=unix://$HOME/.colima/default/docker.sock
+   ```
+8. **Lambda ES Modules**: The `dist/package.json` file with `"type": "module"` is REQUIRED for Lambda Node.js 24.x runtime
+
+### Common Issues & Solutions
+
+**Problem**: SAM local fails with "Docker not found"
+- **Solution**: Set `DOCKER_HOST` environment variable (see gotcha #7)
+
+**Problem**: Lambda fails with "Cannot use import statement"
+- **Solution**: Ensure `dist/package.json` contains `"type": "module"` (see gotcha #8)
+
+**Problem**: Import errors with missing modules
+- **Solution**: Add `.js` extensions to all relative imports (see gotcha #6)
+
+**Problem**: Docker credential errors (`docker-credential-desktop`)
+- **Solution**: Remove `"credsStore"` field from `~/.docker/config.json`
+
+For detailed troubleshooting, see the backend README's Troubleshooting section.
 
 ## 🎯 Next Steps
 
