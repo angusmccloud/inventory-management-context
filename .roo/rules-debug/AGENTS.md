@@ -38,3 +38,15 @@ This file provides guidance for Debug mode when troubleshooting issues in this p
 - **Timeout errors**: Increase Lambda timeout, check for blocking operations
 - **Permission denied**: Review IAM role policies attached to Lambda
 - **Module not found**: Check package.json dependencies and bundling
+
+## Agent Context Synchronization
+
+When adding shared context that should apply to all AI agents:
+
+1. **Edit the shared source**: `.specify/memory/agent-shared-context.md`
+2. **Run the sync script**: `.specify/scripts/bash/sync-agent-contexts.sh`
+
+This ensures Cursor, Roo Code, and GitHub Copilot all receive the same guidelines.
+
+**Quick Reference**: See `.specify/AGENT-SYNC-QUICK-REFERENCE.md`
+**Full Documentation**: See `.specify/docs/agent-context-sync.md`

@@ -27,6 +27,109 @@ Before you begin, ensure you have the following installed:
   - macOS: `brew install colima` ([Colima docs](https://github.com/abiosoft/colima))
   - Linux: Use Docker Engine via package manager
 
+## 🖥️ Platform-Specific Setup
+
+### macOS
+
+1. **Install Homebrew** (if not already installed):
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+2. **Install Node.js 20.x**:
+   ```bash
+   brew install node@20
+   ```
+
+3. **Install AWS CLI**:
+   ```bash
+   brew install awscli
+   ```
+
+4. **Install AWS SAM CLI**:
+   ```bash
+   brew install aws-sam-cli
+   ```
+
+### Windows (WSL2)
+
+1. **Install WSL2** (run in PowerShell as Administrator):
+   ```powershell
+   wsl --install -d Ubuntu
+   ```
+
+2. **Install Node.js via nvm** (recommended for WSL):
+   ```bash
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+   source ~/.bashrc
+   nvm install 20
+   nvm use 20
+   ```
+
+3. **Install AWS CLI**:
+   ```bash
+   sudo apt-get update
+   sudo apt-get install awscli -y
+   ```
+
+4. **Install AWS SAM CLI**:
+   ```bash
+   # Follow AWS documentation for Linux installation
+   # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html
+   ```
+
+### Linux
+
+1. **Install Node.js via nvm**:
+   ```bash
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+   source ~/.bashrc
+   nvm install 20
+   nvm use 20
+   ```
+
+2. **Install AWS CLI**:
+   ```bash
+   sudo apt-get update
+   sudo apt-get install awscli -y
+   # Or use pip: pip install awscli
+   ```
+
+3. **Install AWS SAM CLI**:
+   ```bash
+   # Follow AWS documentation for Linux installation
+   ```
+
+### Git Configuration (All Platforms)
+
+Configure Git to handle line endings properly:
+
+```bash
+# For Mac/Linux/WSL (recommended)
+git config --global core.autocrlf input
+
+# Verify the setting
+git config --global core.autocrlf
+```
+
+### Making Scripts Executable
+
+After cloning the repository, make all bash scripts executable:
+
+```bash
+# From repository root
+chmod +x .specify/scripts/bash/*.sh
+```
+
+**WSL Users**: If scripts fail with "bad interpreter" errors, convert line endings:
+```bash
+# Install dos2unix if needed
+sudo apt-get install dos2unix
+
+# Convert all scripts
+find .specify/scripts/bash -name "*.sh" -exec dos2unix {} \;
+```
+
 ### Recommended VSCode Extensions
 Install these extensions for the best development experience:
 - **GitHub Copilot** (`github.copilot`) - AI-powered code completion
@@ -320,6 +423,18 @@ sam build
 cd inventory-management-backend
 sam deploy --guided
 ```
+
+## 🔄 Agent Context Sync
+
+When adding shared context that should apply to all AI agents:
+
+1. **Edit the shared source**: `.specify/memory/agent-shared-context.md`
+2. **Run the sync script**: `.specify/scripts/bash/sync-agent-contexts.sh`
+
+This ensures Cursor, Roo Code, and GitHub Copilot all receive the same guidelines.
+
+**Quick Reference**: See `.specify/AGENT-SYNC-QUICK-REFERENCE.md`
+**Full Documentation**: See `.specify/docs/agent-context-sync.md`
 
 ## 🆘 Getting Help
 

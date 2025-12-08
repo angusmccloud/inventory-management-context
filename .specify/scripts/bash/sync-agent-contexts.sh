@@ -26,7 +26,7 @@ eval $(get_feature_paths)
 SHARED_CONTEXT_FILE="$REPO_ROOT/.specify/memory/agent-shared-context.md"
 
 # Agent-specific file paths
-CLAUDE_FILE="$REPO_ROOT/CLAUDE.md"
+ROO_FILE="$REPO_ROOT/AGENTS.md"
 CURSOR_FILE="$REPO_ROOT/.cursor/rules/specify-rules.mdc"
 COPILOT_FILE="$REPO_ROOT/.github/agents/copilot-instructions.md"
 
@@ -92,7 +92,7 @@ sync_shared_context_to_agents() {
     # Update each agent file
     local updated_count=0
     
-    for agent_file in "$CLAUDE_FILE" "$CURSOR_FILE" "$COPILOT_FILE"; do
+    for agent_file in "$ROO_FILE" "$CURSOR_FILE" "$COPILOT_FILE"; do
         if [[ -f "$agent_file" ]]; then
             log_info "Updating $(basename "$agent_file")..."
             
@@ -139,7 +139,7 @@ extract_from_agent_to_shared() {
     local extracted_content=""
     local source_agent=""
     
-    for agent_file in "$CURSOR_FILE" "$CLAUDE_FILE" "$COPILOT_FILE"; do
+    for agent_file in "$CURSOR_FILE" "$ROO_FILE" "$COPILOT_FILE"; do
         if [[ -f "$agent_file" ]]; then
             if extracted_content=$(extract_manual_additions_from_file "$agent_file"); then
                 source_agent=$(basename "$agent_file")
@@ -194,7 +194,7 @@ OPTIONS:
     --help       Show this help message
 
 AGENT FILES:
-    - CLAUDE.md (Roo Code)
+    - AGENTS.md (Roo Code)
     - .cursor/rules/specify-rules.mdc (Cursor IDE)
     - .github/agents/copilot-instructions.md (GitHub Copilot)
 

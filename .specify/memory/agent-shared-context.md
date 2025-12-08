@@ -3,7 +3,7 @@
 This file is the **single source of truth** for manual additions to all AI agent context files.
 
 Any content added here will be synchronized to:
-- `CLAUDE.md` (Roo Code)
+- `AGENTS.md` (Roo Code)
 - `.cursor/rules/specify-rules.mdc` (Cursor IDE)
 - `.github/agents/copilot-instructions.md` (GitHub Copilot)
 
