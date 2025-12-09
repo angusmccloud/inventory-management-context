@@ -146,7 +146,8 @@ Build a serverless family inventory management system that enables households to
 ✅ **AWS Best Practices**:
 - Data model uses DynamoDB best practices (single-table, GSIs, efficient queries)
 - Research documents AWS SDK v3 usage with modular imports
-- Cognito integration planned for authentication
+- Cognito integration planned for authentication (JWT validation only)
+- Lambda authorizer queries DynamoDB for member familyId and role (authorization context)
 - SES integration planned for notifications
 - Structured logging patterns defined
 
@@ -284,7 +285,8 @@ No violations detected. All architectural decisions align with constitutional pr
 
 Key decisions documented:
 - DynamoDB single-table design pattern
-- AWS Cognito for authentication with Lambda authorizer
+- AWS Cognito for authentication only (username/password) - familyId and role stored in DynamoDB
+- Lambda authorizer validates JWT then queries DynamoDB for member authorization context
 - AWS SES for email notifications
 - Next.js 16 App Router rendering strategies
 - RESTful API design over GraphQL

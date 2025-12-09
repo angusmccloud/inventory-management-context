@@ -307,21 +307,29 @@ export async function handler(event: APIGatewayProxyEvent) {
 
 ### 3. Lambda Authorizer for Authentication
 
-**Pattern**: Extract family context from JWT
+**Pattern**: Extract memberId from JWT, query DynamoDB for family context
 
 ```typescript
-// Lambda authorizer extracts familyId from Cognito JWT
+// Lambda authorizer validates Cognito JWT and queries DynamoDB for member info
 export async function authorizerHandler(event: APIGatewayTokenAuthorizerEvent) {
   const token = event.authorizationToken.replace('Bearer ', '');
   const decoded = verifyJWT(token); // Verify Cognito JWT
+  const memberId = decoded.sub;
+  
+  // Query DynamoDB to get member's familyId and role
+  const member = await getMemberById(memberId); // Query using GSI1PK
+  
+  if (!member || member.status !== 'active') {
+    throw new Error('Unauthorized');
+  }
   
   return {
-    principalId: decoded.sub, // memberId
+    principalId: memberId,
     policyDocument: generatePolicy('Allow', event.methodArn),
     context: {
-      memberId: decoded.sub,
-      familyId: decoded['custom:familyId'],
-      role: decoded['custom:role'],
+      memberId: memberId,
+      familyId: member.familyId,
+      role: member.role,
     },
   };
 }
