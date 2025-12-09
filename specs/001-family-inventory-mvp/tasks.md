@@ -88,40 +88,40 @@
 
 **Backend Implementation:**
 
-- [ ] T033 [P] [US1] Create Family model with DynamoDB operations in inventory-management-backend/src/models/family.ts
-- [ ] T034 [P] [US1] Create Member model with DynamoDB operations in inventory-management-backend/src/models/member.ts
-- [ ] T035 [P] [US1] Create InventoryItem model with DynamoDB operations in inventory-management-backend/src/models/inventory.ts
-- [ ] T036 [P] [US1] Create StorageLocation model with DynamoDB operations in inventory-management-backend/src/models/location.ts
-- [ ] T037 [P] [US1] Create Store model with DynamoDB operations in inventory-management-backend/src/models/store.ts
-- [ ] T038 [US1] Create FamilyService business logic in inventory-management-backend/src/services/familyService.ts
-- [ ] T039 [US1] Create InventoryService business logic in inventory-management-backend/src/services/inventoryService.ts
-- [ ] T040 [P] [US1] Implement POST /families handler in inventory-management-backend/src/handlers/createFamily.ts
-- [ ] T041 [P] [US1] Implement GET /families/{familyId} handler in inventory-management-backend/src/handlers/getFamily.ts
-- [ ] T042 [P] [US1] Implement PUT /families/{familyId} handler in inventory-management-backend/src/handlers/updateFamily.ts
-- [ ] T043 [P] [US1] Implement POST /families/{familyId}/inventory handler in inventory-management-backend/src/handlers/createInventoryItem.ts
-- [ ] T044 [P] [US1] Implement GET /families/{familyId}/inventory handler in inventory-management-backend/src/handlers/listInventoryItems.ts
-- [ ] T045 [P] [US1] Implement GET /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/getInventoryItem.ts
-- [ ] T046 [P] [US1] Implement PUT /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/updateInventoryItem.ts
-- [ ] T047 [P] [US1] Implement PATCH /families/{familyId}/inventory/{itemId}/quantity handler in inventory-management-backend/src/handlers/adjustInventoryQuantity.ts
-- [ ] T048 [P] [US1] Implement POST /families/{familyId}/inventory/{itemId}/archive handler in inventory-management-backend/src/handlers/archiveInventoryItem.ts
-- [ ] T049 [P] [US1] Implement DELETE /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/deleteInventoryItem.ts
-- [ ] T050 [US1] Add all US1 API Gateway routes and Lambda functions to inventory-management-backend/template.yaml
+- [X] T033 [P] [US1] Create Family model with DynamoDB operations in inventory-management-backend/src/models/family.ts
+- [X] T034 [P] [US1] Create Member model with DynamoDB operations in inventory-management-backend/src/models/member.ts
+- [X] T035 [P] [US1] Create InventoryItem model with DynamoDB operations in inventory-management-backend/src/models/inventory.ts
+- [X] T036 [P] [US1] Create StorageLocation model with DynamoDB operations in inventory-management-backend/src/models/location.ts
+- [X] T037 [P] [US1] Create Store model with DynamoDB operations in inventory-management-backend/src/models/store.ts
+- [X] T038 [US1] Create FamilyService business logic in inventory-management-backend/src/services/familyService.ts
+- [X] T039 [US1] Create InventoryService business logic in inventory-management-backend/src/services/inventoryService.ts
+- [X] T040 [P] [US1] Implement POST /families handler in inventory-management-backend/src/handlers/createFamily.ts
+- [X] T041 [P] [US1] Implement GET /families/{familyId} handler in inventory-management-backend/src/handlers/getFamily.ts
+- [X] T042 [P] [US1] Implement PUT /families/{familyId} handler in inventory-management-backend/src/handlers/updateFamily.ts
+- [X] T043 [P] [US1] Implement POST /families/{familyId}/inventory handler in inventory-management-backend/src/handlers/createInventoryItem.ts
+- [X] T044 [P] [US1] Implement GET /families/{familyId}/inventory handler in inventory-management-backend/src/handlers/listInventoryItems.ts
+- [X] T045 [P] [US1] Implement GET /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/getInventoryItem.ts
+- [X] T046 [P] [US1] Implement PUT /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/updateInventoryItem.ts
+- [X] T047 [P] [US1] Implement PATCH /families/{familyId}/inventory/{itemId}/quantity handler in inventory-management-backend/src/handlers/adjustInventoryQuantity.ts
+- [X] T048 [P] [US1] Implement POST /families/{familyId}/inventory/{itemId}/archive handler in inventory-management-backend/src/handlers/archiveInventoryItem.ts
+- [X] T049 [P] [US1] Implement DELETE /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/deleteInventoryItem.ts
+- [X] T050 [US1] Add all US1 API Gateway routes and Lambda functions to inventory-management-backend/template.yaml
 - [ ] T051 [US1] Deploy backend updates with `sam build && sam deploy`
 
 **Frontend Implementation:**
 
-- [ ] T052 [P] [US1] Create authentication pages in inventory-management-frontend/app/(auth)/login/page.tsx
-- [ ] T053 [P] [US1] Create family creation form component in inventory-management-frontend/components/family/CreateFamilyForm.tsx
-- [ ] T054 [P] [US1] Create inventory list component in inventory-management-frontend/components/inventory/InventoryList.tsx
-- [ ] T055 [P] [US1] Create add inventory item form in inventory-management-frontend/components/inventory/AddItemForm.tsx
-- [ ] T056 [P] [US1] Create edit inventory item form in inventory-management-frontend/components/inventory/EditItemForm.tsx
-- [ ] T057 [P] [US1] Create adjust quantity component in inventory-management-frontend/components/inventory/AdjustQuantity.tsx
-- [ ] T058 [US1] Create dashboard layout in inventory-management-frontend/app/dashboard/layout.tsx
-- [ ] T059 [US1] Create dashboard home page in inventory-management-frontend/app/dashboard/page.tsx
-- [ ] T060 [US1] Create inventory page in inventory-management-frontend/app/dashboard/inventory/page.tsx
-- [ ] T061 [US1] Create family API client methods in inventory-management-frontend/lib/api/families.ts
-- [ ] T062 [US1] Create inventory API client methods in inventory-management-frontend/lib/api/inventory.ts
-- [ ] T063 [US1] Build and test frontend locally with `npm run dev`
+- [X] T052 [P] [US1] Create authentication pages in inventory-management-frontend/app/(auth)/login/page.tsx
+- [X] T053 [P] [US1] Create family creation form component in inventory-management-frontend/components/family/CreateFamilyForm.tsx
+- [X] T054 [P] [US1] Create inventory list component in inventory-management-frontend/components/inventory/InventoryList.tsx
+- [X] T055 [P] [US1] Create add inventory item form in inventory-management-frontend/components/inventory/AddItemForm.tsx
+- [X] T056 [P] [US1] Create edit inventory item form in inventory-management-frontend/components/inventory/EditItemForm.tsx
+- [X] T057 [P] [US1] Create adjust quantity component in inventory-management-frontend/components/inventory/AdjustQuantity.tsx
+- [X] T058 [US1] Create dashboard layout in inventory-management-frontend/app/dashboard/layout.tsx
+- [X] T059 [US1] Create dashboard home page in inventory-management-frontend/app/dashboard/page.tsx
+- [X] T060 [US1] Create inventory page in inventory-management-frontend/app/dashboard/inventory/page.tsx
+- [X] T061 [US1] Create family API client methods in inventory-management-frontend/lib/api/families.ts
+- [X] T062 [US1] Create inventory API client methods in inventory-management-frontend/lib/api/inventory.ts
+- [X] T063 [US1] Build and test frontend locally with `npm run dev`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - can create families, add/edit/archive inventory items, adjust quantities
 
