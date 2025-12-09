@@ -1,8 +1,11 @@
 # Tasks: Family Inventory Management System MVP
 
-**Feature**: 001-family-inventory-mvp  
-**Date**: 2025-12-08  
+**Feature**: 001-family-inventory-mvp
+**Date**: 2025-12-08
+**Updated**: 2025-12-09
 **Input**: Design documents from `/specs/001-family-inventory-mvp/`
+
+> **📋 Scope Note**: This task list has been reduced to focus on User Stories 1 and 2 only (Family/Inventory Management and Low Stock Notifications). Tasks for User Stories 3-7 (Phases 5-10) have been moved to separate feature specifications. See [spec.md](./spec.md#related-features) for the list of related features.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -155,201 +158,7 @@
 - [X] T078 [US2] Add notification badge to dashboard layout in inventory-management-frontend/app/dashboard/layout.tsx
 - [X] T079 [US2] Build and test frontend locally with `npm run dev`
 
-**Checkpoint**: At this point, User Stories 1 AND 2 work independently - low-stock items trigger notifications with emails
-
----
-
-## Phase 5: User Story 3 - Adult Creates and Manages Shopping Lists (Priority: P1)
-
-**Goal**: Enable adults to add items to shopping lists, organize by store, and check off purchased items
-
-**Independent Test**: Add inventory items and free-text items to shopping list, view by store and combined views, check off items to verify they're marked as purchased
-
-**Backend Implementation:**
-
-- [ ] T080 [P] [US3] Create ShoppingListItem model with DynamoDB operations in inventory-management-backend/src/models/shoppingList.ts
-- [ ] T081 [US3] Create ShoppingListService business logic in inventory-management-backend/src/services/shoppingListService.ts
-- [ ] T082 [P] [US3] Implement GET /families/{familyId}/shopping-list handler in inventory-management-backend/src/handlers/getShoppingList.ts
-- [ ] T083 [P] [US3] Implement POST /families/{familyId}/shopping-list handler in inventory-management-backend/src/handlers/addToShoppingList.ts
-- [ ] T084 [P] [US3] Implement PATCH /families/{familyId}/shopping-list/{shoppingItemId} handler in inventory-management-backend/src/handlers/updateShoppingListItem.ts
-- [ ] T085 [P] [US3] Implement DELETE /families/{familyId}/shopping-list/{shoppingItemId} handler in inventory-management-backend/src/handlers/removeFromShoppingList.ts
-- [ ] T086 [US3] Add shopping list routes to inventory-management-backend/template.yaml
-- [ ] T087 [US3] Deploy backend updates with `sam build && sam deploy`
-
-**Frontend Implementation:**
-
-- [ ] T088 [P] [US3] Create shopping list component in inventory-management-frontend/components/shopping/ShoppingList.tsx
-- [ ] T089 [P] [US3] Create shopping list item component in inventory-management-frontend/components/shopping/ShoppingListItem.tsx
-- [ ] T090 [P] [US3] Create add to shopping list form in inventory-management-frontend/components/shopping/AddToListForm.tsx
-- [ ] T091 [P] [US3] Create store filter component in inventory-management-frontend/components/shopping/StoreFilter.tsx
-- [ ] T092 [US3] Create shopping list page in inventory-management-frontend/app/dashboard/shopping-list/page.tsx
-- [ ] T093 [US3] Create shopping list API client methods in inventory-management-frontend/lib/api/shopping.ts
-- [ ] T094 [US3] Build and test frontend locally with `npm run dev`
-
-**Checkpoint**: All P1 user stories (1, 2, 3) are now complete and independently functional - MVP is ready for deployment!
-
----
-
-## Phase 6: User Story 4 - Family Member Management (Priority: P2)
-
-**Goal**: Enable adults to add family members with roles (admin/suggester) and remove members
-
-**Independent Test**: Add members with different roles, verify each role has appropriate permissions, remove a member to confirm access is revoked
-
-**Backend Implementation:**
-
-- [ ] T095 [US4] Create MemberService business logic in inventory-management-backend/src/services/memberService.ts
-- [ ] T096 [P] [US4] Implement GET /families/{familyId}/members handler in inventory-management-backend/src/handlers/listMembers.ts
-- [ ] T097 [P] [US4] Implement POST /families/{familyId}/members handler in inventory-management-backend/src/handlers/addMember.ts
-- [ ] T098 [P] [US4] Implement DELETE /families/{familyId}/members/{memberId} handler in inventory-management-backend/src/handlers/removeMember.ts
-- [ ] T099 [US4] Add member management routes to inventory-management-backend/template.yaml
-- [ ] T100 [US4] Enhance Lambda authorizer to cache DynamoDB member lookups for performance in inventory-management-backend/src/handlers/authorizer.ts
-- [ ] T101 [US4] Deploy backend updates with `sam build && sam deploy`
-
-**Frontend Implementation:**
-
-- [ ] T102 [P] [US4] Create member list component in inventory-management-frontend/components/members/MemberList.tsx
-- [ ] T103 [P] [US4] Create add member form in inventory-management-frontend/components/members/AddMemberForm.tsx
-- [ ] T104 [P] [US4] Create member item component in inventory-management-frontend/components/members/MemberItem.tsx
-- [ ] T105 [US4] Create family settings page in inventory-management-frontend/app/dashboard/settings/family/page.tsx
-- [ ] T106 [US4] Create member API client methods in inventory-management-frontend/lib/api/members.ts
-- [ ] T107 [US4] Build and test frontend locally with `npm run dev`
-
-**Checkpoint**: User Story 4 complete - multi-user family management with role-based permissions
-
----
-
-## Phase 7: User Story 5 - Suggesters View Inventory and Submit Suggestions (Priority: P2)
-
-**Goal**: Enable suggester users to view inventory and submit suggestions for admins to approve/reject
-
-**Independent Test**: Log in as suggester, submit suggestions for shopping list additions and new items, log in as admin to approve/reject and verify results
-
-**Backend Implementation:**
-
-- [ ] T108 [P] [US5] Create Suggestion model with DynamoDB operations in inventory-management-backend/src/models/suggestion.ts
-- [ ] T109 [US5] Create SuggestionService business logic in inventory-management-backend/src/services/suggestionService.ts
-- [ ] T110 [P] [US5] Implement GET /families/{familyId}/suggestions handler in inventory-management-backend/src/handlers/listSuggestions.ts
-- [ ] T111 [P] [US5] Implement POST /families/{familyId}/suggestions handler in inventory-management-backend/src/handlers/createSuggestion.ts
-- [ ] T112 [P] [US5] Implement POST /families/{familyId}/suggestions/{suggestionId}/approve handler in inventory-management-backend/src/handlers/approveSuggestion.ts
-- [ ] T113 [P] [US5] Implement POST /families/{familyId}/suggestions/{suggestionId}/reject handler in inventory-management-backend/src/handlers/rejectSuggestion.ts
-- [ ] T114 [US5] Add suggestion routes to inventory-management-backend/template.yaml
-- [ ] T115 [US5] Deploy backend updates with `sam build && sam deploy`
-
-**Frontend Implementation:**
-
-- [ ] T116 [P] [US5] Create suggestion list component for admins in inventory-management-frontend/components/suggestions/SuggestionList.tsx
-- [ ] T117 [P] [US5] Create suggestion item component in inventory-management-frontend/components/suggestions/SuggestionItem.tsx
-- [ ] T118 [P] [US5] Create submit suggestion form for suggesters in inventory-management-frontend/components/suggestions/SubmitSuggestionForm.tsx
-- [ ] T119 [US5] Create suggestions page for admins in inventory-management-frontend/app/dashboard/suggestions/page.tsx
-- [ ] T120 [US5] Add suggestion button to inventory view for suggesters in inventory-management-frontend/app/dashboard/inventory/page.tsx
-- [ ] T121 [US5] Create suggestion API client methods in inventory-management-frontend/lib/api/suggestions.ts
-- [ ] T122 [US5] Build and test frontend locally with `npm run dev`
-
-**Checkpoint**: User Story 5 complete - suggester workflow with admin approval process
-
----
-
-## Phase 8: User Story 6 - Reference Data Management (Priority: P3)
-
-**Goal**: Enable adults to manage storage locations and stores for better data consistency
-
-**Independent Test**: Create storage locations and stores, verify they appear as options when adding/editing inventory items
-
-**Backend Implementation:**
-
-- [ ] T123 [US6] Create ReferenceDataService business logic in inventory-management-backend/src/services/referenceDataService.ts
-- [ ] T124 [P] [US6] Implement GET /families/{familyId}/locations handler in inventory-management-backend/src/handlers/listLocations.ts
-- [ ] T125 [P] [US6] Implement POST /families/{familyId}/locations handler in inventory-management-backend/src/handlers/createLocation.ts
-- [ ] T126 [P] [US6] Implement PUT /families/{familyId}/locations/{locationId} handler in inventory-management-backend/src/handlers/updateLocation.ts
-- [ ] T127 [P] [US6] Implement DELETE /families/{familyId}/locations/{locationId} handler in inventory-management-backend/src/handlers/deleteLocation.ts
-- [ ] T128 [P] [US6] Implement GET /families/{familyId}/stores handler in inventory-management-backend/src/handlers/listStores.ts
-- [ ] T129 [P] [US6] Implement POST /families/{familyId}/stores handler in inventory-management-backend/src/handlers/createStore.ts
-- [ ] T130 [P] [US6] Implement PUT /families/{familyId}/stores/{storeId} handler in inventory-management-backend/src/handlers/updateStore.ts
-- [ ] T131 [P] [US6] Implement DELETE /families/{familyId}/stores/{storeId} handler in inventory-management-backend/src/handlers/deleteStore.ts
-- [ ] T132 [US6] Add reference data routes to inventory-management-backend/template.yaml
-- [ ] T133 [US6] Deploy backend updates with `sam build && sam deploy`
-
-**Frontend Implementation:**
-
-- [ ] T134 [P] [US6] Create location list component in inventory-management-frontend/components/reference/LocationList.tsx
-- [ ] T135 [P] [US6] Create location form component in inventory-management-frontend/components/reference/LocationForm.tsx
-- [ ] T136 [P] [US6] Create store list component in inventory-management-frontend/components/reference/StoreList.tsx
-- [ ] T137 [P] [US6] Create store form component in inventory-management-frontend/components/reference/StoreForm.tsx
-- [ ] T138 [US6] Create reference data settings page in inventory-management-frontend/app/dashboard/settings/reference/page.tsx
-- [ ] T139 [US6] Update AddItemForm to use location/store dropdowns in inventory-management-frontend/components/inventory/AddItemForm.tsx
-- [ ] T140 [US6] Create reference data API client methods in inventory-management-frontend/lib/api/reference.ts
-- [ ] T141 [US6] Build and test frontend locally with `npm run dev`
-
-**Checkpoint**: User Story 6 complete - reference data management integrated with inventory
-
----
-
-## Phase 9: User Story 7 - API Integration for Automated Inventory Updates (Priority: P2)
-
-**Goal**: Enable external systems to authenticate and programmatically decrement inventory quantities
-
-**Independent Test**: Make authenticated API calls to decrement item quantities, verify inventory reflects changes and triggers low-stock notifications
-
-**Backend Implementation:**
-
-- [ ] T142 [US7] Create API key authentication mechanism in inventory-management-backend/src/lib/apiKeyAuth.ts
-- [ ] T143 [US7] Update Lambda authorizer to support API key auth in inventory-management-backend/src/handlers/authorizer.ts
-- [ ] T144 [US7] Document API authentication in inventory-management-backend/API.md
-- [ ] T145 [US7] Add API key generation endpoint (admin only) to create family-scoped API keys
-- [ ] T146 [US7] Update template.yaml with API key authentication support
-- [ ] T147 [US7] Deploy backend updates with `sam build && sam deploy`
-
-**Documentation:**
-
-- [ ] T148 [P] [US7] Create API integration guide in inventory-management-backend/docs/api-integration.md
-- [ ] T149 [P] [US7] Create example scripts for API usage in inventory-management-backend/examples/
-
-**Checkpoint**: User Story 7 complete - external API integration for automated inventory updates
-
----
-
-## Phase 10: Polish & Cross-Cutting Concerns
-
-**Purpose**: Improvements that affect multiple user stories
-
-**Frontend Polish:**
-
-- [ ] T150 [P] Create shared UI components library in inventory-management-frontend/components/ui/
-- [ ] T151 [P] Add loading states and error handling across all pages
-- [ ] T152 [P] Implement responsive design for mobile devices
-- [ ] T153 [P] Add accessibility attributes (ARIA labels, keyboard navigation)
-- [ ] T154 [P] Create 404 and error pages in inventory-management-frontend/app/
-
-**Backend Polish:**
-
-- [ ] T155 [P] Add CloudWatch log queries for monitoring in inventory-management-backend/docs/monitoring.md
-- [ ] T156 [P] Add CloudWatch alarms for Lambda errors and DynamoDB throttling
-- [ ] T157 [P] Implement rate limiting for API endpoints
-- [ ] T158 [P] Add request correlation IDs across all handlers
-
-**Security & Performance:**
-
-- [ ] T159 [P] Run security audit with `npm audit` on both projects
-- [ ] T160 [P] Optimize Lambda bundle sizes (tree-shaking, minimize dependencies)
-- [ ] T161 [P] Add DynamoDB query optimization (verify all queries use indexes)
-- [ ] T162 [P] Configure CORS headers properly in template.yaml
-
-**Documentation:**
-
-- [ ] T163 [P] Update README.md with project overview and setup instructions
-- [ ] T164 [P] Validate quickstart.md against actual implementation
-- [ ] T165 [P] Create deployment guide in docs/deployment.md
-- [ ] T166 [P] Create troubleshooting guide in docs/troubleshooting.md
-
-**Deployment:**
-
-- [ ] T167 Setup frontend S3 bucket and CloudFront distribution
-- [ ] T168 Configure CI/CD pipeline for backend (GitHub Actions or AWS CodePipeline)
-- [ ] T169 Configure CI/CD pipeline for frontend (GitHub Actions to S3/CloudFront)
-- [ ] T170 Deploy backend to production environment
-- [ ] T171 Deploy frontend to production environment
-- [ ] T172 Run end-to-end smoke tests on production
+**Checkpoint**: At this point, User Stories 1 AND 2 work independently - low-stock items trigger notifications with emails. **This completes the reduced MVP scope.**
 
 ---
 
@@ -359,20 +168,13 @@
 
 - **Setup (Phase 1)**: No dependencies - can start immediately
 - **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Stories (Phases 3-9)**: All depend on Foundational phase completion
-  - User stories can then proceed in parallel (if staffed)
-  - Or sequentially in priority order: US1 → US2 → US3 → US4 → US5 → US6 → US7
-- **Polish (Phase 10)**: Depends on desired user stories being complete
+- **User Story 1 (Phase 3)**: Depends on Foundational phase completion
+- **User Story 2 (Phase 4)**: Depends on User Story 1 completion (notifications require inventory items)
 
 ### User Story Dependencies
 
 - **User Story 1 (P1)**: Foundation → US1 (Core inventory management - NO dependencies on other stories)
 - **User Story 2 (P1)**: Foundation → US1 → US2 (Notifications require inventory items)
-- **User Story 3 (P1)**: Foundation → US1 → US3 (Shopping list requires inventory items)
-- **User Story 4 (P2)**: Foundation → US4 (Member management - NO dependencies on other stories)
-- **User Story 5 (P2)**: Foundation → US1 + US4 → US5 (Suggestions require inventory and roles)
-- **User Story 6 (P3)**: Foundation → US1 → US6 (Reference data enhances inventory)
-- **User Story 7 (P2)**: Foundation → US1 + US2 → US7 (API integration for inventory updates with notifications)
 
 ### Within Each User Story
 
@@ -390,117 +192,62 @@
 
 **Phase 2 (Foundational)**: Backend foundation tasks (T015-T020) and frontend foundation tasks (T023-T028) can run in parallel
 
-**Phase 3 (US1)**: 
+**Phase 3 (US1)**:
 - Backend models (T033-T037) can run in parallel
 - Backend handlers (T040-T050) can run in parallel after services complete
 - Frontend components (T053-T058) can run in parallel
 - Frontend and backend work can proceed simultaneously
 
-**Subsequent Phases**: Same parallel patterns apply within each user story phase
-
----
-
-## Parallel Example: User Story 1
-
-**Backend Models (parallel after foundation):**
-```bash
-Task T033: Create Family model
-Task T034: Create Member model
-Task T035: Create InventoryItem model
-Task T036: Create StorageLocation model
-Task T037: Create Store model
-```
-
-**Backend Handlers (parallel after services):**
-```bash
-Task T040: POST /families handler
-Task T041: GET /families/{familyId} handler
-Task T043: PUT /families/{familyId} handler
-Task T044: POST /inventory handler
-Task T045: GET /inventory handler
-Task T046: GET /inventory/{itemId} handler
-Task T047: PUT /inventory/{itemId} handler
-Task T048: PATCH /inventory/{itemId}/quantity handler
-Task T049: POST /inventory/{itemId}/archive handler
-Task T050: DELETE /inventory/{itemId} handler
-```
-
-**Frontend Components (parallel after foundation):**
-```bash
-Task T053: Login page
-Task T054: CreateFamilyForm component
-Task T055: InventoryList component
-Task T056: AddItemForm component
-Task T057: EditItemForm component
-Task T058: AdjustQuantity component
-```
+**Phase 4 (US2)**: Same parallel patterns apply
 
 ---
 
 ## Implementation Strategy
 
-### MVP First (User Stories 1, 2, 3 Only)
+### Reduced MVP Scope (User Stories 1 and 2 Only)
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1 (Family and Inventory Management)
-4. Complete Phase 4: User Story 2 (Notifications)
-5. Complete Phase 5: User Story 3 (Shopping Lists)
-6. **STOP and VALIDATE**: Test all P1 stories independently
-7. Deploy MVP to production
+1. ✅ Complete Phase 1: Setup
+2. ✅ Complete Phase 2: Foundational (CRITICAL - blocks all stories) - *Pending deployment tasks T029-T031*
+3. ✅ Complete Phase 3: User Story 1 (Family and Inventory Management) - *Pending deployment task T051*
+4. ✅ Complete Phase 4: User Story 2 (Notifications) - *Pending deployment task T073*
+5. **NEXT**: Deploy to production (T029-T031, T051, T073)
 
-**MVP = US1 + US2 + US3** provides complete core value:
+**Reduced MVP = US1 + US2** provides core value:
 - Create families and manage inventory
-- Get low-stock alerts
-- Create and manage shopping lists
+- Get low-stock alerts via UI and email
 
-### Incremental Delivery
+### Future Features (Separate Specifications)
 
-1. **Foundation** (Phases 1-2) → Development environment ready
-2. **MVP** (Phases 3-5) → Deploy/Demo core value
-3. **Enhanced** (Phase 6) → Add US4 (member management) → Deploy/Demo
-4. **Collaborative** (Phase 7) → Add US5 (suggester workflow) → Deploy/Demo
-5. **Complete** (Phases 8-9) → Add US6 (reference data) + US7 (API integration) → Deploy/Demo
-6. **Production-Ready** (Phase 10) → Polish and deploy final version
+The following user stories have been moved to separate feature specifications:
 
-### Parallel Team Strategy
+- **US3 (Shopping Lists)** → `002-shopping-lists`
+- **US4 (Member Management)** → `003-member-management`
+- **US5 (Suggester Workflow)** → `004-suggester-workflow`
+- **US6 (Reference Data)** → `005-reference-data`
+- **US7 (API Integration)** → `006-api-integration`
 
-With multiple developers after foundation completes:
-
-- **Developer A**: User Story 1 (Backend + Frontend)
-- **Developer B**: User Story 2 (Backend + Frontend)
-- **Developer C**: User Story 3 (Backend + Frontend)
-
-Once MVP is validated:
-
-- **Developer A**: User Story 4
-- **Developer B**: User Story 5
-- **Developer C**: User Story 6 + 7
-
-Then converge on Phase 10 (Polish) together.
+See [spec.md](./spec.md#related-features) for details on related features.
 
 ---
 
 ## Task Summary
 
-**Total Tasks**: 172
+**Total Tasks (This Specification)**: 79
 **Task Breakdown by Phase**:
-- Phase 1 (Setup): 13 tasks
-- Phase 2 (Foundational): 17 tasks (includes T032 critical authorizer refactor)
-- Phase 3 (US1 - P1): 32 tasks
-- Phase 4 (US2 - P1): 16 tasks
-- Phase 5 (US3 - P1): 15 tasks
-- Phase 6 (US4 - P2): 13 tasks
-- Phase 7 (US5 - P2): 14 tasks
-- Phase 8 (US6 - P3): 19 tasks
-- Phase 9 (US7 - P2): 8 tasks
-- Phase 10 (Polish): 25 tasks
+- Phase 1 (Setup): 13 tasks ✅ Complete
+- Phase 2 (Foundational): 19 tasks (16 complete, 3 pending deployment)
+- Phase 3 (US1 - P1): 31 tasks (30 complete, 1 pending deployment)
+- Phase 4 (US2 - P1): 16 tasks (15 complete, 1 pending deployment)
 
-**MVP Scope** (Phases 1-5): 93 tasks for complete core functionality
+**Completion Status**:
+- ✅ 74 tasks complete
+- ⏳ 5 tasks pending (all deployment-related: T029, T030, T031, T051, T073)
 
-**Parallel Opportunities**: 87 tasks marked [P] can run in parallel with others in their phase
+**Parallel Opportunities**: Tasks marked [P] can run in parallel with others in their phase
 
 **Independent Test Criteria**: Each user story phase includes specific test criteria for validation
+
+**Tasks Moved to Other Specifications**: 93 tasks (T080-T172) have been moved to separate feature specifications for US3-US7
 
 ---
 
@@ -515,4 +262,19 @@ Then converge on Phase 10 (Polish) together.
 - Stop at any checkpoint to validate story independently before proceeding
 - All file paths are absolute or relative to repository roots
 - Tests are NOT included (not explicitly requested in spec) but can be added if TDD is desired
+
+---
+
+## Related Feature Specifications
+
+Tasks for the following user stories have been moved to separate specifications:
+
+| Original Phase | User Story | New Specification | Original Tasks |
+|----------------|------------|-------------------|----------------|
+| Phase 5 | US3 - Shopping Lists | `002-shopping-lists` | T080-T094 |
+| Phase 6 | US4 - Member Management | `003-member-management` | T095-T107 |
+| Phase 7 | US5 - Suggester Workflow | `004-suggester-workflow` | T108-T122 |
+| Phase 8 | US6 - Reference Data | `005-reference-data` | T123-T141 |
+| Phase 9 | US7 - API Integration | `006-api-integration` | T142-T149 |
+| Phase 10 | Polish & Cross-Cutting | Various specs | T150-T172 |
 

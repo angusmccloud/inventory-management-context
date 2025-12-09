@@ -1,13 +1,22 @@
 # Implementation Plan: Family Inventory Management System MVP
 
-**Branch**: `001-family-inventory-mvp` | **Date**: 2025-12-08 | **Spec**: [spec.md](./spec.md)
+**Branch**: `001-family-inventory-mvp` | **Date**: 2025-12-08 | **Updated**: 2025-12-09 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-family-inventory-mvp/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
+> **📋 Scope Note**: This specification has been reduced to focus on User Stories 1 and 2 only (Family/Inventory Management and Low Stock Notifications). User Stories 3-7 have been moved to separate feature specifications. See [spec.md](./spec.md#related-features) for details.
+
 ## Summary
 
-Build a serverless family inventory management system that enables households to proactively track consumable goods, manage shopping lists, and coordinate replenishment across multiple family members with role-based access. The system will use Next.js 16 with App Router for the frontend, AWS Lambda for serverless backend, DynamoDB for data persistence, and AWS SES for email notifications. The architecture follows TypeScript-first development with strict type safety, test-driven development practices, and AWS serverless best practices.
+Build a serverless family inventory management system that enables households to proactively track consumable goods and receive low-stock notifications. This reduced MVP scope focuses on:
+
+- **User Story 1**: Family creation and core inventory management (add, edit, archive, delete items)
+- **User Story 2**: Low-stock notifications via UI and email when items fall below thresholds
+
+The system uses Next.js 16 with App Router for the frontend, AWS Lambda for serverless backend, DynamoDB for data persistence, and AWS SES for email notifications. The architecture follows TypeScript-first development with strict type safety, test-driven development practices, and AWS serverless best practices.
+
+**Future features** (shopping lists, member management, suggester workflow, reference data, API integration) will be implemented in separate specifications.
 
 ## Technical Context
 
@@ -304,24 +313,28 @@ Key decisions documented:
 - `quickstart.md` - Developer onboarding guide
 - `.cursor/rules/specify-rules.mdc` - Agent context updated
 
-**Data Model Entities**:
+**Data Model Entities (Implemented in this MVP)**:
 1. Family (root organizational unit)
-2. Member (with admin/suggester roles)
+2. Member (with admin role - suggester role deferred)
 3. InventoryItem (with low-stock logic)
-4. StorageLocation (reference data)
-5. Store (reference data)
-6. ShoppingListItem (with purchased status)
-7. Notification (low-stock alerts)
-8. Suggestion (suggester workflow)
+4. StorageLocation (reference data - basic support)
+5. Store (reference data - basic support)
+6. Notification (low-stock alerts)
 
-**API Domains**:
+**Data Model Entities (Deferred to Future Specs)**:
+- ShoppingListItem → `002-shopping-lists`
+- Suggestion → `004-suggester-workflow`
+
+**API Domains (Implemented in this MVP)**:
 - Families (create, get, update)
-- Members (list, add, remove)
 - Inventory (CRUD, quantity adjustments, archive)
-- Shopping List (add, update, remove, filter by store)
 - Notifications (list, acknowledge)
-- Suggestions (create, approve, reject)
-- Reference Data (locations and stores management)
+
+**API Domains (Deferred to Future Specs)**:
+- Members (list, add, remove) → `003-member-management`
+- Shopping List (add, update, remove, filter by store) → `002-shopping-lists`
+- Suggestions (create, approve, reject) → `004-suggester-workflow`
+- Reference Data (locations and stores management) → `005-reference-data`
 
 **Agent Context**:
 - Technology stack documented for Cursor IDE
@@ -337,10 +350,10 @@ No violations. No complexity justifications required.
 
 ### Next Steps
 
-1. **Generate Tasks** (Phase 2): Run `/speckit.tasks` to break down implementation into detailed tasks
-2. **Generate Checklist**: Run `/speckit.checklist` to create quality validation checklist
-3. **Begin Implementation**: Follow quickstart.md to set up development environment
-4. **Start with P1 User Stories**: Implement family management and inventory tracking first
+1. ✅ **Tasks Generated**: See [tasks.md](./tasks.md) for detailed task breakdown
+2. ✅ **Implementation Complete**: Phases 1-4 (US1 and US2) implementation complete
+3. ⏳ **Pending Deployment**: Complete remaining deployment tasks (T029-T031, T051, T073)
+4. 🔜 **Create Future Specs**: Create separate specifications for US3-US7 when ready to implement
 
 ### Artifacts Location
 
@@ -359,6 +372,23 @@ specs/001-family-inventory-mvp/
 
 ---
 
-**Plan Status**: ✅ READY FOR IMPLEMENTATION  
-**Constitution Compliance**: ✅ VERIFIED  
-**Next Command**: `/speckit.tasks` to generate task breakdown
+## Related Features
+
+This specification is part of a larger family inventory management system. The following features were originally planned as part of this MVP but have been separated for focused implementation:
+
+| Feature ID | Name | Original User Story | Status |
+|------------|------|---------------------|--------|
+| `002-shopping-lists` | Shopping List Management | US3 | Planned |
+| `003-member-management` | Family Member Management | US4 | Planned |
+| `004-suggester-workflow` | Suggester Workflow | US5 | Planned |
+| `005-reference-data` | Reference Data Management | US6 | Planned |
+| `006-api-integration` | API Integration | US7 | Planned |
+
+**Note**: The data model (`data-model.md`) and API contracts (`contracts/api-spec.yaml`) include schemas for all planned features to ensure architectural consistency.
+
+---
+
+**Plan Status**: ✅ IMPLEMENTATION COMPLETE (Pending Deployment)
+**Constitution Compliance**: ✅ VERIFIED
+**Scope**: Reduced to US1 + US2 only (December 9, 2025)
+**Next Steps**: Complete deployment tasks, then create specifications for future features
