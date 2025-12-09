@@ -1,0 +1,156 @@
+{
+  "project": "ATL-Inventory",
+  "context_protocol": "Context7_MCP_v1.0",
+  "description": "Family Inventory Management System with serverless architecture",
+  
+  "critical_sources": {
+    "constitution": {
+      "path": "../../../inventory-management-context/prompts/constitution.md",
+      "priority": "CRITICAL",
+      "always_load": true,
+      "description": "NON-NEGOTIABLE project authority",
+      "rules": [
+        "TypeScript strict mode required",
+        "Test-first development mandatory",
+        "80% coverage on critical paths",
+        "No implicit any types"
+      ]
+    },
+    "agent_guidance": {
+      "path": "../../../inventory-management-context/AGENTS.md",
+      "priority": "HIGH",
+      "always_load": true,
+      "description": "AI-specific patterns and gotchas",
+      "contains": [
+        "Feature branch conventions",
+        "SpecKit workflow",
+        "Critical gotchas",
+        "Code patterns"
+      ]
+    },
+    "onboarding": {
+      "path": "../../../inventory-management-context/ONBOARDING.md",
+      "priority": "HIGH",
+      "load_when": ["setup", "workflow", "getting-started"],
+      "description": "Setup and development workflow guide"
+    }
+  },
+  
+  "feature_sources": {
+    "data_model": {
+      "path": "../../../inventory-management-backend/src/types/entities.ts",
+      "priority": "HIGH",
+      "load_when": ["database", "dynamodb", "entity", "schema", "model"],
+      "mandatory_patterns": [
+        "KeyBuilder for key construction",
+        "QueryPatterns for queries",
+        "Single-table design"
+      ]
+    },
+    "api_patterns": {
+      "path": "../../../inventory-management-backend/src/lib/response.ts",
+      "priority": "MEDIUM",
+      "load_when": ["handler", "api", "endpoint", "response"],
+      "use_for": [
+        "Response formatting",
+        "Error handling",
+        "CORS headers"
+      ]
+    },
+    "logging_patterns": {
+      "path": "../../../inventory-management-backend/src/lib/logger.ts",
+      "priority": "MEDIUM",
+      "load_when": ["logging", "cloudwatch", "debug"],
+      "use_for": "Structured CloudWatch logging"
+    },
+    "database_client": {
+      "path": "../../../inventory-management-backend/src/lib/dynamodb.ts",
+      "priority": "MEDIUM",
+      "load_when": ["dynamodb", "client", "sdk"],
+      "use_for": "DynamoDB Document Client configuration"
+    }
+  },
+  
+  "mandatory_checks": [
+    {
+      "before": "architecture_decision",
+      "check": "constitution_compliance",
+      "question": "What does the constitution say about this?"
+    },
+    {
+      "before": "implementation",
+      "check": "agents_gotchas",
+      "question": "What are the AGENTS.md gotchas for this feature?"
+    },
+    {
+      "before": "database_code",
+      "check": "use_keybuilder",
+      "rule": "ALWAYS use KeyBuilder, NEVER manual key construction"
+    },
+    {
+      "before": "any_code",
+      "check": "testing_strategy",
+      "requirement": "Unit tests (mocked) + Integration tests (DynamoDB Local)"
+    }
+  ],
+  
+  "forbidden_patterns": [
+    {
+      "pattern": "Manual DynamoDB key construction",
+      "example": "{ PK: `FAMILY#${id}`, SK: `FAMILY#${id}` }",
+      "instead_use": "KeyBuilder.family(id)"
+    },
+    {
+      "pattern": "console.log statements",
+      "instead_use": "logger.info/warn/error"
+    },
+    {
+      "pattern": "Implicit any types",
+      "instead_use": "Explicit TypeScript types"
+    },
+    {
+      "pattern": "Missing .js extensions in imports",
+      "example": "import { x } from './lib/y'",
+      "instead_use": "import { x } from './lib/y.js'"
+    }
+  ],
+  
+  "implementation_workflow": [
+    "1. Review constitution for requirements",
+    "2. Check AGENTS.md for gotchas",
+    "3. Identify existing patterns to follow",
+    "4. Review entities.ts if database involved",
+    "5. Plan testing strategy",
+    "6. Implement using patterns and helpers",
+    "7. Write unit tests (mocked)",
+    "8. Write integration tests (DynamoDB Local)",
+    "9. Verify 80% coverage"
+  ],
+  
+  "testing_requirements": {
+    "unit_tests": {
+      "approach": "Mock all external dependencies",
+      "tool": "aws-sdk-client-mock",
+      "speed": "Fast (<1s per test)"
+    },
+    "integration_tests": {
+      "approach": "Use DynamoDB Local",
+      "endpoint": "http://localhost:8000",
+      "cleanup": "Required after each test"
+    },
+    "coverage": {
+      "minimum": "80% for critical paths",
+      "enforcement": "MANDATORY"
+    }
+  },
+  
+  "quick_reference": {
+    "dynamodb_keys": "KeyBuilder from entities.ts",
+    "dynamodb_queries": "QueryPatterns from entities.ts",
+    "api_responses": "successResponse() from response.ts",
+    "error_handling": "handleError() from response.ts",
+    "logging": "logger.info() from logger.ts",
+    "imports": "Always use .js extensions"
+  }
+}
+
