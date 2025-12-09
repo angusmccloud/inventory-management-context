@@ -57,7 +57,7 @@
 - [X] T018 [P] Create UUID generator utility in inventory-management-backend/src/lib/uuid.ts
 - [X] T019 [P] Create structured logging utility in inventory-management-backend/src/lib/logger.ts
 - [X] T020 [P] Create API response helpers in inventory-management-backend/src/lib/response.ts
-- [X] T021 Implement Lambda authorizer for Cognito JWT in inventory-management-backend/src/handlers/authorizer.ts
+- [X] T021 Implement Lambda authorizer for Cognito JWT validation and DynamoDB member lookup in inventory-management-backend/src/handlers/authorizer.ts
 - [X] T022 Add Lambda authorizer to SAM template in inventory-management-backend/template.yaml
 
 **Frontend Foundation:**
@@ -72,8 +72,9 @@
 **Infrastructure Setup:**
 
 - [ ] T029 Deploy backend infrastructure with `sam deploy --guided` and note outputs
-- [ ] T030 Configure Cognito User Pool with custom attributes (familyId, role)
+- [ ] T030 Configure Cognito User Pool for authentication (email/password)
 - [ ] T031 Verify SES sender email address for notifications
+- [X] T032 **[CRITICAL]** Refactor Lambda authorizer to query DynamoDB for member info instead of using Cognito custom attributes in inventory-management-backend/src/handlers/authorizer.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -87,40 +88,40 @@
 
 **Backend Implementation:**
 
-- [ ] T032 [P] [US1] Create Family model with DynamoDB operations in inventory-management-backend/src/models/family.ts
-- [ ] T033 [P] [US1] Create Member model with DynamoDB operations in inventory-management-backend/src/models/member.ts
-- [ ] T034 [P] [US1] Create InventoryItem model with DynamoDB operations in inventory-management-backend/src/models/inventory.ts
-- [ ] T035 [P] [US1] Create StorageLocation model with DynamoDB operations in inventory-management-backend/src/models/location.ts
-- [ ] T036 [P] [US1] Create Store model with DynamoDB operations in inventory-management-backend/src/models/store.ts
-- [ ] T037 [US1] Create FamilyService business logic in inventory-management-backend/src/services/familyService.ts
-- [ ] T038 [US1] Create InventoryService business logic in inventory-management-backend/src/services/inventoryService.ts
-- [ ] T039 [P] [US1] Implement POST /families handler in inventory-management-backend/src/handlers/createFamily.ts
-- [ ] T040 [P] [US1] Implement GET /families/{familyId} handler in inventory-management-backend/src/handlers/getFamily.ts
-- [ ] T041 [P] [US1] Implement PUT /families/{familyId} handler in inventory-management-backend/src/handlers/updateFamily.ts
-- [ ] T042 [P] [US1] Implement POST /families/{familyId}/inventory handler in inventory-management-backend/src/handlers/createInventoryItem.ts
-- [ ] T043 [P] [US1] Implement GET /families/{familyId}/inventory handler in inventory-management-backend/src/handlers/listInventoryItems.ts
-- [ ] T044 [P] [US1] Implement GET /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/getInventoryItem.ts
-- [ ] T045 [P] [US1] Implement PUT /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/updateInventoryItem.ts
-- [ ] T046 [P] [US1] Implement PATCH /families/{familyId}/inventory/{itemId}/quantity handler in inventory-management-backend/src/handlers/adjustInventoryQuantity.ts
-- [ ] T047 [P] [US1] Implement POST /families/{familyId}/inventory/{itemId}/archive handler in inventory-management-backend/src/handlers/archiveInventoryItem.ts
-- [ ] T048 [P] [US1] Implement DELETE /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/deleteInventoryItem.ts
-- [ ] T049 [US1] Add all US1 API Gateway routes and Lambda functions to inventory-management-backend/template.yaml
-- [ ] T050 [US1] Deploy backend updates with `sam build && sam deploy`
+- [X] T033 [P] [US1] Create Family model with DynamoDB operations in inventory-management-backend/src/models/family.ts
+- [X] T034 [P] [US1] Create Member model with DynamoDB operations in inventory-management-backend/src/models/member.ts
+- [X] T035 [P] [US1] Create InventoryItem model with DynamoDB operations in inventory-management-backend/src/models/inventory.ts
+- [X] T036 [P] [US1] Create StorageLocation model with DynamoDB operations in inventory-management-backend/src/models/location.ts
+- [X] T037 [P] [US1] Create Store model with DynamoDB operations in inventory-management-backend/src/models/store.ts
+- [X] T038 [US1] Create FamilyService business logic in inventory-management-backend/src/services/familyService.ts
+- [X] T039 [US1] Create InventoryService business logic in inventory-management-backend/src/services/inventoryService.ts
+- [X] T040 [P] [US1] Implement POST /families handler in inventory-management-backend/src/handlers/createFamily.ts
+- [X] T041 [P] [US1] Implement GET /families/{familyId} handler in inventory-management-backend/src/handlers/getFamily.ts
+- [X] T042 [P] [US1] Implement PUT /families/{familyId} handler in inventory-management-backend/src/handlers/updateFamily.ts
+- [X] T043 [P] [US1] Implement POST /families/{familyId}/inventory handler in inventory-management-backend/src/handlers/createInventoryItem.ts
+- [X] T044 [P] [US1] Implement GET /families/{familyId}/inventory handler in inventory-management-backend/src/handlers/listInventoryItems.ts
+- [X] T045 [P] [US1] Implement GET /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/getInventoryItem.ts
+- [X] T046 [P] [US1] Implement PUT /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/updateInventoryItem.ts
+- [X] T047 [P] [US1] Implement PATCH /families/{familyId}/inventory/{itemId}/quantity handler in inventory-management-backend/src/handlers/adjustInventoryQuantity.ts
+- [X] T048 [P] [US1] Implement POST /families/{familyId}/inventory/{itemId}/archive handler in inventory-management-backend/src/handlers/archiveInventoryItem.ts
+- [X] T049 [P] [US1] Implement DELETE /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/deleteInventoryItem.ts
+- [X] T050 [US1] Add all US1 API Gateway routes and Lambda functions to inventory-management-backend/template.yaml
+- [ ] T051 [US1] Deploy backend updates with `sam build && sam deploy`
 
 **Frontend Implementation:**
 
-- [ ] T051 [P] [US1] Create authentication pages in inventory-management-frontend/app/(auth)/login/page.tsx
-- [ ] T052 [P] [US1] Create family creation form component in inventory-management-frontend/components/family/CreateFamilyForm.tsx
-- [ ] T053 [P] [US1] Create inventory list component in inventory-management-frontend/components/inventory/InventoryList.tsx
-- [ ] T054 [P] [US1] Create add inventory item form in inventory-management-frontend/components/inventory/AddItemForm.tsx
-- [ ] T055 [P] [US1] Create edit inventory item form in inventory-management-frontend/components/inventory/EditItemForm.tsx
-- [ ] T056 [P] [US1] Create adjust quantity component in inventory-management-frontend/components/inventory/AdjustQuantity.tsx
-- [ ] T057 [US1] Create dashboard layout in inventory-management-frontend/app/dashboard/layout.tsx
-- [ ] T058 [US1] Create dashboard home page in inventory-management-frontend/app/dashboard/page.tsx
-- [ ] T059 [US1] Create inventory page in inventory-management-frontend/app/dashboard/inventory/page.tsx
-- [ ] T060 [US1] Create family API client methods in inventory-management-frontend/lib/api/families.ts
-- [ ] T061 [US1] Create inventory API client methods in inventory-management-frontend/lib/api/inventory.ts
-- [ ] T062 [US1] Build and test frontend locally with `npm run dev`
+- [X] T052 [P] [US1] Create authentication pages in inventory-management-frontend/app/(auth)/login/page.tsx
+- [X] T053 [P] [US1] Create family creation form component in inventory-management-frontend/components/family/CreateFamilyForm.tsx
+- [X] T054 [P] [US1] Create inventory list component in inventory-management-frontend/components/inventory/InventoryList.tsx
+- [X] T055 [P] [US1] Create add inventory item form in inventory-management-frontend/components/inventory/AddItemForm.tsx
+- [X] T056 [P] [US1] Create edit inventory item form in inventory-management-frontend/components/inventory/EditItemForm.tsx
+- [X] T057 [P] [US1] Create adjust quantity component in inventory-management-frontend/components/inventory/AdjustQuantity.tsx
+- [X] T058 [US1] Create dashboard layout in inventory-management-frontend/app/dashboard/layout.tsx
+- [X] T059 [US1] Create dashboard home page in inventory-management-frontend/app/dashboard/page.tsx
+- [X] T060 [US1] Create inventory page in inventory-management-frontend/app/dashboard/inventory/page.tsx
+- [X] T061 [US1] Create family API client methods in inventory-management-frontend/lib/api/families.ts
+- [X] T062 [US1] Create inventory API client methods in inventory-management-frontend/lib/api/inventory.ts
+- [X] T063 [US1] Build and test frontend locally with `npm run dev`
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - can create families, add/edit/archive inventory items, adjust quantities
 
@@ -134,25 +135,25 @@
 
 **Backend Implementation:**
 
-- [ ] T063 [P] [US2] Create Notification model with DynamoDB operations in inventory-management-backend/src/models/notification.ts
-- [ ] T064 [US2] Create NotificationService business logic in inventory-management-backend/src/services/notificationService.ts
-- [ ] T065 [US2] Create EmailService for SES integration in inventory-management-backend/src/services/emailService.ts
-- [ ] T066 [US2] Update InventoryService to trigger notifications on low stock in inventory-management-backend/src/services/inventoryService.ts
-- [ ] T067 [P] [US2] Implement GET /families/{familyId}/notifications handler in inventory-management-backend/src/handlers/listNotifications.ts
-- [ ] T068 [P] [US2] Implement POST /families/{familyId}/notifications/{notificationId}/acknowledge handler in inventory-management-backend/src/handlers/acknowledgeNotification.ts
-- [ ] T069 [P] [US2] Create SES email template for low-stock notifications in inventory-management-backend/src/templates/low-stock-email.html
-- [ ] T070 [US2] Add notification routes to inventory-management-backend/template.yaml
-- [ ] T071 [US2] Add SES permissions to Lambda execution role in inventory-management-backend/template.yaml
-- [ ] T072 [US2] Deploy backend updates with `sam build && sam deploy`
+- [X] T064 [P] [US2] Create Notification model with DynamoDB operations in inventory-management-backend/src/models/notification.ts
+- [X] T065 [US2] Create NotificationService business logic in inventory-management-backend/src/services/notificationService.ts
+- [X] T066 [US2] Create EmailService for SES integration in inventory-management-backend/src/services/emailService.ts
+- [X] T067 [US2] Update InventoryService to trigger notifications on low stock in inventory-management-backend/src/services/inventoryService.ts
+- [X] T068 [P] [US2] Implement GET /families/{familyId}/notifications handler in inventory-management-backend/src/handlers/listNotifications.ts
+- [X] T069 [P] [US2] Implement POST /families/{familyId}/notifications/{notificationId}/acknowledge handler in inventory-management-backend/src/handlers/acknowledgeNotification.ts
+- [X] T070 [P] [US2] Create SES email template for low-stock notifications in inventory-management-backend/src/templates/low-stock-email.html
+- [X] T071 [US2] Add notification routes to inventory-management-backend/template.yaml
+- [X] T072 [US2] Add SES permissions to Lambda execution role in inventory-management-backend/template.yaml
+- [ ] T073 [US2] Deploy backend updates with `sam build && sam deploy`
 
 **Frontend Implementation:**
 
-- [ ] T073 [P] [US2] Create notification list component in inventory-management-frontend/components/notifications/NotificationList.tsx
-- [ ] T074 [P] [US2] Create notification item component in inventory-management-frontend/components/notifications/NotificationItem.tsx
-- [ ] T075 [US2] Create notifications page in inventory-management-frontend/app/dashboard/notifications/page.tsx
-- [ ] T076 [US2] Create notification API client methods in inventory-management-frontend/lib/api/notifications.ts
-- [ ] T077 [US2] Add notification badge to dashboard layout in inventory-management-frontend/app/dashboard/layout.tsx
-- [ ] T078 [US2] Build and test frontend locally with `npm run dev`
+- [X] T074 [P] [US2] Create notification list component in inventory-management-frontend/components/notifications/NotificationList.tsx
+- [X] T075 [P] [US2] Create notification item component in inventory-management-frontend/components/notifications/NotificationItem.tsx
+- [X] T076 [US2] Create notifications page in inventory-management-frontend/app/dashboard/notifications/page.tsx
+- [X] T077 [US2] Create notification API client methods in inventory-management-frontend/lib/api/notifications.ts
+- [X] T078 [US2] Add notification badge to dashboard layout in inventory-management-frontend/app/dashboard/layout.tsx
+- [X] T079 [US2] Build and test frontend locally with `npm run dev`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 work independently - low-stock items trigger notifications with emails
 
@@ -166,24 +167,24 @@
 
 **Backend Implementation:**
 
-- [ ] T079 [P] [US3] Create ShoppingListItem model with DynamoDB operations in inventory-management-backend/src/models/shoppingList.ts
-- [ ] T080 [US3] Create ShoppingListService business logic in inventory-management-backend/src/services/shoppingListService.ts
-- [ ] T081 [P] [US3] Implement GET /families/{familyId}/shopping-list handler in inventory-management-backend/src/handlers/getShoppingList.ts
-- [ ] T082 [P] [US3] Implement POST /families/{familyId}/shopping-list handler in inventory-management-backend/src/handlers/addToShoppingList.ts
-- [ ] T083 [P] [US3] Implement PATCH /families/{familyId}/shopping-list/{shoppingItemId} handler in inventory-management-backend/src/handlers/updateShoppingListItem.ts
-- [ ] T084 [P] [US3] Implement DELETE /families/{familyId}/shopping-list/{shoppingItemId} handler in inventory-management-backend/src/handlers/removeFromShoppingList.ts
-- [ ] T085 [US3] Add shopping list routes to inventory-management-backend/template.yaml
-- [ ] T086 [US3] Deploy backend updates with `sam build && sam deploy`
+- [ ] T080 [P] [US3] Create ShoppingListItem model with DynamoDB operations in inventory-management-backend/src/models/shoppingList.ts
+- [ ] T081 [US3] Create ShoppingListService business logic in inventory-management-backend/src/services/shoppingListService.ts
+- [ ] T082 [P] [US3] Implement GET /families/{familyId}/shopping-list handler in inventory-management-backend/src/handlers/getShoppingList.ts
+- [ ] T083 [P] [US3] Implement POST /families/{familyId}/shopping-list handler in inventory-management-backend/src/handlers/addToShoppingList.ts
+- [ ] T084 [P] [US3] Implement PATCH /families/{familyId}/shopping-list/{shoppingItemId} handler in inventory-management-backend/src/handlers/updateShoppingListItem.ts
+- [ ] T085 [P] [US3] Implement DELETE /families/{familyId}/shopping-list/{shoppingItemId} handler in inventory-management-backend/src/handlers/removeFromShoppingList.ts
+- [ ] T086 [US3] Add shopping list routes to inventory-management-backend/template.yaml
+- [ ] T087 [US3] Deploy backend updates with `sam build && sam deploy`
 
 **Frontend Implementation:**
 
-- [ ] T087 [P] [US3] Create shopping list component in inventory-management-frontend/components/shopping/ShoppingList.tsx
-- [ ] T088 [P] [US3] Create shopping list item component in inventory-management-frontend/components/shopping/ShoppingListItem.tsx
-- [ ] T089 [P] [US3] Create add to shopping list form in inventory-management-frontend/components/shopping/AddToListForm.tsx
-- [ ] T090 [P] [US3] Create store filter component in inventory-management-frontend/components/shopping/StoreFilter.tsx
-- [ ] T091 [US3] Create shopping list page in inventory-management-frontend/app/dashboard/shopping-list/page.tsx
-- [ ] T092 [US3] Create shopping list API client methods in inventory-management-frontend/lib/api/shopping.ts
-- [ ] T093 [US3] Build and test frontend locally with `npm run dev`
+- [ ] T088 [P] [US3] Create shopping list component in inventory-management-frontend/components/shopping/ShoppingList.tsx
+- [ ] T089 [P] [US3] Create shopping list item component in inventory-management-frontend/components/shopping/ShoppingListItem.tsx
+- [ ] T090 [P] [US3] Create add to shopping list form in inventory-management-frontend/components/shopping/AddToListForm.tsx
+- [ ] T091 [P] [US3] Create store filter component in inventory-management-frontend/components/shopping/StoreFilter.tsx
+- [ ] T092 [US3] Create shopping list page in inventory-management-frontend/app/dashboard/shopping-list/page.tsx
+- [ ] T093 [US3] Create shopping list API client methods in inventory-management-frontend/lib/api/shopping.ts
+- [ ] T094 [US3] Build and test frontend locally with `npm run dev`
 
 **Checkpoint**: All P1 user stories (1, 2, 3) are now complete and independently functional - MVP is ready for deployment!
 
@@ -197,22 +198,22 @@
 
 **Backend Implementation:**
 
-- [ ] T094 [US4] Create MemberService business logic in inventory-management-backend/src/services/memberService.ts
-- [ ] T095 [P] [US4] Implement GET /families/{familyId}/members handler in inventory-management-backend/src/handlers/listMembers.ts
-- [ ] T096 [P] [US4] Implement POST /families/{familyId}/members handler in inventory-management-backend/src/handlers/addMember.ts
-- [ ] T097 [P] [US4] Implement DELETE /families/{familyId}/members/{memberId} handler in inventory-management-backend/src/handlers/removeMember.ts
-- [ ] T098 [US4] Add member management routes to inventory-management-backend/template.yaml
-- [ ] T099 [US4] Update Lambda authorizer to enforce role-based access in inventory-management-backend/src/handlers/authorizer.ts
-- [ ] T100 [US4] Deploy backend updates with `sam build && sam deploy`
+- [ ] T095 [US4] Create MemberService business logic in inventory-management-backend/src/services/memberService.ts
+- [ ] T096 [P] [US4] Implement GET /families/{familyId}/members handler in inventory-management-backend/src/handlers/listMembers.ts
+- [ ] T097 [P] [US4] Implement POST /families/{familyId}/members handler in inventory-management-backend/src/handlers/addMember.ts
+- [ ] T098 [P] [US4] Implement DELETE /families/{familyId}/members/{memberId} handler in inventory-management-backend/src/handlers/removeMember.ts
+- [ ] T099 [US4] Add member management routes to inventory-management-backend/template.yaml
+- [ ] T100 [US4] Enhance Lambda authorizer to cache DynamoDB member lookups for performance in inventory-management-backend/src/handlers/authorizer.ts
+- [ ] T101 [US4] Deploy backend updates with `sam build && sam deploy`
 
 **Frontend Implementation:**
 
-- [ ] T101 [P] [US4] Create member list component in inventory-management-frontend/components/members/MemberList.tsx
-- [ ] T102 [P] [US4] Create add member form in inventory-management-frontend/components/members/AddMemberForm.tsx
-- [ ] T103 [P] [US4] Create member item component in inventory-management-frontend/components/members/MemberItem.tsx
-- [ ] T104 [US4] Create family settings page in inventory-management-frontend/app/dashboard/settings/family/page.tsx
-- [ ] T105 [US4] Create member API client methods in inventory-management-frontend/lib/api/members.ts
-- [ ] T106 [US4] Build and test frontend locally with `npm run dev`
+- [ ] T102 [P] [US4] Create member list component in inventory-management-frontend/components/members/MemberList.tsx
+- [ ] T103 [P] [US4] Create add member form in inventory-management-frontend/components/members/AddMemberForm.tsx
+- [ ] T104 [P] [US4] Create member item component in inventory-management-frontend/components/members/MemberItem.tsx
+- [ ] T105 [US4] Create family settings page in inventory-management-frontend/app/dashboard/settings/family/page.tsx
+- [ ] T106 [US4] Create member API client methods in inventory-management-frontend/lib/api/members.ts
+- [ ] T107 [US4] Build and test frontend locally with `npm run dev`
 
 **Checkpoint**: User Story 4 complete - multi-user family management with role-based permissions
 
@@ -226,24 +227,24 @@
 
 **Backend Implementation:**
 
-- [ ] T107 [P] [US5] Create Suggestion model with DynamoDB operations in inventory-management-backend/src/models/suggestion.ts
-- [ ] T108 [US5] Create SuggestionService business logic in inventory-management-backend/src/services/suggestionService.ts
-- [ ] T109 [P] [US5] Implement GET /families/{familyId}/suggestions handler in inventory-management-backend/src/handlers/listSuggestions.ts
-- [ ] T110 [P] [US5] Implement POST /families/{familyId}/suggestions handler in inventory-management-backend/src/handlers/createSuggestion.ts
-- [ ] T111 [P] [US5] Implement POST /families/{familyId}/suggestions/{suggestionId}/approve handler in inventory-management-backend/src/handlers/approveSuggestion.ts
-- [ ] T112 [P] [US5] Implement POST /families/{familyId}/suggestions/{suggestionId}/reject handler in inventory-management-backend/src/handlers/rejectSuggestion.ts
-- [ ] T113 [US5] Add suggestion routes to inventory-management-backend/template.yaml
-- [ ] T114 [US5] Deploy backend updates with `sam build && sam deploy`
+- [ ] T108 [P] [US5] Create Suggestion model with DynamoDB operations in inventory-management-backend/src/models/suggestion.ts
+- [ ] T109 [US5] Create SuggestionService business logic in inventory-management-backend/src/services/suggestionService.ts
+- [ ] T110 [P] [US5] Implement GET /families/{familyId}/suggestions handler in inventory-management-backend/src/handlers/listSuggestions.ts
+- [ ] T111 [P] [US5] Implement POST /families/{familyId}/suggestions handler in inventory-management-backend/src/handlers/createSuggestion.ts
+- [ ] T112 [P] [US5] Implement POST /families/{familyId}/suggestions/{suggestionId}/approve handler in inventory-management-backend/src/handlers/approveSuggestion.ts
+- [ ] T113 [P] [US5] Implement POST /families/{familyId}/suggestions/{suggestionId}/reject handler in inventory-management-backend/src/handlers/rejectSuggestion.ts
+- [ ] T114 [US5] Add suggestion routes to inventory-management-backend/template.yaml
+- [ ] T115 [US5] Deploy backend updates with `sam build && sam deploy`
 
 **Frontend Implementation:**
 
-- [ ] T115 [P] [US5] Create suggestion list component for admins in inventory-management-frontend/components/suggestions/SuggestionList.tsx
-- [ ] T116 [P] [US5] Create suggestion item component in inventory-management-frontend/components/suggestions/SuggestionItem.tsx
-- [ ] T117 [P] [US5] Create submit suggestion form for suggesters in inventory-management-frontend/components/suggestions/SubmitSuggestionForm.tsx
-- [ ] T118 [US5] Create suggestions page for admins in inventory-management-frontend/app/dashboard/suggestions/page.tsx
-- [ ] T119 [US5] Add suggestion button to inventory view for suggesters in inventory-management-frontend/app/dashboard/inventory/page.tsx
-- [ ] T120 [US5] Create suggestion API client methods in inventory-management-frontend/lib/api/suggestions.ts
-- [ ] T121 [US5] Build and test frontend locally with `npm run dev`
+- [ ] T116 [P] [US5] Create suggestion list component for admins in inventory-management-frontend/components/suggestions/SuggestionList.tsx
+- [ ] T117 [P] [US5] Create suggestion item component in inventory-management-frontend/components/suggestions/SuggestionItem.tsx
+- [ ] T118 [P] [US5] Create submit suggestion form for suggesters in inventory-management-frontend/components/suggestions/SubmitSuggestionForm.tsx
+- [ ] T119 [US5] Create suggestions page for admins in inventory-management-frontend/app/dashboard/suggestions/page.tsx
+- [ ] T120 [US5] Add suggestion button to inventory view for suggesters in inventory-management-frontend/app/dashboard/inventory/page.tsx
+- [ ] T121 [US5] Create suggestion API client methods in inventory-management-frontend/lib/api/suggestions.ts
+- [ ] T122 [US5] Build and test frontend locally with `npm run dev`
 
 **Checkpoint**: User Story 5 complete - suggester workflow with admin approval process
 
@@ -257,28 +258,28 @@
 
 **Backend Implementation:**
 
-- [ ] T122 [US6] Create ReferenceDataService business logic in inventory-management-backend/src/services/referenceDataService.ts
-- [ ] T123 [P] [US6] Implement GET /families/{familyId}/locations handler in inventory-management-backend/src/handlers/listLocations.ts
-- [ ] T124 [P] [US6] Implement POST /families/{familyId}/locations handler in inventory-management-backend/src/handlers/createLocation.ts
-- [ ] T125 [P] [US6] Implement PUT /families/{familyId}/locations/{locationId} handler in inventory-management-backend/src/handlers/updateLocation.ts
-- [ ] T126 [P] [US6] Implement DELETE /families/{familyId}/locations/{locationId} handler in inventory-management-backend/src/handlers/deleteLocation.ts
-- [ ] T127 [P] [US6] Implement GET /families/{familyId}/stores handler in inventory-management-backend/src/handlers/listStores.ts
-- [ ] T128 [P] [US6] Implement POST /families/{familyId}/stores handler in inventory-management-backend/src/handlers/createStore.ts
-- [ ] T129 [P] [US6] Implement PUT /families/{familyId}/stores/{storeId} handler in inventory-management-backend/src/handlers/updateStore.ts
-- [ ] T130 [P] [US6] Implement DELETE /families/{familyId}/stores/{storeId} handler in inventory-management-backend/src/handlers/deleteStore.ts
-- [ ] T131 [US6] Add reference data routes to inventory-management-backend/template.yaml
-- [ ] T132 [US6] Deploy backend updates with `sam build && sam deploy`
+- [ ] T123 [US6] Create ReferenceDataService business logic in inventory-management-backend/src/services/referenceDataService.ts
+- [ ] T124 [P] [US6] Implement GET /families/{familyId}/locations handler in inventory-management-backend/src/handlers/listLocations.ts
+- [ ] T125 [P] [US6] Implement POST /families/{familyId}/locations handler in inventory-management-backend/src/handlers/createLocation.ts
+- [ ] T126 [P] [US6] Implement PUT /families/{familyId}/locations/{locationId} handler in inventory-management-backend/src/handlers/updateLocation.ts
+- [ ] T127 [P] [US6] Implement DELETE /families/{familyId}/locations/{locationId} handler in inventory-management-backend/src/handlers/deleteLocation.ts
+- [ ] T128 [P] [US6] Implement GET /families/{familyId}/stores handler in inventory-management-backend/src/handlers/listStores.ts
+- [ ] T129 [P] [US6] Implement POST /families/{familyId}/stores handler in inventory-management-backend/src/handlers/createStore.ts
+- [ ] T130 [P] [US6] Implement PUT /families/{familyId}/stores/{storeId} handler in inventory-management-backend/src/handlers/updateStore.ts
+- [ ] T131 [P] [US6] Implement DELETE /families/{familyId}/stores/{storeId} handler in inventory-management-backend/src/handlers/deleteStore.ts
+- [ ] T132 [US6] Add reference data routes to inventory-management-backend/template.yaml
+- [ ] T133 [US6] Deploy backend updates with `sam build && sam deploy`
 
 **Frontend Implementation:**
 
-- [ ] T133 [P] [US6] Create location list component in inventory-management-frontend/components/reference/LocationList.tsx
-- [ ] T134 [P] [US6] Create location form component in inventory-management-frontend/components/reference/LocationForm.tsx
-- [ ] T135 [P] [US6] Create store list component in inventory-management-frontend/components/reference/StoreList.tsx
-- [ ] T136 [P] [US6] Create store form component in inventory-management-frontend/components/reference/StoreForm.tsx
-- [ ] T137 [US6] Create reference data settings page in inventory-management-frontend/app/dashboard/settings/reference/page.tsx
-- [ ] T138 [US6] Update AddItemForm to use location/store dropdowns in inventory-management-frontend/components/inventory/AddItemForm.tsx
-- [ ] T139 [US6] Create reference data API client methods in inventory-management-frontend/lib/api/reference.ts
-- [ ] T140 [US6] Build and test frontend locally with `npm run dev`
+- [ ] T134 [P] [US6] Create location list component in inventory-management-frontend/components/reference/LocationList.tsx
+- [ ] T135 [P] [US6] Create location form component in inventory-management-frontend/components/reference/LocationForm.tsx
+- [ ] T136 [P] [US6] Create store list component in inventory-management-frontend/components/reference/StoreList.tsx
+- [ ] T137 [P] [US6] Create store form component in inventory-management-frontend/components/reference/StoreForm.tsx
+- [ ] T138 [US6] Create reference data settings page in inventory-management-frontend/app/dashboard/settings/reference/page.tsx
+- [ ] T139 [US6] Update AddItemForm to use location/store dropdowns in inventory-management-frontend/components/inventory/AddItemForm.tsx
+- [ ] T140 [US6] Create reference data API client methods in inventory-management-frontend/lib/api/reference.ts
+- [ ] T141 [US6] Build and test frontend locally with `npm run dev`
 
 **Checkpoint**: User Story 6 complete - reference data management integrated with inventory
 
@@ -292,17 +293,17 @@
 
 **Backend Implementation:**
 
-- [ ] T141 [US7] Create API key authentication mechanism in inventory-management-backend/src/lib/apiKeyAuth.ts
-- [ ] T142 [US7] Update Lambda authorizer to support API key auth in inventory-management-backend/src/handlers/authorizer.ts
-- [ ] T143 [US7] Document API authentication in inventory-management-backend/API.md
-- [ ] T144 [US7] Add API key generation endpoint (admin only) to create family-scoped API keys
-- [ ] T145 [US7] Update template.yaml with API key authentication support
-- [ ] T146 [US7] Deploy backend updates with `sam build && sam deploy`
+- [ ] T142 [US7] Create API key authentication mechanism in inventory-management-backend/src/lib/apiKeyAuth.ts
+- [ ] T143 [US7] Update Lambda authorizer to support API key auth in inventory-management-backend/src/handlers/authorizer.ts
+- [ ] T144 [US7] Document API authentication in inventory-management-backend/API.md
+- [ ] T145 [US7] Add API key generation endpoint (admin only) to create family-scoped API keys
+- [ ] T146 [US7] Update template.yaml with API key authentication support
+- [ ] T147 [US7] Deploy backend updates with `sam build && sam deploy`
 
 **Documentation:**
 
-- [ ] T147 [P] [US7] Create API integration guide in inventory-management-backend/docs/api-integration.md
-- [ ] T148 [P] [US7] Create example scripts for API usage in inventory-management-backend/examples/
+- [ ] T148 [P] [US7] Create API integration guide in inventory-management-backend/docs/api-integration.md
+- [ ] T149 [P] [US7] Create example scripts for API usage in inventory-management-backend/examples/
 
 **Checkpoint**: User Story 7 complete - external API integration for automated inventory updates
 
@@ -314,41 +315,41 @@
 
 **Frontend Polish:**
 
-- [ ] T149 [P] Create shared UI components library in inventory-management-frontend/components/ui/
-- [ ] T150 [P] Add loading states and error handling across all pages
-- [ ] T151 [P] Implement responsive design for mobile devices
-- [ ] T152 [P] Add accessibility attributes (ARIA labels, keyboard navigation)
-- [ ] T153 [P] Create 404 and error pages in inventory-management-frontend/app/
+- [ ] T150 [P] Create shared UI components library in inventory-management-frontend/components/ui/
+- [ ] T151 [P] Add loading states and error handling across all pages
+- [ ] T152 [P] Implement responsive design for mobile devices
+- [ ] T153 [P] Add accessibility attributes (ARIA labels, keyboard navigation)
+- [ ] T154 [P] Create 404 and error pages in inventory-management-frontend/app/
 
 **Backend Polish:**
 
-- [ ] T154 [P] Add CloudWatch log queries for monitoring in inventory-management-backend/docs/monitoring.md
-- [ ] T155 [P] Add CloudWatch alarms for Lambda errors and DynamoDB throttling
-- [ ] T156 [P] Implement rate limiting for API endpoints
-- [ ] T157 [P] Add request correlation IDs across all handlers
+- [ ] T155 [P] Add CloudWatch log queries for monitoring in inventory-management-backend/docs/monitoring.md
+- [ ] T156 [P] Add CloudWatch alarms for Lambda errors and DynamoDB throttling
+- [ ] T157 [P] Implement rate limiting for API endpoints
+- [ ] T158 [P] Add request correlation IDs across all handlers
 
 **Security & Performance:**
 
-- [ ] T158 [P] Run security audit with `npm audit` on both projects
-- [ ] T159 [P] Optimize Lambda bundle sizes (tree-shaking, minimize dependencies)
-- [ ] T160 [P] Add DynamoDB query optimization (verify all queries use indexes)
-- [ ] T161 [P] Configure CORS headers properly in template.yaml
+- [ ] T159 [P] Run security audit with `npm audit` on both projects
+- [ ] T160 [P] Optimize Lambda bundle sizes (tree-shaking, minimize dependencies)
+- [ ] T161 [P] Add DynamoDB query optimization (verify all queries use indexes)
+- [ ] T162 [P] Configure CORS headers properly in template.yaml
 
 **Documentation:**
 
-- [ ] T162 [P] Update README.md with project overview and setup instructions
-- [ ] T163 [P] Validate quickstart.md against actual implementation
-- [ ] T164 [P] Create deployment guide in docs/deployment.md
-- [ ] T165 [P] Create troubleshooting guide in docs/troubleshooting.md
+- [ ] T163 [P] Update README.md with project overview and setup instructions
+- [ ] T164 [P] Validate quickstart.md against actual implementation
+- [ ] T165 [P] Create deployment guide in docs/deployment.md
+- [ ] T166 [P] Create troubleshooting guide in docs/troubleshooting.md
 
 **Deployment:**
 
-- [ ] T166 Setup frontend S3 bucket and CloudFront distribution
-- [ ] T167 Configure CI/CD pipeline for backend (GitHub Actions or AWS CodePipeline)
-- [ ] T168 Configure CI/CD pipeline for frontend (GitHub Actions to S3/CloudFront)
-- [ ] T169 Deploy backend to production environment
-- [ ] T170 Deploy frontend to production environment
-- [ ] T171 Run end-to-end smoke tests on production
+- [ ] T167 Setup frontend S3 bucket and CloudFront distribution
+- [ ] T168 Configure CI/CD pipeline for backend (GitHub Actions or AWS CodePipeline)
+- [ ] T169 Configure CI/CD pipeline for frontend (GitHub Actions to S3/CloudFront)
+- [ ] T170 Deploy backend to production environment
+- [ ] T171 Deploy frontend to production environment
+- [ ] T172 Run end-to-end smoke tests on production
 
 ---
 
@@ -390,9 +391,9 @@
 **Phase 2 (Foundational)**: Backend foundation tasks (T015-T020) and frontend foundation tasks (T023-T028) can run in parallel
 
 **Phase 3 (US1)**: 
-- Backend models (T032-T036) can run in parallel
-- Backend handlers (T039-T048) can run in parallel after services complete
-- Frontend components (T051-T056) can run in parallel
+- Backend models (T033-T037) can run in parallel
+- Backend handlers (T040-T050) can run in parallel after services complete
+- Frontend components (T053-T058) can run in parallel
 - Frontend and backend work can proceed simultaneously
 
 **Subsequent Phases**: Same parallel patterns apply within each user story phase
@@ -403,35 +404,35 @@
 
 **Backend Models (parallel after foundation):**
 ```bash
-Task T032: Create Family model
-Task T033: Create Member model
-Task T034: Create InventoryItem model
-Task T035: Create StorageLocation model
-Task T036: Create Store model
+Task T033: Create Family model
+Task T034: Create Member model
+Task T035: Create InventoryItem model
+Task T036: Create StorageLocation model
+Task T037: Create Store model
 ```
 
 **Backend Handlers (parallel after services):**
 ```bash
-Task T039: POST /families handler
-Task T040: GET /families/{familyId} handler
-Task T041: PUT /families/{familyId} handler
-Task T042: POST /inventory handler
-Task T043: GET /inventory handler
-Task T044: GET /inventory/{itemId} handler
-Task T045: PUT /inventory/{itemId} handler
-Task T046: PATCH /inventory/{itemId}/quantity handler
-Task T047: POST /inventory/{itemId}/archive handler
-Task T048: DELETE /inventory/{itemId} handler
+Task T040: POST /families handler
+Task T041: GET /families/{familyId} handler
+Task T043: PUT /families/{familyId} handler
+Task T044: POST /inventory handler
+Task T045: GET /inventory handler
+Task T046: GET /inventory/{itemId} handler
+Task T047: PUT /inventory/{itemId} handler
+Task T048: PATCH /inventory/{itemId}/quantity handler
+Task T049: POST /inventory/{itemId}/archive handler
+Task T050: DELETE /inventory/{itemId} handler
 ```
 
 **Frontend Components (parallel after foundation):**
 ```bash
-Task T051: Login page
-Task T052: CreateFamilyForm component
-Task T053: InventoryList component
-Task T054: AddItemForm component
-Task T055: EditItemForm component
-Task T056: AdjustQuantity component
+Task T053: Login page
+Task T054: CreateFamilyForm component
+Task T055: InventoryList component
+Task T056: AddItemForm component
+Task T057: EditItemForm component
+Task T058: AdjustQuantity component
 ```
 
 ---
@@ -482,20 +483,20 @@ Then converge on Phase 10 (Polish) together.
 
 ## Task Summary
 
-**Total Tasks**: 171
+**Total Tasks**: 172
 **Task Breakdown by Phase**:
 - Phase 1 (Setup): 13 tasks
-- Phase 2 (Foundational): 16 tasks
-- Phase 3 (US1 - P1): 31 tasks
+- Phase 2 (Foundational): 17 tasks (includes T032 critical authorizer refactor)
+- Phase 3 (US1 - P1): 32 tasks
 - Phase 4 (US2 - P1): 16 tasks
 - Phase 5 (US3 - P1): 15 tasks
 - Phase 6 (US4 - P2): 13 tasks
 - Phase 7 (US5 - P2): 14 tasks
 - Phase 8 (US6 - P3): 19 tasks
 - Phase 9 (US7 - P2): 8 tasks
-- Phase 10 (Polish): 26 tasks
+- Phase 10 (Polish): 25 tasks
 
-**MVP Scope** (Phases 1-5): 91 tasks for complete core functionality
+**MVP Scope** (Phases 1-5): 93 tasks for complete core functionality
 
 **Parallel Opportunities**: 87 tasks marked [P] can run in parallel with others in their phase
 

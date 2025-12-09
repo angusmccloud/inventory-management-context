@@ -75,6 +75,8 @@ The root organizational unit representing a household.
 
 A user belonging to a family with a specific role.
 
+**⚠️ ARCHITECTURE NOTE**: Member familyId and role are stored **ONLY in DynamoDB**, NOT as Cognito custom attributes. Cognito handles authentication only (username/password). The Lambda authorizer validates the JWT, extracts the Cognito `sub` (memberId), then queries DynamoDB to retrieve the member's familyId and role for authorization decisions.
+
 **Access Pattern**: 
 - Get member by ID
 - List all members in a family
@@ -89,7 +91,7 @@ A user belonging to a family with a specific role.
 **Attributes**:
 ```typescript
 {
-  memberId: string;           // UUID (Cognito user ID)
+  memberId: string;           // UUID (Cognito user sub)
   familyId: string;           // UUID
   email: string;              // User email
   name: string;               // Display name
