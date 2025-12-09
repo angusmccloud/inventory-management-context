@@ -135,25 +135,25 @@
 
 **Backend Implementation:**
 
-- [ ] T064 [P] [US2] Create Notification model with DynamoDB operations in inventory-management-backend/src/models/notification.ts
-- [ ] T065 [US2] Create NotificationService business logic in inventory-management-backend/src/services/notificationService.ts
-- [ ] T066 [US2] Create EmailService for SES integration in inventory-management-backend/src/services/emailService.ts
-- [ ] T067 [US2] Update InventoryService to trigger notifications on low stock in inventory-management-backend/src/services/inventoryService.ts
-- [ ] T068 [P] [US2] Implement GET /families/{familyId}/notifications handler in inventory-management-backend/src/handlers/listNotifications.ts
-- [ ] T069 [P] [US2] Implement POST /families/{familyId}/notifications/{notificationId}/acknowledge handler in inventory-management-backend/src/handlers/acknowledgeNotification.ts
-- [ ] T070 [P] [US2] Create SES email template for low-stock notifications in inventory-management-backend/src/templates/low-stock-email.html
-- [ ] T071 [US2] Add notification routes to inventory-management-backend/template.yaml
-- [ ] T072 [US2] Add SES permissions to Lambda execution role in inventory-management-backend/template.yaml
+- [X] T064 [P] [US2] Create Notification model with DynamoDB operations in inventory-management-backend/src/models/notification.ts
+- [X] T065 [US2] Create NotificationService business logic in inventory-management-backend/src/services/notificationService.ts
+- [X] T066 [US2] Create EmailService for SES integration in inventory-management-backend/src/services/emailService.ts
+- [X] T067 [US2] Update InventoryService to trigger notifications on low stock in inventory-management-backend/src/services/inventoryService.ts
+- [X] T068 [P] [US2] Implement GET /families/{familyId}/notifications handler in inventory-management-backend/src/handlers/listNotifications.ts
+- [X] T069 [P] [US2] Implement POST /families/{familyId}/notifications/{notificationId}/acknowledge handler in inventory-management-backend/src/handlers/acknowledgeNotification.ts
+- [X] T070 [P] [US2] Create SES email template for low-stock notifications in inventory-management-backend/src/templates/low-stock-email.html
+- [X] T071 [US2] Add notification routes to inventory-management-backend/template.yaml
+- [X] T072 [US2] Add SES permissions to Lambda execution role in inventory-management-backend/template.yaml
 - [ ] T073 [US2] Deploy backend updates with `sam build && sam deploy`
 
 **Frontend Implementation:**
 
-- [ ] T074 [P] [US2] Create notification list component in inventory-management-frontend/components/notifications/NotificationList.tsx
-- [ ] T075 [P] [US2] Create notification item component in inventory-management-frontend/components/notifications/NotificationItem.tsx
-- [ ] T076 [US2] Create notifications page in inventory-management-frontend/app/dashboard/notifications/page.tsx
-- [ ] T077 [US2] Create notification API client methods in inventory-management-frontend/lib/api/notifications.ts
-- [ ] T078 [US2] Add notification badge to dashboard layout in inventory-management-frontend/app/dashboard/layout.tsx
-- [ ] T079 [US2] Build and test frontend locally with `npm run dev`
+- [X] T074 [P] [US2] Create notification list component in inventory-management-frontend/components/notifications/NotificationList.tsx
+- [X] T075 [P] [US2] Create notification item component in inventory-management-frontend/components/notifications/NotificationItem.tsx
+- [X] T076 [US2] Create notifications page in inventory-management-frontend/app/dashboard/notifications/page.tsx
+- [X] T077 [US2] Create notification API client methods in inventory-management-frontend/lib/api/notifications.ts
+- [X] T078 [US2] Add notification badge to dashboard layout in inventory-management-frontend/app/dashboard/layout.tsx
+- [X] T079 [US2] Build and test frontend locally with `npm run dev`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 work independently - low-stock items trigger notifications with emails
 
