@@ -82,14 +82,18 @@ jobs:
             echo "ℹ️ Copilot action is disabled via copilot-enabled input"
           fi
           
-      # Step 5: Request Copilot Code Review (if enabled and available)
-      - name: Request Copilot Code Review
+      # Step 5: Copilot Code Review placeholder (native feature, not an action)
+      # NOTE: GitHub Copilot code review is a native GitHub feature enabled at the repository level.
+      # Enable it in: Repository Settings → Code review → Copilot
+      # This step provides a placeholder for workflow logic that depends on the review step.
+      - name: Copilot Code Review Status
         id: review
         if: steps.copilot_check.outputs.copilot_available == 'true'
-        uses: github/copilot-code-review-action@v1
-        with:
-          custom-instructions-file: .github/agents/speckit.pr-review.agent.md
-        continue-on-error: true
+        run: |
+          echo "outcome=skipped" >> $GITHUB_OUTPUT
+          echo "ℹ️ GitHub Copilot code review is a native GitHub feature."
+          echo "Enable it in: Repository Settings → Code review → Copilot"
+          echo "The native Copilot code review runs automatically on PRs when enabled."
         
       # Step 6: Fallback - Post review guidelines if Copilot action failed or unavailable
       - name: Fallback - Post review guidelines
