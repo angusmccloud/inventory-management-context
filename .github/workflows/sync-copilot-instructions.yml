@@ -23,7 +23,8 @@ on:
         type: boolean
 
 env:
-  TARGET_REPOS: 'inventory-management-frontend'
+  TARGET_REPOS: 'inventory-management-frontend inventory-management-backend'
+
 
 jobs:
   generate-and-sync:
