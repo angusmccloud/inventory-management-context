@@ -10,6 +10,10 @@ inputs:
     description: Type of repository calling this action (context, backend, frontend)
     required: false
     default: backend
+  context-repo-token:
+    description: 'Token with access to the context repository (required for private repos)'
+    required: false
+    default: ''
 
 outputs:
   constitution-version:
@@ -28,6 +32,7 @@ runs:
         repository: Slalom/inventory-management-context
         path: .pr-review-context
         ref: ${{ inputs.context-ref }}
+        token: ${{ inputs.context-repo-token || github.token }}
         
     - name: Create directory structure
       shell: bash
