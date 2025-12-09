@@ -25,7 +25,7 @@ runs:
     - name: Checkout context repository
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.repository_owner }}/inventory-management-context
+        repository: Slalom/inventory-management-context
         path: .pr-review-context
         ref: ${{ inputs.context-ref }}
         
