@@ -4,6 +4,18 @@
 
 This repository includes an automated Pull Request review system powered by GitHub Copilot. The system validates code changes against the project's constitution and coding standards, providing inline comments and actionable feedback directly on your PRs.
 
+### Multi-Repository Support
+
+The PR review system is designed to work across **three repositories** in the project:
+
+- **📋 Context Repository** (this repo) - Central hub for rules, constitution, and review configuration
+- **🔧 Backend Repository** - Application backend code reviewed using Context rules
+- **🎨 Frontend Repository** - Application frontend code reviewed using Context rules
+
+**Key Benefit**: Backend and Frontend repositories only need **ONE small file** (~15 lines) to enable PR reviews. All rules, constitution, and review logic are centralized in the Context repository, eliminating file duplication and ensuring consistency.
+
+See [Multi-Repository Setup](#multi-repository-setup) for details on setting up other repositories.
+
 ### What It Does
 
 - **Automated Code Review**: Analyzes all code changes in pull requests
@@ -218,6 +230,117 @@ comments:
 |------|---------|------|
 | **Architecture Document** | System design and data flow | [`.specify/memory/pr-review-architecture.md`](.specify/memory/pr-review-architecture.md:1) |
 | **This Document** | User guide and reference | [`docs/COPILOT-PR-REVIEW.md`](docs/COPILOT-PR-REVIEW.md:1) |
+
+---
+
+## Multi-Repository Setup
+
+### Architecture Overview
+
+The multi-repository PR review system uses GitHub's reusable workflows and composite actions to share rules across repositories:
+
+```mermaid
+flowchart TD
+    subgraph Context[Context Repository - Central Hub]
+        RW[Reusable Workflow]
+        CA[Composite Action]
+        Rules[Constitution + Rules]
+        Agent[PR Review Agent]
+    end
+    
+    subgraph Backend[Backend Repository]
+        BWC[Caller Workflow<br/>~15 lines]
+    end
+    
+    subgraph Frontend[Frontend Repository]
+        FWC[Caller Workflow<br/>~15 lines]
+    end
+    
+    BWC -->|workflow_call| RW
+    FWC -->|workflow_call| RW
+    RW --> CA
+    CA --> Rules
+    CA --> Agent
+```
+
+### How It Works
+
+1. **Backend/Frontend** repositories have a minimal caller workflow (~15 lines)
+2. Caller workflow invokes the **reusable workflow** in Context repository
+3. Reusable workflow uses a **composite action** to fetch all rules from Context
+4. Rules are placed in the correct locations for Copilot to use
+5. Review runs with the latest centralized rules
+6. Results are posted back to the calling repository's PR
+
+### Benefits
+
+| Benefit | Description |
+|---------|-------------|
+| ✅ **Minimal Duplication** | Only ~15 lines needed in Backend/Frontend repos |
+| ✅ **Centralized Rules** | All rules maintained in one place (Context repo) |
+| ✅ **Automatic Updates** | Rule changes automatically apply to all repos |
+| ✅ **Consistent Reviews** | Same standards across all repositories |
+| ✅ **Version Tracking** | Each review shows which constitution version was used |
+
+### Setting Up Backend or Frontend Repository
+
+To enable PR reviews in the Backend or Frontend repository:
+
+1. **Copy the template workflow**:
+   - Template location: [`.github/workflows/templates/caller-workflow.yml`](.github/workflows/templates/caller-workflow.yml:1)
+   - Destination: `.github/workflows/pr-review.yml` in your Backend/Frontend repo
+
+2. **Replace the organization name**:
+   - Find `ORG_NAME` in the template
+   - Replace with your actual GitHub organization name
+
+3. **Set the repository type**:
+   - Change `repository-type: backend` to match your repo (backend or frontend)
+
+4. **Commit and push**:
+   ```bash
+   git add .github/workflows/pr-review.yml
+   git commit -m "feat: add Copilot PR review workflow"
+   git push
+   ```
+
+5. **Configure branch protection** (optional but recommended):
+   - Add "Copilot PR Review" as a required status check
+   - See [detailed setup guide](COPILOT-PR-REVIEW-SETUP.md#part-2-add-required-status-check)
+
+**That's it!** Your repository will now use the centralized rules from the Context repository for all PR reviews.
+
+### Template File
+
+The complete template is available at [`.github/workflows/templates/caller-workflow.yml`](.github/workflows/templates/caller-workflow.yml:1). Here's what it looks like:
+
+```yaml
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - develop
+
+jobs:
+  review:
+    # Replace ORG_NAME with your GitHub organization name
+    uses: ORG_NAME/inventory-management-context/.github/workflows/copilot-pr-review.yml@main
+    with:
+      repository-type: backend  # or 'frontend'
+      copilot-enabled: false
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+```
+
+### Architecture Documentation
+
+For complete technical details about the multi-repository architecture, see:
+- [Multi-Repository PR Review Architecture](.specify/memory/multi-repo-pr-review-architecture.md:1)
 
 ---
 

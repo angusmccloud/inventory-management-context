@@ -12,9 +12,10 @@ This guide provides detailed, step-by-step instructions for setting up GitHub Co
 2. [Part 1: Enable GitHub Copilot Code Review](#part-1-enable-github-copilot-code-review)
 3. [Part 2: Add Required Status Check](#part-2-add-required-status-check)
 4. [Part 3: Verify Configuration](#part-3-verify-configuration)
-5. [Troubleshooting](#troubleshooting)
-6. [Updating the Workflow](#updating-the-workflow)
-7. [Next Steps](#next-steps)
+5. [Part 4: Setup for Backend/Frontend Repositories](#part-4-setup-for-backendfrontend-repositories)
+6. [Troubleshooting](#troubleshooting)
+7. [Updating the Workflow](#updating-the-workflow)
+8. [Next Steps](#next-steps)
 
 ---
 
@@ -380,6 +381,312 @@ If the Copilot review found critical issues:
 **Current Behavior**: Since the Copilot action is not yet available, you'll see manual review guidelines instead of automated comments.
 
 **Expected Outcome**: You should see review feedback posted to the PR.
+
+---
+
+## Part 4: Setup for Backend/Frontend Repositories
+
+This section explains how to enable PR reviews in the **Backend** or **Frontend** repositories using the centralized rules from the **Context** repository.
+
+### Overview
+
+The multi-repository architecture allows Backend and Frontend repos to use the same PR review rules without duplicating files. You only need **ONE small file** (~15 lines) in each repository.
+
+```mermaid
+flowchart LR
+    subgraph Context[Context Repository]
+        Rules[Constitution + Rules]
+        Workflow[Reusable Workflow]
+    end
+    
+    subgraph Backend[Backend Repository]
+        BCaller[Caller Workflow<br/>~15 lines]
+    end
+    
+    subgraph Frontend[Frontend Repository]
+        FCaller[Caller Workflow<br/>~15 lines]
+    end
+    
+    BCaller -->|calls| Workflow
+    FCaller -->|calls| Workflow
+    Workflow -->|uses| Rules
+```
+
+---
+
+### Step 1: Locate the Template File
+
+The template workflow is located in the Context repository at:
+
+**Path**: [`.github/workflows/templates/caller-workflow.yml`](../.github/workflows/templates/caller-workflow.yml)
+
+This template contains all the necessary configuration to call the centralized PR review workflow.
+
+---
+
+### Step 2: Copy Template to Your Repository
+
+1. **Navigate to your Backend or Frontend repository**
+
+2. **Create the workflows directory** (if it doesn't exist):
+   ```bash
+   mkdir -p .github/workflows
+   ```
+
+3. **Copy the template file**:
+   
+   From the Context repository, copy the contents of:
+   ```
+   .github/workflows/templates/caller-workflow.yml
+   ```
+   
+   To your Backend/Frontend repository as:
+   ```
+   .github/workflows/pr-review.yml
+   ```
+
+**Example using curl** (if you have the raw file URL):
+```bash
+# From your Backend/Frontend repository root
+curl -o .github/workflows/pr-review.yml \
+  https://raw.githubusercontent.com/YOUR_ORG/inventory-management-context/main/.github/workflows/templates/caller-workflow.yml
+```
+
+**Or manually**:
+- Open the template in Context repo
+- Copy all contents
+- Create `.github/workflows/pr-review.yml` in your repo
+- Paste the contents
+
+---
+
+### Step 3: Configure the Workflow
+
+Edit the newly created `.github/workflows/pr-review.yml` file and make these changes:
+
+#### 3.1: Replace Organization Name
+
+Find this line:
+```yaml
+uses: ORG_NAME/inventory-management-context/.github/workflows/copilot-pr-review.yml@main
+```
+
+Replace `ORG_NAME` with your actual GitHub organization name:
+```yaml
+uses: your-org-name/inventory-management-context/.github/workflows/copilot-pr-review.yml@main
+```
+
+#### 3.2: Set Repository Type
+
+Find this line:
+```yaml
+repository-type: backend
+```
+
+Change it to match your repository:
+- For Backend repository: `repository-type: backend`
+- For Frontend repository: `repository-type: frontend`
+
+#### 3.3: Final Configuration
+
+Your complete file should look like this:
+
+**For Backend Repository**:
+```yaml
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - develop
+
+jobs:
+  review:
+    uses: your-org-name/inventory-management-context/.github/workflows/copilot-pr-review.yml@main
+    with:
+      repository-type: backend
+      copilot-enabled: false
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+```
+
+**For Frontend Repository**:
+```yaml
+name: PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - develop
+
+jobs:
+  review:
+    uses: your-org-name/inventory-management-context/.github/workflows/copilot-pr-review.yml@main
+    with:
+      repository-type: frontend
+      copilot-enabled: false
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+```
+
+---
+
+### Step 4: Commit and Push
+
+1. **Add the file to git**:
+   ```bash
+   git add .github/workflows/pr-review.yml
+   ```
+
+2. **Commit the change**:
+   ```bash
+   git commit -m "feat: add Copilot PR review workflow"
+   ```
+
+3. **Push to your repository**:
+   ```bash
+   git push origin main
+   ```
+
+---
+
+### Step 5: Verify Workflow is Active
+
+1. **Navigate to the Actions tab** in your Backend/Frontend repository
+
+2. **Look for the "PR Review" workflow** in the list
+
+3. **Verify it's enabled** (not disabled)
+
+![Workflow Active](screenshots/backend-workflow-active.png)
+
+**Expected Outcome**: The workflow should appear in the list and be enabled.
+
+---
+
+### Step 6: Test with a Pull Request
+
+1. **Create a test branch**:
+   ```bash
+   git checkout -b test/pr-review-setup
+   ```
+
+2. **Make a small change** (e.g., add a comment):
+   ```typescript
+   // Test comment for PR review
+   ```
+
+3. **Commit and push**:
+   ```bash
+   git add .
+   git commit -m "test: verify PR review setup"
+   git push origin test/pr-review-setup
+   ```
+
+4. **Create a pull request** targeting `main` or `develop`
+
+5. **Watch the workflow run**:
+   - Go to the Actions tab
+   - Find the "PR Review" workflow run
+   - Verify it completes successfully
+
+---
+
+### Step 7: Configure Branch Protection (Recommended)
+
+To make PR reviews required before merging:
+
+1. **Navigate to Settings** → **Branches** in your Backend/Frontend repository
+
+2. **Add or edit branch protection rule** for `main` or `develop`
+
+3. **Enable "Require status checks to pass before merging"**
+
+4. **Search for and add "Copilot PR Review"** status check
+
+5. **Save the protection rule**
+
+See [Part 2: Add Required Status Check](#part-2-add-required-status-check) for detailed instructions.
+
+---
+
+### What Happens Now?
+
+When you create or update a pull request in your Backend/Frontend repository:
+
+1. ✅ The caller workflow triggers automatically
+2. ✅ It calls the reusable workflow in the Context repository
+3. ✅ The reusable workflow fetches the latest rules from Context
+4. ✅ Rules are placed in the correct locations
+5. ✅ Copilot reviews your code (or posts guidelines in fallback mode)
+6. ✅ Review results are posted to your PR
+7. ✅ Status check updates (pass/fail)
+
+**All rules come from the Context repository** - no duplication needed!
+
+---
+
+### Key Benefits
+
+| Benefit | Description |
+|---------|-------------|
+| ✅ **Minimal Setup** | Only ~15 lines of code needed |
+| ✅ **No Duplication** | Rules maintained in one place |
+| ✅ **Automatic Updates** | Rule changes apply to all repos immediately |
+| ✅ **Consistent Standards** | Same review criteria across all repositories |
+| ✅ **Easy Maintenance** | Update rules once, affects all repos |
+
+---
+
+### Troubleshooting Backend/Frontend Setup
+
+#### Issue: Workflow Not Found
+
+**Symptoms**: Error message "workflow not found" or "repository not found"
+
+**Solutions**:
+1. Verify the organization name is correct in the `uses:` line
+2. Ensure all three repositories are in the **same GitHub organization**
+3. Check that the Context repository is accessible (not private to you only)
+4. Verify the reusable workflow exists at `.github/workflows/copilot-pr-review.yml` in Context repo
+
+#### Issue: Permission Denied
+
+**Symptoms**: Workflow fails with permission errors
+
+**Solutions**:
+1. Verify all repositories are in the same organization
+2. Check that GitHub Actions are enabled in repository settings
+3. Ensure workflow permissions are set to "Read and write permissions"
+4. Verify the `permissions:` block is present in the caller workflow
+
+#### Issue: Rules Not Applied
+
+**Symptoms**: Review runs but doesn't use expected rules
+
+**Solutions**:
+1. Check that the Context repository has the latest constitution
+2. Verify the composite action successfully copied files (check workflow logs)
+3. Ensure the `repository-type` is set correctly (backend or frontend)
+4. Review the workflow logs in the Actions tab for errors
+
+#### Issue: Status Check Not Appearing
+
+**Symptoms**: Can't find "Copilot PR Review" when setting up branch protection
+
+**Solutions**:
+1. Create a test PR first to trigger the workflow
+2. Wait for the workflow to complete successfully
+3. Return to branch protection settings and search again
+4. The status check only appears after running at least once
 
 ---
 

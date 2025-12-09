@@ -1,0 +1,134 @@
+name: Setup Copilot Review
+description: Sets up PR review environment with centralized rules from Context repository
+
+inputs:
+  context-ref:
+    description: Git ref for context repository (branch, tag, or commit SHA)
+    required: false
+    default: main
+  repository-type:
+    description: Type of repository calling this action (context, backend, frontend)
+    required: false
+    default: backend
+
+outputs:
+  constitution-version:
+    description: Version of the constitution used for review
+    value: ${{ steps.constitution.outputs.version }}
+  context-path:
+    description: Path to the aggregated review context file
+    value: /tmp/review-context.md
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout context repository
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.repository_owner }}/inventory-management-context
+        path: .pr-review-context
+        ref: ${{ inputs.context-ref }}
+        
+    - name: Create directory structure
+      shell: bash
+      run: |
+        echo "📁 Creating directory structure for PR review..."
+        mkdir -p .github/agents
+        mkdir -p .github/scripts
+        mkdir -p .specify/memory
+        
+    - name: Copy rule files from context repository
+      shell: bash
+      run: |
+        echo "📋 Copying rule files from context repository..."
+        
+        # Copy agent file (required)
+        if [[ -f .pr-review-context/.github/agents/speckit.pr-review.agent.md ]]; then
+          cp .pr-review-context/.github/agents/speckit.pr-review.agent.md .github/agents/
+          echo "✅ Copied speckit.pr-review.agent.md"
+        else
+          echo "❌ ERROR: speckit.pr-review.agent.md not found in context repository"
+          exit 1
+        fi
+        
+        # Copy constitution (required)
+        if [[ -f .pr-review-context/.specify/memory/constitution.md ]]; then
+          cp .pr-review-context/.specify/memory/constitution.md .specify/memory/
+          echo "✅ Copied constitution.md"
+        else
+          echo "❌ ERROR: constitution.md not found in context repository"
+          exit 1
+        fi
+        
+        # Copy shared context (optional)
+        if [[ -f .pr-review-context/.specify/memory/agent-shared-context.md ]]; then
+          cp .pr-review-context/.specify/memory/agent-shared-context.md .specify/memory/
+          echo "✅ Copied agent-shared-context.md"
+        else
+          echo "ℹ️ agent-shared-context.md not found (optional)"
+        fi
+        
+        # Copy AGENTS.md (optional)
+        if [[ -f .pr-review-context/AGENTS.md ]]; then
+          cp .pr-review-context/AGENTS.md .
+          echo "✅ Copied AGENTS.md"
+        else
+          echo "ℹ️ AGENTS.md not found (optional)"
+        fi
+        
+        # Copy copilot instructions (optional)
+        if [[ -f .pr-review-context/.github/agents/copilot-instructions.md ]]; then
+          cp .pr-review-context/.github/agents/copilot-instructions.md .github/agents/
+          echo "✅ Copied copilot-instructions.md"
+        else
+          echo "ℹ️ copilot-instructions.md not found (optional)"
+        fi
+        
+        # Copy aggregation script (required)
+        if [[ -f .pr-review-context/.github/scripts/aggregate-rules.sh ]]; then
+          cp .pr-review-context/.github/scripts/aggregate-rules.sh .github/scripts/
+          chmod +x .github/scripts/aggregate-rules.sh
+          echo "✅ Copied and made executable aggregate-rules.sh"
+        else
+          echo "❌ ERROR: aggregate-rules.sh not found in context repository"
+          exit 1
+        fi
+        
+    - name: Aggregate rules
+      shell: bash
+      run: |
+        echo "🔄 Aggregating rules from all sources..."
+        if .github/scripts/aggregate-rules.sh /tmp/review-context.md; then
+          echo "✅ Review context generated successfully"
+          FILE_SIZE=$(wc -c < /tmp/review-context.md)
+          echo "📊 Context file size: ${FILE_SIZE} bytes"
+        else
+          echo "❌ Failed to aggregate rules"
+          exit 1
+        fi
+        
+    - name: Get constitution version
+      id: constitution
+      shell: bash
+      run: |
+        if [[ -f .specify/memory/constitution.md ]]; then
+          VERSION=$(grep -oP '\*\*Version\*\*: \K[0-9]+\.[0-9]+\.[0-9]+' .specify/memory/constitution.md 2>/dev/null || echo "unknown")
+        else
+          VERSION="unknown"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "📜 Constitution version: $VERSION"
+        
+    - name: Display setup summary
+      shell: bash
+      run: |
+        echo ""
+        echo "═══════════════════════════════════════════════════════════"
+        echo "  🔧 Copilot Review Setup Complete"
+        echo "═══════════════════════════════════════════════════════════"
+        echo "  Repository Type: ${{ inputs.repository-type }}"
+        echo "  Context Ref: ${{ inputs.context-ref }}"
+        echo "  Constitution Version: ${{ steps.constitution.outputs.version }}"
+        echo "  Context File: /tmp/review-context.md"
+        echo "═══════════════════════════════════════════════════════════"
+        echo ""
