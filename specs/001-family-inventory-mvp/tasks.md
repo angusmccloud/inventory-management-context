@@ -74,7 +74,7 @@
 - [ ] T029 Deploy backend infrastructure with `sam deploy --guided` and note outputs
 - [ ] T030 Configure Cognito User Pool for authentication (email/password)
 - [ ] T031 Verify SES sender email address for notifications
-- [ ] T032 **[CRITICAL]** Refactor Lambda authorizer to query DynamoDB for member info instead of using Cognito custom attributes in inventory-management-backend/src/handlers/authorizer.ts
+- [X] T032 **[CRITICAL]** Refactor Lambda authorizer to query DynamoDB for member info instead of using Cognito custom attributes in inventory-management-backend/src/handlers/authorizer.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
