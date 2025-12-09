@@ -1,0 +1,153 @@
+name: Sync Copilot Instructions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.specify/memory/constitution.md'
+      - '.specify/memory/agent-shared-context.md'
+      - 'AGENTS.md'
+      - '.github/scripts/generate-copilot-instructions.sh'
+      - '.github/copilot-instructions.md'
+  
+  workflow_dispatch:
+    inputs:
+      target_repos:
+        description: 'Comma-separated list of repos to sync (or "all" for all configured repos)'
+        required: false
+        default: 'all'
+      dry_run:
+        description: 'Dry run - generate but do not push'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  TARGET_REPOS: 'inventory-management-frontend'
+
+jobs:
+  generate-and-sync:
+    name: Generate and Sync Instructions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout context repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Generate aggregated Copilot instructions
+        id: generate
+        run: |
+          chmod +x .github/scripts/generate-copilot-instructions.sh
+          .github/scripts/generate-copilot-instructions.sh
+          echo "Generated file contents:"
+          cat .github/copilot-instructions-aggregated.md
+          echo "output_file=.github/copilot-instructions-aggregated.md" >> $GITHUB_OUTPUT
+
+      - name: Determine target repositories
+        id: targets
+        run: |
+          if [[ "${{ github.event.inputs.target_repos }}" == "all" ]] || [[ -z "${{ github.event.inputs.target_repos }}" ]]; then
+            REPOS="${{ env.TARGET_REPOS }}"
+          else
+            REPOS="${{ github.event.inputs.target_repos }}"
+          fi
+          echo "repos=$REPOS" >> $GITHUB_OUTPUT
+          echo "Will sync to: $REPOS"
+
+      - name: Sync to application repositories
+        if: ${{ github.event.inputs.dry_run != true }}
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
+        run: |
+          set -e
+          
+          REPOS="${{ steps.targets.outputs.repos }}"
+          OWNER="${{ github.repository_owner }}"
+          SOURCE_FILE=".github/copilot-instructions-aggregated.md"
+          TARGET_PATH=".github/copilot-instructions.md"
+          
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "Error: CROSS_REPO_TOKEN secret is not set"
+            echo "Please create a PAT with repo scope and add it as a repository secret"
+            exit 1
+          fi
+          
+          CONTENT=$(base64 -w0 "$SOURCE_FILE")
+          
+          for repo in $REPOS; do
+            echo ""
+            echo "=========================================="
+            echo "Syncing to: $OWNER/$repo"
+            echo "=========================================="
+            
+            EXISTING_SHA=""
+            EXISTING=$(gh api "repos/$OWNER/$repo/contents/$TARGET_PATH" 2>/dev/null || echo "")
+            
+            if [[ -n "$EXISTING" ]] && [[ "$EXISTING" != *"Not Found"* ]]; then
+              EXISTING_SHA=$(echo "$EXISTING" | jq -r '.sha // empty')
+              echo "File exists, will update (SHA: $EXISTING_SHA)"
+            else
+              echo "File does not exist, will create"
+            fi
+            
+            COMMIT_MSG="chore: sync copilot instructions from context repo"
+            
+            if [[ -n "$EXISTING_SHA" ]]; then
+              PAYLOAD=$(jq -n \
+                --arg message "$COMMIT_MSG" \
+                --arg content "$CONTENT" \
+                --arg sha "$EXISTING_SHA" \
+                '{"message": $message, "content": $content, "sha": $sha}')
+            else
+              PAYLOAD=$(jq -n \
+                --arg message "$COMMIT_MSG" \
+                --arg content "$CONTENT" \
+                '{"message": $message, "content": $content}')
+            fi
+            
+            RESULT=$(echo "$PAYLOAD" | gh api "repos/$OWNER/$repo/contents/$TARGET_PATH" \
+              --method PUT \
+              --input - \
+              2>&1) || {
+              echo "Failed to sync to $repo"
+              echo "Error: $RESULT"
+              continue
+            }
+            
+            NEW_SHA=$(echo "$RESULT" | jq -r '.commit.sha // empty')
+            echo "Successfully synced to $repo (SHA: $NEW_SHA)"
+          done
+          
+          echo ""
+          echo "=========================================="
+          echo "Sync complete!"
+          echo "=========================================="
+
+      - name: Dry run summary
+        if: ${{ github.event.inputs.dry_run == true }}
+        run: |
+          echo "DRY RUN - No changes were pushed"
+          echo ""
+          echo "Would sync to these repositories:"
+          echo "${{ steps.targets.outputs.repos }}"
+          echo ""
+          echo "Generated file preview:"
+          echo "----------------------------------------"
+          head -50 .github/copilot-instructions-aggregated.md
+          echo "..."
+          echo "----------------------------------------"
+
+      - name: Create workflow summary
+        run: |
+          echo "## Copilot Instructions Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Trigger | ${{ github.event_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Source Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Target Repos | ${{ steps.targets.outputs.repos }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dry Run | ${{ github.event.inputs.dry_run }} |" >> $GITHUB_STEP_SUMMARY
