@@ -53,7 +53,7 @@ jobs:
           
       # Step 2: Setup PR review environment using the composite action
       - name: Setup PR review environment
-        uses: ${{ github.repository_owner }}/inventory-management-context/.github/actions/setup-copilot-review@${{ inputs.context-ref }}
+        uses: Slalom/inventory-management-context/.github/actions/setup-copilot-review@main
         with:
           context-ref: ${{ inputs.context-ref }}
           repository-type: ${{ inputs.repository-type }}
