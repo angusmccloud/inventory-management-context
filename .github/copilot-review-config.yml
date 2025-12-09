@@ -1,0 +1,143 @@
+# GitHub Copilot Code Review Configuration
+# This file configures GitHub Copilot's code review behavior for this repository.
+#
+# Documentation: https://docs.github.com/en/copilot/using-github-copilot/code-review
+# Architecture Reference: .specify/memory/pr-review-architecture.md
+#
+# NOTE: This configuration is for GitHub's native Copilot code review feature.
+# The custom instructions are defined in .github/agents/speckit.pr-review.agent.md
+
+# Version of this configuration
+version: 1
+
+# Custom instructions file for Copilot code review
+# This file contains the detailed validation rules and review process
+custom_instructions_file: .github/agents/speckit.pr-review.agent.md
+
+# Review settings
+review:
+  # Enable code review on pull requests
+  enabled: true
+  
+  # Branches to review
+  branches:
+    - main
+    - develop
+  
+  # File patterns to include in review (glob patterns)
+  include:
+    - "**/*.ts"
+    - "**/*.tsx"
+    - "**/*.js"
+    - "**/*.jsx"
+    - "**/*.json"
+    - "**/*.yaml"
+    - "**/*.yml"
+    - "**/*.md"
+  
+  # File patterns to exclude from review
+  exclude:
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/.next/**"
+    - "**/coverage/**"
+    - "**/*.min.js"
+    - "**/*.min.css"
+    - "**/package-lock.json"
+    - "**/yarn.lock"
+    - "**/pnpm-lock.yaml"
+
+# Severity configuration
+# Maps validation categories to severity levels
+severity:
+  # CRITICAL - Blocks merge
+  critical:
+    - typescript_implicit_any
+    - typescript_strict_mode
+    - missing_tests_business_logic
+    - secrets_in_code
+    - input_validation_missing
+  
+  # HIGH - Strongly recommended to fix
+  high:
+    - aws_sdk_v2_usage
+    - dynamodb_scan_operation
+    - missing_error_handling
+    - cors_misconfiguration
+    - security_headers_missing
+  
+  # MEDIUM - Advisory
+  medium:
+    - code_organization
+    - missing_type_definitions
+    - test_colocation
+    - file_structure
+  
+  # LOW - Informational
+  low:
+    - style_inconsistency
+    - documentation_missing
+    - performance_optimization
+
+# Rule sources (in order of authority)
+# These files are read by the PR review agent to determine validation rules
+rule_sources:
+  primary:
+    path: .specify/memory/constitution.md
+    description: "NON-NEGOTIABLE project constitution"
+    authority: highest
+  
+  secondary:
+    path: AGENTS.md
+    description: "Repository-specific agent rules"
+    authority: high
+  
+  tertiary:
+    path: .github/agents/copilot-instructions.md
+    description: "Development guidelines"
+    authority: medium
+  
+  context:
+    path: .specify/memory/agent-shared-context.md
+    description: "Shared patterns and context"
+    authority: supplementary
+
+# Comment settings
+comments:
+  # Post inline comments on specific lines
+  inline: true
+  
+  # Post a summary comment on the PR
+  summary: true
+  
+  # Include code suggestions in comments
+  suggestions: true
+  
+  # Reference constitution sections in comments
+  include_rule_references: true
+
+# Status check settings
+status_check:
+  # Name of the status check
+  name: "Copilot PR Review"
+  
+  # Block merge on critical findings
+  block_on_critical: true
+  
+  # Allow merge with warnings (high/medium/low)
+  allow_with_warnings: true
+
+# Metadata
+metadata:
+  # Link to architecture documentation
+  architecture_doc: .specify/memory/pr-review-architecture.md
+  
+  # Link to PR review agent
+  agent_file: .github/agents/speckit.pr-review.agent.md
+  
+  # Link to PR review prompt
+  prompt_file: .github/prompts/speckit.pr-review.prompt.md
+  
+  # Link to rule aggregation script
+  aggregation_script: .github/scripts/aggregate-rules.sh

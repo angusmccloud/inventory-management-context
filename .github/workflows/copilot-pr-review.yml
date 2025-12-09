@@ -1,0 +1,285 @@
+# Reusable GitHub Actions Workflow for Copilot PR Review
+# This workflow can be called from other repositories in the same organization
+# to perform PR reviews using centralized rules from the Context repository.
+#
+# Architecture Reference: .specify/memory/multi-repo-pr-review-architecture.md
+#
+# Usage from other repositories:
+#   jobs:
+#     review:
+#       uses: ORG_NAME/inventory-management-context/.github/workflows/copilot-pr-review.yml@main
+#       with:
+#         repository-type: backend  # or frontend
+#         copilot-enabled: false
+
+name: Reusable Copilot PR Review
+
+on:
+  workflow_call:
+    inputs:
+      context-ref:
+        description: Git ref for context repository rules (branch, tag, or commit SHA)
+        required: false
+        type: string
+        default: main
+      repository-type:
+        description: Type of repository (context, backend, frontend)
+        required: false
+        type: string
+        default: backend
+      copilot-enabled:
+        description: Enable GitHub Copilot code review action (set to true when available)
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  copilot-review:
+    name: Copilot Code Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      # Step 1: Checkout the calling repository (the one with the PR)
+      - name: Checkout calling repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      # Step 2: Setup PR review environment using the composite action
+      - name: Setup PR review environment
+        uses: ${{ github.repository_owner }}/inventory-management-context/.github/actions/setup-copilot-review@${{ inputs.context-ref }}
+        with:
+          context-ref: ${{ inputs.context-ref }}
+          repository-type: ${{ inputs.repository-type }}
+          
+      # Step 3: Get constitution version for tracking
+      - name: Get constitution version
+        id: constitution
+        run: |
+          if [[ -f .specify/memory/constitution.md ]]; then
+            VERSION=$(grep -oP '\*\*Version\*\*: \K[0-9]+\.[0-9]+\.[0-9]+' .specify/memory/constitution.md 2>/dev/null || echo "unknown")
+          else
+            VERSION="unknown"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📜 Constitution version: $VERSION"
+          
+      # Step 4: Check if Copilot action should be used
+      - name: Check Copilot action availability
+        id: copilot_check
+        run: |
+          if [[ "${{ inputs.copilot-enabled }}" == "true" ]]; then
+            echo "copilot_available=true" >> $GITHUB_OUTPUT
+            echo "✅ Copilot action is enabled"
+          else
+            echo "copilot_available=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Copilot action is disabled via copilot-enabled input"
+          fi
+          
+      # Step 5: Request Copilot Code Review (if enabled and available)
+      - name: Request Copilot Code Review
+        id: review
+        if: steps.copilot_check.outputs.copilot_available == 'true'
+        uses: github/copilot-code-review-action@v1
+        with:
+          custom-instructions-file: .github/agents/speckit.pr-review.agent.md
+        continue-on-error: true
+        
+      # Step 6: Fallback - Post review guidelines if Copilot action failed or unavailable
+      - name: Fallback - Post review guidelines
+        if: steps.copilot_check.outputs.copilot_available == 'false' || steps.review.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const constitutionVersion = '${{ steps.constitution.outputs.version }}';
+            const reviewDate = new Date().toISOString();
+            const prNumber = context.issue.number;
+            const callingRepo = context.repo.repo;
+            const repositoryType = '${{ inputs.repository-type }}';
+            const copilotAvailable = '${{ steps.copilot_check.outputs.copilot_available }}' === 'true';
+            const reviewOutcome = '${{ steps.review.outcome }}';
+            
+            // Determine fallback reason
+            let fallbackReason = '';
+            if (!copilotAvailable) {
+              fallbackReason = 'GitHub Copilot code review action is not enabled for this workflow.';
+            } else if (reviewOutcome === 'failure') {
+              fallbackReason = 'GitHub Copilot code review action encountered an error.';
+            }
+            
+            // Read the aggregated rules for manual review guidance
+            let reviewGuidelines = '';
+            try {
+              const contextPath = '/tmp/review-context.md';
+              if (fs.existsSync(contextPath)) {
+                const fullContext = fs.readFileSync(contextPath, 'utf8');
+                const instructionsMatch = fullContext.match(/## Review Instructions[\s\S]*$/);
+                if (instructionsMatch) {
+                  reviewGuidelines = instructionsMatch[0];
+                }
+              }
+            } catch (error) {
+              console.log('Could not read review context:', error.message);
+            }
+            
+            const body = [
+              '## 🤖 PR Review Guidelines',
+              '',
+              '> **Multi-Repo Review**: Rules loaded from Context repository',
+              '>',
+              '> ⚠️ **Fallback Mode**: ' + fallbackReason,
+              '',
+              '| Field | Value |',
+              '|-------|-------|',
+              '| Constitution Version | ' + constitutionVersion + ' |',
+              '| Review Date | ' + reviewDate + ' |',
+              '| Repository | ' + callingRepo + ' |',
+              '| Repository Type | ' + repositoryType + ' |',
+              '| PR Number | #' + prNumber + ' |',
+              '',
+              '### Validation Categories',
+              '',
+              '| Category | Severity |',
+              '|----------|----------|',
+              '| TypeScript Compliance | 🔴 CRITICAL |',
+              '| Testing Requirements | 🔴 CRITICAL |',
+              '| AWS Best Practices | 🟠 HIGH |',
+              '| Security Standards | 🔴 CRITICAL |',
+              '| Code Organization | 🟡 MEDIUM |',
+              '',
+              '<details>',
+              '<summary>📋 Review Instructions</summary>',
+              '',
+              reviewGuidelines || '> See constitution for full guidelines',
+              '',
+              '</details>',
+              '',
+              '---',
+              '',
+              '**Next Steps:**',
+              '1. Review the changed files against the validation categories above',
+              '2. Check for CRITICAL violations (TypeScript, Testing, Security)',
+              '3. Post inline comments for any findings',
+              '4. Approve or request changes based on findings',
+              '',
+              '*Rules from Context repository - Constitution v' + constitutionVersion + '*'
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+            
+            console.log('Fallback review guidelines posted successfully');
+            
+      # Step 7: Post review summary comment (when Copilot review succeeded)
+      - name: Post review summary
+        if: steps.review.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const constitutionVersion = '${{ steps.constitution.outputs.version }}';
+            const reviewDate = new Date().toISOString();
+            const prNumber = context.issue.number;
+            const callingRepo = context.repo.repo;
+            const repositoryType = '${{ inputs.repository-type }}';
+            
+            const body = [
+              '## 🤖 Copilot Code Review ✅',
+              '',
+              '> **Multi-Repo Review**: Rules loaded from Context repository',
+              '',
+              '| Field | Value |',
+              '|-------|-------|',
+              '| Constitution Version | ' + constitutionVersion + ' |',
+              '| Review Date | ' + reviewDate + ' |',
+              '| Repository | ' + callingRepo + ' |',
+              '| Repository Type | ' + repositoryType + ' |',
+              '| PR Number | #' + prNumber + ' |',
+              '',
+              'Copilot code review completed successfully.',
+              '',
+              '### Validation Categories',
+              '',
+              '| Category | Source | Severity |',
+              '|----------|--------|----------|',
+              '| TypeScript Compliance | Constitution §I | CRITICAL |',
+              '| Testing Requirements | Constitution §III | CRITICAL |',
+              '| AWS Best Practices | Constitution §IV | HIGH |',
+              '| Security Standards | Constitution §V | CRITICAL |',
+              '| Code Organization | Constitution §VII | MEDIUM |',
+              '',
+              '---',
+              '',
+              'See inline comments for detailed findings.',
+              '',
+              '*Review powered by GitHub Copilot with project constitution v' + constitutionVersion + '*'
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+            
+            console.log('Review summary posted successfully');
+
+      # Step 8: Set final check status based on review outcome
+      - name: Set check status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const reviewOutcome = '${{ steps.review.outcome }}';
+            const copilotAvailable = '${{ steps.copilot_check.outputs.copilot_available }}' === 'true';
+            const constitutionVersion = '${{ steps.constitution.outputs.version }}';
+            const repositoryType = '${{ inputs.repository-type }}';
+            
+            // Determine check conclusion
+            let conclusion = 'neutral';
+            let summary = '';
+            
+            if (!copilotAvailable) {
+              summary = 'Manual review guidelines posted. Constitution v' + constitutionVersion + ' | Repo type: ' + repositoryType;
+            } else if (reviewOutcome === 'success') {
+              conclusion = 'success';
+              summary = 'Code review completed. Constitution v' + constitutionVersion + ' | Repo type: ' + repositoryType;
+            } else {
+              summary = 'Review completed with fallback. Constitution v' + constitutionVersion + ' | Repo type: ' + repositoryType;
+            }
+            
+            try {
+              await github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'Copilot PR Review',
+                head_sha: context.payload.pull_request.head.sha,
+                status: 'completed',
+                conclusion: conclusion,
+                output: {
+                  title: 'Copilot PR Review',
+                  summary: summary,
+                  text: [
+                    'Constitution Version: ' + constitutionVersion,
+                    'Repository Type: ' + repositoryType,
+                    'Review Date: ' + new Date().toISOString(),
+                    'Copilot Available: ' + copilotAvailable,
+                    'Rules Source: inventory-management-context'
+                  ].join('\n')
+                }
+              });
+              
+              console.log('Check status set to: ' + conclusion);
+            } catch (error) {
+              console.log('Failed to create check run:', error.message);
+            }

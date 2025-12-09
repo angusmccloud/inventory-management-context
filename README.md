@@ -84,6 +84,73 @@ SpecKit provides a structured, AI-assisted development workflow with the followi
 
 ---
 
+## 🤖 Automated PR Review
+
+This repository includes an **automated Pull Request review system** powered by GitHub Copilot that validates all code changes against the project constitution and coding standards.
+
+### Multi-Repository Support
+
+The PR review system works across **all three repositories** in the project:
+
+- **📋 Context Repository** (this repo) - Central hub for rules and review configuration
+- **🔧 Backend Repository** - Uses Context rules (only needs ~15 lines of config)
+- **🎨 Frontend Repository** - Uses Context rules (only needs ~15 lines of config)
+
+**Key Advantage**: Backend and Frontend repositories don't duplicate any rules or configuration files. They simply call the centralized review workflow from this Context repository.
+
+### Key Features
+
+- ✅ **Automated Reviews**: Every PR is automatically reviewed against constitution rules
+- ✅ **Multi-Repo Support**: Works across Context, Backend, and Frontend repositories
+- ✅ **Centralized Rules**: All rules maintained in one place (this repository)
+- ✅ **Inline Feedback**: Comments posted directly on problematic code lines
+- ✅ **Severity-Based Blocking**: Critical violations block merge, warnings are advisory
+- ✅ **Dynamic Updates**: Changes to constitution automatically reflected in all repos
+- ✅ **Version Tracking**: Each review references the constitution version used
+- ✅ **Minimal Setup**: Backend/Frontend repos only need ONE small file (~15 lines)
+
+### How It Works
+
+When you create or update a pull request:
+1. GitHub Actions workflow triggers automatically
+2. System aggregates latest rules from constitution and agent files
+3. Copilot reviews changed files against validation categories
+4. Inline comments posted on violations with suggested fixes
+5. Summary comment shows overall findings and verdict
+6. Status check blocks merge if critical violations found
+
+### Validation Categories
+
+| Category | Severity | Examples |
+|----------|----------|----------|
+| TypeScript Compliance | 🔴 CRITICAL | No implicit `any`, strict mode |
+| Testing Requirements | 🔴 CRITICAL | Test-first, 80% coverage |
+| Security Standards | 🔴 CRITICAL | No secrets, input validation |
+| AWS Best Practices | 🟠 HIGH | SDK v3, no DynamoDB scans |
+| Code Organization | 🟡 MEDIUM | App Router structure |
+| Performance | 🟠 HIGH | Image optimization, caching |
+
+### Learn More
+
+📖 **[Complete PR Review Documentation](docs/COPILOT-PR-REVIEW.md)**
+
+The comprehensive guide covers:
+- Prerequisites and setup
+- Multi-repository architecture and setup
+- Configuration options
+- How to update validation rules
+- Troubleshooting common issues
+- Example review outputs
+
+📖 **[Setup Guide for Backend/Frontend Repos](docs/COPILOT-PR-REVIEW-SETUP.md#part-4-setup-for-backendfrontend-repositories)**
+
+Step-by-step instructions for enabling PR reviews in Backend or Frontend repositories:
+- Copy the template workflow (~15 lines)
+- Configure organization name and repository type
+- Test and verify the setup
+
+---
+
 ## 🎯 Key Files
 
 ### The Constitution (MOST IMPORTANT)
