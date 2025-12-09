@@ -84,6 +84,52 @@ SpecKit provides a structured, AI-assisted development workflow with the followi
 
 ---
 
+## 🤖 Automated PR Review
+
+This repository includes an **automated Pull Request review system** powered by GitHub Copilot that validates all code changes against the project constitution and coding standards.
+
+### Key Features
+
+- ✅ **Automated Reviews**: Every PR is automatically reviewed against constitution rules
+- ✅ **Inline Feedback**: Comments posted directly on problematic code lines
+- ✅ **Severity-Based Blocking**: Critical violations block merge, warnings are advisory
+- ✅ **Dynamic Updates**: Changes to constitution automatically reflected in reviews
+- ✅ **Version Tracking**: Each review references the constitution version used
+
+### How It Works
+
+When you create or update a pull request:
+1. GitHub Actions workflow triggers automatically
+2. System aggregates latest rules from constitution and agent files
+3. Copilot reviews changed files against validation categories
+4. Inline comments posted on violations with suggested fixes
+5. Summary comment shows overall findings and verdict
+6. Status check blocks merge if critical violations found
+
+### Validation Categories
+
+| Category | Severity | Examples |
+|----------|----------|----------|
+| TypeScript Compliance | 🔴 CRITICAL | No implicit `any`, strict mode |
+| Testing Requirements | 🔴 CRITICAL | Test-first, 80% coverage |
+| Security Standards | 🔴 CRITICAL | No secrets, input validation |
+| AWS Best Practices | 🟠 HIGH | SDK v3, no DynamoDB scans |
+| Code Organization | 🟡 MEDIUM | App Router structure |
+| Performance | 🟠 HIGH | Image optimization, caching |
+
+### Learn More
+
+📖 **[Complete PR Review Documentation](docs/COPILOT-PR-REVIEW.md)**
+
+The comprehensive guide covers:
+- Prerequisites and setup
+- Configuration options
+- How to update validation rules
+- Troubleshooting common issues
+- Example review outputs
+
+---
+
 ## 🎯 Key Files
 
 ### The Constitution (MOST IMPORTANT)

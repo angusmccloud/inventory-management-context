@@ -1,0 +1,334 @@
+# GitHub Actions Workflow for Copilot PR Review
+# This workflow triggers GitHub Copilot code review on pull requests
+# with custom instructions aggregated from project rules.
+#
+# Architecture Reference: .specify/memory/pr-review-architecture.md
+#
+# IMPORTANT: The github/copilot-code-review-action@v1 may not be publicly
+# available yet. This workflow includes a fallback mechanism that posts
+# the aggregated rules as a PR comment for manual review guidance.
+
+name: Copilot PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+# Prevent concurrent reviews on the same PR
+concurrency:
+  group: pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  # Feature flag to enable/disable Copilot action
+  # Set to 'false' because github/copilot-code-review-action@v1 is not yet publicly available
+  # When GitHub releases the action, set this to 'true' to enable automated reviews
+  # Until then, the workflow will use the fallback mechanism (manual review guidelines)
+  COPILOT_ACTION_ENABLED: 'false'
+
+jobs:
+  copilot-review:
+    name: Copilot Code Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # Step 1: Checkout repository with full history for context
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Step 2: Make the aggregation script executable (redundant if already executable, but safe)
+      - name: Setup scripts
+        run: |
+          chmod +x .github/scripts/aggregate-rules.sh
+
+      # Step 3: Aggregate rules from all sources
+      - name: Aggregate review rules
+        id: rules
+        run: |
+          echo "Aggregating rules from constitution and agent files..."
+          
+          # Run the aggregation script
+          if .github/scripts/aggregate-rules.sh /tmp/review-context.md; then
+            echo "✅ Review context generated successfully"
+            echo "context_generated=true" >> $GITHUB_OUTPUT
+            
+            # Store the context file path
+            echo "context_file=/tmp/review-context.md" >> $GITHUB_OUTPUT
+            
+            # Get file size for logging
+            FILE_SIZE=$(wc -c < /tmp/review-context.md)
+            echo "Context file size: ${FILE_SIZE} bytes"
+          else
+            echo "❌ Failed to generate review context"
+            echo "context_generated=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      # Step 4: Get constitution version for tracking
+      - name: Get constitution version
+        id: constitution
+        run: |
+          if [[ -f .specify/memory/constitution.md ]]; then
+            VERSION=$(grep -oP '\*\*Version\*\*: \K[0-9]+\.[0-9]+\.[0-9]+' .specify/memory/constitution.md 2>/dev/null || echo "unknown")
+          else
+            VERSION="unknown"
+            echo "⚠️ Constitution file not found"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Constitution version: $VERSION"
+
+      # Step 5: Check if Copilot action is available
+      - name: Check Copilot action availability
+        id: copilot_check
+        run: |
+          # Check if the action should be used based on env var
+          if [[ "${{ env.COPILOT_ACTION_ENABLED }}" == "true" ]]; then
+            echo "copilot_available=true" >> $GITHUB_OUTPUT
+            echo "Copilot action is enabled"
+          else
+            echo "copilot_available=false" >> $GITHUB_OUTPUT
+            echo "Copilot action is disabled via COPILOT_ACTION_ENABLED"
+          fi
+
+      # Step 6: Request Copilot Code Review (if available)
+      # Note: This uses GitHub's native Copilot code review feature
+      # The custom instructions are read from the agent file
+      - name: Request Copilot Code Review
+        id: review
+        if: steps.copilot_check.outputs.copilot_available == 'true'
+        uses: github/copilot-code-review-action@v1
+        with:
+          # Point to the PR review agent with validation rules
+          custom-instructions-file: .github/agents/speckit.pr-review.agent.md
+        continue-on-error: true
+
+      # Step 7: Fallback - Post review guidelines if Copilot action failed or unavailable
+      - name: Fallback - Post review guidelines
+        id: fallback
+        if: steps.copilot_check.outputs.copilot_available == 'false' || steps.review.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const constitutionVersion = '${{ steps.constitution.outputs.version }}';
+            const reviewDate = new Date().toISOString();
+            const prNumber = context.issue.number;
+            const copilotAvailable = '${{ steps.copilot_check.outputs.copilot_available }}' === 'true';
+            const reviewOutcome = '${{ steps.review.outcome }}';
+            
+            // Determine fallback reason
+            let fallbackReason = '';
+            if (!copilotAvailable) {
+              fallbackReason = 'GitHub Copilot code review action is not available or disabled.';
+            } else if (reviewOutcome === 'failure') {
+              fallbackReason = 'GitHub Copilot code review action encountered an error.';
+            }
+            
+            // Read the aggregated rules for manual review guidance
+            let reviewGuidelines = '';
+            try {
+              const contextPath = '/tmp/review-context.md';
+              if (fs.existsSync(contextPath)) {
+                const fullContext = fs.readFileSync(contextPath, 'utf8');
+                // Extract just the review instructions section (last part of the file)
+                const instructionsMatch = fullContext.match(/## Review Instructions[\s\S]*$/);
+                if (instructionsMatch) {
+                  reviewGuidelines = instructionsMatch[0];
+                } else {
+                  reviewGuidelines = '> Review guidelines could not be extracted. See `.github/agents/speckit.pr-review.agent.md` for full instructions.';
+                }
+              }
+            } catch (error) {
+              console.log('Could not read review context:', error.message);
+              reviewGuidelines = '> Review guidelines file not available.';
+            }
+            
+            const body = [
+              '## 🤖 PR Review Guidelines (Manual Review Required)',
+              '',
+              '> ⚠️ **Fallback Mode**: ' + fallbackReason,
+              '>',
+              '> Please review this PR manually using the guidelines below.',
+              '',
+              '| Field | Value |',
+              '|-------|-------|',
+              '| Constitution Version | ' + constitutionVersion + ' |',
+              '| Review Date | ' + reviewDate + ' |',
+              '| PR Number | #' + prNumber + ' |',
+              '| Mode | Manual Review (Fallback) |',
+              '',
+              '### Review Context',
+              '',
+              'This PR should be validated against:',
+              '- 📜 Constitution (`.specify/memory/constitution.md`) - NON-NEGOTIABLE principles',
+              '- 🤖 AGENTS.md - Repository-specific agent rules',
+              '- 📋 Copilot Instructions (`.github/agents/copilot-instructions.md`) - Development guidelines',
+              '- 🔗 Shared Context (`.specify/memory/agent-shared-context.md`) - Common patterns',
+              '',
+              '### Validation Categories',
+              '',
+              '| Category | Source | Severity |',
+              '|----------|--------|----------|',
+              '| TypeScript Compliance | Constitution §I | 🔴 CRITICAL |',
+              '| Testing Requirements | Constitution §III | 🔴 CRITICAL |',
+              '| AWS Best Practices | Constitution §IV | 🟠 HIGH |',
+              '| Security Standards | Constitution §V | 🔴 CRITICAL |',
+              '| Code Organization | Constitution §VII | 🟡 MEDIUM |',
+              '| Performance | Constitution §VI | 🟠 HIGH |',
+              '',
+              '<details>',
+              '<summary>📋 Click to expand review instructions</summary>',
+              '',
+              reviewGuidelines,
+              '',
+              '</details>',
+              '',
+              '---',
+              '',
+              '**Next Steps:**',
+              '1. Review the changed files against the validation categories above',
+              '2. Check for CRITICAL violations (TypeScript, Testing, Security)',
+              '3. Post inline comments for any findings',
+              '4. Approve or request changes based on findings',
+              '',
+              '*Manual review required - Constitution v' + constitutionVersion + '*'
+            ].join('\n');
+
+            // Post the comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+            
+            console.log('Fallback review guidelines posted successfully');
+            return { fallback_used: true };
+
+      # Step 8: Post review summary comment (when Copilot review succeeded)
+      - name: Post review summary
+        if: steps.review.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const constitutionVersion = '${{ steps.constitution.outputs.version }}';
+            const reviewDate = new Date().toISOString();
+            const prNumber = context.issue.number;
+            
+            const body = [
+              '## 🤖 Copilot Code Review ✅',
+              '',
+              '| Field | Value |',
+              '|-------|-------|',
+              '| Constitution Version | ' + constitutionVersion + ' |',
+              '| Review Date | ' + reviewDate + ' |',
+              '| PR Number | #' + prNumber + ' |',
+              '',
+              'Copilot code review completed successfully.',
+              '',
+              '### Review Context',
+              '',
+              'This review validated code changes against:',
+              '- 📜 Constitution (`.specify/memory/constitution.md`) - NON-NEGOTIABLE principles',
+              '- 🤖 AGENTS.md - Repository-specific agent rules',
+              '- 📋 Copilot Instructions - Development guidelines',
+              '- 🔗 Shared Context - Common patterns',
+              '',
+              '### Validation Categories',
+              '',
+              '| Category | Source | Severity |',
+              '|----------|--------|----------|',
+              '| TypeScript Compliance | Constitution §I | CRITICAL |',
+              '| Testing Requirements | Constitution §III | CRITICAL |',
+              '| AWS Best Practices | Constitution §IV | HIGH |',
+              '| Security Standards | Constitution §V | CRITICAL |',
+              '| Code Organization | Constitution §VII | MEDIUM |',
+              '| Performance | Constitution §VI | HIGH |',
+              '',
+              '---',
+              '',
+              'See inline comments for detailed findings.',
+              '',
+              '*Review powered by GitHub Copilot with project constitution v' + constitutionVersion + '*'
+            ].join('\n');
+
+            // Post the comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+            
+            console.log('Review summary posted successfully');
+
+      # Step 9: Set final check status based on review outcome
+      - name: Set check status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const reviewOutcome = '${{ steps.review.outcome }}';
+            const copilotAvailable = '${{ steps.copilot_check.outputs.copilot_available }}' === 'true';
+            const constitutionVersion = '${{ steps.constitution.outputs.version }}';
+            const contextGenerated = '${{ steps.rules.outputs.context_generated }}' === 'true';
+            
+            // Determine check conclusion
+            let conclusion = 'neutral';
+            let title = 'Copilot PR Review';
+            let summary = '';
+            
+            if (!contextGenerated) {
+              conclusion = 'failure';
+              summary = 'Failed to generate review context. Check workflow logs for details.';
+            } else if (!copilotAvailable) {
+              conclusion = 'neutral';
+              summary = 'Copilot code review is not available. Manual review guidelines have been posted. Constitution v' + constitutionVersion;
+            } else if (reviewOutcome === 'success') {
+              conclusion = 'success';
+              summary = 'Code review completed successfully using constitution v' + constitutionVersion + '. See PR comments for details.';
+            } else if (reviewOutcome === 'failure') {
+              conclusion = 'neutral';
+              summary = 'Copilot code review encountered an issue. Manual review guidelines have been posted. Constitution v' + constitutionVersion;
+            } else {
+              conclusion = 'neutral';
+              summary = 'Code review completed with warnings. Review inline comments for recommendations.';
+            }
+            
+            // Create check run
+            try {
+              await github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'Copilot PR Review',
+                head_sha: context.payload.pull_request.head.sha,
+                status: 'completed',
+                conclusion: conclusion,
+                output: {
+                  title: title,
+                  summary: summary,
+                  text: [
+                    'Constitution Version: ' + constitutionVersion,
+                    'Review Date: ' + new Date().toISOString(),
+                    'Copilot Available: ' + copilotAvailable,
+                    'Context Generated: ' + contextGenerated
+                  ].join('\n')
+                }
+              });
+              
+              console.log('Check status set to: ' + conclusion);
+            } catch (error) {
+              console.log('Failed to create check run:', error.message);
+              // Don't fail the workflow if check creation fails
+            }
