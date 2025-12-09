@@ -2,27 +2,27 @@
 
 ## Overview
 
-This repository includes an automated Pull Request review system powered by GitHub Copilot. The system validates code changes against the project's constitution and coding standards, providing inline comments and actionable feedback directly on your PRs.
+This repository includes an automated Pull Request review system powered by GitHub Copilot's native code review feature. The system validates code changes against the project's constitution and coding standards, providing inline comments and actionable feedback directly on your PRs.
 
 ### Multi-Repository Support
 
 The PR review system is designed to work across **three repositories** in the project:
 
-- **📋 Context Repository** (this repo) - Central hub for rules, constitution, and review configuration
-- **🔧 Backend Repository** - Application backend code reviewed using Context rules
-- **🎨 Frontend Repository** - Application frontend code reviewed using Context rules
+- **📋 Context Repository** (this repo) - Central hub for rules, constitution, and instruction generation
+- **🔧 Backend Repository** - Application backend code reviewed using synced rules
+- **🎨 Frontend Repository** - Application frontend code reviewed using synced rules
 
-**Key Benefit**: Backend and Frontend repositories only need **ONE small file** (~15 lines) to enable PR reviews. All rules, constitution, and review logic are centralized in the Context repository, eliminating file duplication and ensuring consistency.
+**Key Benefit**: Rules are automatically synced from the Context repository to each application repository's `.github/copilot-instructions.md` file. This ensures all repositories use the same standards without manual duplication.
 
 See [Multi-Repository Setup](#multi-repository-setup) for details on setting up other repositories.
 
 ### What It Does
 
-- **Automated Code Review**: Analyzes all code changes in pull requests
+- **Automated Code Review**: GitHub Copilot analyzes all code changes in pull requests
 - **Constitution Compliance**: Validates against NON-NEGOTIABLE principles defined in [`.specify/memory/constitution.md`](.specify/memory/constitution.md:1)
 - **Inline Feedback**: Posts comments directly on problematic lines with suggested fixes
 - **Severity-Based Blocking**: Critical violations block merge, while warnings are advisory
-- **Dynamic Rule Updates**: Automatically uses the latest version of project rules
+- **Automatic Rule Sync**: Rules are automatically synced to application repositories when updated
 
 ### Key Benefits
 
@@ -31,6 +31,7 @@ See [Multi-Repository Setup](#multi-repository-setup) for details on setting up 
 - ✅ **Actionable Suggestions**: Concrete code fixes, not vague recommendations
 - ✅ **Learning Tool**: Helps developers understand project standards
 - ✅ **Version Tracked**: Reviews reference specific constitution versions
+- ✅ **Automatic Updates**: Rule changes propagate automatically to all repositories
 
 ---
 
@@ -46,69 +47,66 @@ This feature requires:
 
 ### Repository Settings
 
-1. **Enable GitHub Actions**
+1. **Enable GitHub Actions** (Context Repository)
    - Navigate to **Settings** → **Actions** → **General**
    - Ensure "Allow all actions and reusable workflows" is selected
 
-2. **Configure Workflow Permissions**
+2. **Configure Workflow Permissions** (Context Repository)
    - Navigate to **Settings** → **Actions** → **General** → **Workflow permissions**
    - Select "Read and write permissions"
-   - Check "Allow GitHub Actions to create and approve pull requests"
 
-3. **Enable Copilot Code Review** (when available)
+3. **Enable Copilot Code Review** (Application Repositories)
    - Navigate to **Settings** → **Copilot**
    - Enable "Copilot code review"
-   - The custom instructions file is automatically configured via [`.github/copilot-review-config.yml`](.github/copilot-review-config.yml:1)
+   - Copilot will automatically read `.github/copilot-instructions.md` synced from the Context repository
 
-### Required Permissions
+### Required Secrets
 
-The workflow requires these permissions (already configured in [`.github/workflows/pr-review.yml`](.github/workflows/pr-review.yml:20)):
+The sync workflow requires a Personal Access Token (PAT) with repository access:
 
-| Permission | Access | Purpose |
-|------------|--------|---------|
-| `contents` | read | Access repository files and constitution |
-| `pull-requests` | write | Post review comments on PRs |
-| `checks` | write | Update PR status checks |
+| Secret | Scope | Purpose |
+|--------|-------|---------|
+| `CROSS_REPO_TOKEN` | Context repo | PAT with `repo` scope to push files to application repositories |
 
 ---
 
 ## How It Works
 
-### Workflow Trigger
+### Sync Workflow
 
-The PR review workflow automatically triggers when:
-- A pull request is **opened**
-- A pull request is **synchronized** (new commits pushed)
-- A pull request is **reopened**
-
-Target branches: `main` and `develop`
+The sync workflow automatically triggers when:
+- Changes are pushed to `main` branch affecting:
+  - [`.specify/memory/constitution.md`](.specify/memory/constitution.md:1)
+  - [`AGENTS.md`](AGENTS.md:1)
+  - [`.specify/memory/agent-shared-context.md`](.specify/memory/agent-shared-context.md:1)
+  - [`.github/copilot-instructions.md`](.github/copilot-instructions.md:1)
+  - [`.github/scripts/generate-copilot-instructions.sh`](.github/scripts/generate-copilot-instructions.sh:1)
+- Manually triggered via workflow dispatch
 
 ### Review Process
 
 ```mermaid
 graph TD
-    A[PR Created/Updated] --> B[Workflow Triggered]
-    B --> C[Aggregate Rules]
-    C --> D{Copilot Available?}
-    D -->|Yes| E[Copilot Reviews Code]
-    D -->|No| F[Post Manual Guidelines]
-    E --> G[Post Inline Comments]
-    G --> H[Post Summary Comment]
-    H --> I[Set Status Check]
-    F --> I
+    A[Rules Updated in Context Repo] --> B[Sync Workflow Triggers]
+    B --> C[Generate Aggregated Instructions]
+    C --> D[Push to App Repos via GitHub API]
+    D --> E[.github/copilot-instructions.md Updated]
+    
+    F[PR Created in App Repo] --> G[Copilot Reads Instructions]
+    G --> H[Copilot Reviews Code]
+    H --> I[Post Inline Comments]
     I --> J[Developer Reviews Feedback]
 ```
 
 ### Rule Aggregation
 
-The system aggregates rules from multiple sources in order of authority:
+The generation script ([`.github/scripts/generate-copilot-instructions.sh`](.github/scripts/generate-copilot-instructions.sh:1)) aggregates rules from multiple sources:
 
 1. **PRIMARY**: [`.specify/memory/constitution.md`](.specify/memory/constitution.md:1) - NON-NEGOTIABLE principles
 2. **SECONDARY**: [`AGENTS.md`](AGENTS.md:1) - Repository-specific agent rules
-3. **TERTIARY**: [`.github/agents/copilot-instructions.md`](.github/agents/copilot-instructions.md:1) - Development guidelines
-4. **CONTEXT**: [`.specify/memory/agent-shared-context.md`](.specify/memory/agent-shared-context.md:1) - Shared patterns
+3. **TERTIARY**: [`.specify/memory/agent-shared-context.md`](.specify/memory/agent-shared-context.md:1) - Shared patterns
 
-The aggregation script ([`.github/scripts/aggregate-rules.sh`](.github/scripts/aggregate-rules.sh:1)) combines these files into a single context that Copilot uses for review.
+The aggregated file is then synced to each application repository's `.github/copilot-instructions.md`.
 
 ### Validation Categories
 
@@ -134,24 +132,15 @@ The aggregation script ([`.github/scripts/aggregate-rules.sh`](.github/scripts/a
 
 ## Configuration
 
-### Current Status
+### Enabling Copilot Code Review
 
-The system is currently in **fallback mode** because the `github/copilot-code-review-action@v1` is not yet publicly available. The workflow posts manual review guidelines instead of automated Copilot reviews.
+To enable Copilot code review in an application repository:
 
-### Enabling Copilot Action (When Available)
+1. **Navigate to Repository Settings** → **Copilot**
+2. **Enable "Copilot code review"**
+3. Copilot will automatically read `.github/copilot-instructions.md` (synced from Context repo)
 
-When GitHub releases the Copilot code review action, enable it by:
-
-1. Edit [`.github/workflows/pr-review.yml`](.github/workflows/pr-review.yml:35)
-2. Change `COPILOT_ACTION_ENABLED` from `'false'` to `'true'`:
-
-```yaml
-env:
-  COPILOT_ACTION_ENABLED: 'true'  # Changed from 'false'
-```
-
-3. Commit and push the change
-4. Future PRs will use automated Copilot reviews
+See [COPILOT-PR-REVIEW-SETUP.md](COPILOT-PR-REVIEW-SETUP.md) for detailed setup instructions.
 
 ### Modifying Validation Rules
 
@@ -166,40 +155,13 @@ To update validation rules:
    - Add repository-specific rules
    - Update technology stack requirements
 
-3. **Edit Development Guidelines**: Update [`.github/agents/copilot-instructions.md`](.github/agents/copilot-instructions.md:1)
+3. **Edit Shared Context**: Update [`.specify/memory/agent-shared-context.md`](.specify/memory/agent-shared-context.md:1)
    - Add coding patterns and conventions
    - Update best practices
 
-Changes take effect immediately on the next PR review - no workflow updates needed!
+4. **Commit and Push**: Changes to `main` branch automatically trigger the sync workflow
 
-### Customizing Review Behavior
-
-Edit [`.github/copilot-review-config.yml`](.github/copilot-review-config.yml:1) to customize:
-
-```yaml
-# File patterns to review
-review:
-  include:
-    - "**/*.ts"
-    - "**/*.tsx"
-  exclude:
-    - "**/node_modules/**"
-
-# Severity mappings
-severity:
-  critical:
-    - typescript_implicit_any
-    - secrets_in_code
-  high:
-    - aws_sdk_v2_usage
-    - dynamodb_scan_operation
-
-# Comment settings
-comments:
-  inline: true
-  summary: true
-  suggestions: true
-```
+The sync workflow will automatically generate updated instructions and push them to all configured application repositories.
 
 ---
 
@@ -209,11 +171,9 @@ comments:
 
 | File | Purpose | Link |
 |------|---------|------|
-| **PR Review Workflow** | Orchestrates the review process | [`.github/workflows/pr-review.yml`](.github/workflows/pr-review.yml:1) |
-| **PR Review Agent** | Defines validation rules and behavior | [`.github/agents/speckit.pr-review.agent.md`](.github/agents/speckit.pr-review.agent.md:1) |
-| **PR Review Prompt** | Links prompt to agent | [`.github/prompts/speckit.pr-review.prompt.md`](.github/prompts/speckit.pr-review.prompt.md:1) |
-| **Rule Aggregation Script** | Combines all rule sources | [`.github/scripts/aggregate-rules.sh`](.github/scripts/aggregate-rules.sh:1) |
-| **Copilot Config** | Configures review behavior | [`.github/copilot-review-config.yml`](.github/copilot-review-config.yml:1) |
+| **Sync Workflow** | Syncs instructions to app repos | [`.github/workflows/sync-copilot-instructions.yml`](.github/workflows/sync-copilot-instructions.yml:1) |
+| **Generation Script** | Aggregates rules into instructions | [`.github/scripts/generate-copilot-instructions.sh`](.github/scripts/generate-copilot-instructions.sh:1) |
+| **Source Instructions** | Base Copilot instructions | [`.github/copilot-instructions.md`](.github/copilot-instructions.md:1) |
 
 ### Rule Sources
 
@@ -221,14 +181,14 @@ comments:
 |------|-----------|---------|------|
 | **Constitution** | PRIMARY | NON-NEGOTIABLE principles | [`.specify/memory/constitution.md`](.specify/memory/constitution.md:1) |
 | **AGENTS.md** | SECONDARY | Repository-specific rules | [`AGENTS.md`](AGENTS.md:1) |
-| **Copilot Instructions** | TERTIARY | Development guidelines | [`.github/agents/copilot-instructions.md`](.github/agents/copilot-instructions.md:1) |
 | **Shared Context** | SUPPLEMENTARY | Common patterns | [`.specify/memory/agent-shared-context.md`](.specify/memory/agent-shared-context.md:1) |
 
 ### Documentation
 
 | File | Purpose | Link |
 |------|---------|------|
-| **Architecture Document** | System design and data flow | [`.specify/memory/pr-review-architecture.md`](.specify/memory/pr-review-architecture.md:1) |
+| **Architecture Document** | System design and approach | [`docs/architecture/copilot-code-review-centralized-rules.md`](docs/architecture/copilot-code-review-centralized-rules.md:1) |
+| **Setup Guide** | Detailed setup instructions | [`docs/COPILOT-PR-REVIEW-SETUP.md`](docs/COPILOT-PR-REVIEW-SETUP.md:1) |
 | **This Document** | User guide and reference | [`docs/COPILOT-PR-REVIEW.md`](docs/COPILOT-PR-REVIEW.md:1) |
 
 ---
@@ -237,177 +197,117 @@ comments:
 
 ### Architecture Overview
 
-The multi-repository PR review system uses GitHub's reusable workflows and composite actions to share rules across repositories:
+The multi-repository PR review system uses a sync workflow to automatically push aggregated rules to application repositories:
 
 ```mermaid
 flowchart TD
-    subgraph Context[Context Repository - Central Hub]
-        RW[Reusable Workflow]
-        CA[Composite Action]
+    subgraph Context[Context Repository]
         Rules[Constitution + Rules]
-        Agent[PR Review Agent]
-    end
-    
-    subgraph Backend[Backend Repository]
-        BWC[Caller Workflow<br/>~15 lines]
+        Script[Generation Script]
+        Sync[Sync Workflow]
     end
     
     subgraph Frontend[Frontend Repository]
-        FWC[Caller Workflow<br/>~15 lines]
+        FInst[.github/copilot-instructions.md]
+        FCopilot[GitHub Copilot]
     end
     
-    BWC -->|workflow_call| RW
-    FWC -->|workflow_call| RW
-    RW --> CA
-    CA --> Rules
-    CA --> Agent
+    subgraph Backend[Backend Repository]
+        BInst[.github/copilot-instructions.md]
+        BCopilot[GitHub Copilot]
+    end
+    
+    Rules --> Script
+    Script --> Sync
+    Sync -->|Push via API| FInst
+    Sync -->|Push via API| BInst
+    FInst --> FCopilot
+    BInst --> BCopilot
 ```
 
 ### How It Works
 
-1. **Backend/Frontend** repositories have a minimal caller workflow (~15 lines)
-2. Caller workflow invokes the **reusable workflow** in Context repository
-3. Reusable workflow uses a **composite action** to fetch all rules from Context
-4. Rules are placed in the correct locations for Copilot to use
-5. Review runs with the latest centralized rules
-6. Results are posted back to the calling repository's PR
+1. **Rules are updated** in the Context repository (constitution, AGENTS.md, etc.)
+2. **Sync workflow triggers** automatically on push to `main`
+3. **Generation script** aggregates rules into a comprehensive instructions file
+4. **GitHub API** pushes the file to each application repository's `.github/copilot-instructions.md`
+5. **Copilot reads** the synced instructions when reviewing PRs in application repositories
 
 ### Benefits
 
 | Benefit | Description |
 |---------|-------------|
-| ✅ **Minimal Duplication** | Only ~15 lines needed in Backend/Frontend repos |
-| ✅ **Centralized Rules** | All rules maintained in one place (Context repo) |
-| ✅ **Automatic Updates** | Rule changes automatically apply to all repos |
-| ✅ **Consistent Reviews** | Same standards across all repositories |
-| ✅ **Version Tracking** | Each review shows which constitution version was used |
+| ✅ **Single Source of Truth** | All rules maintained in Context repository |
+| ✅ **Automatic Sync** | Changes propagate automatically on push |
+| ✅ **Native Integration** | Copilot reads instructions natively |
+| ✅ **Version Tracking** | Each sync includes constitution version |
+| ✅ **No Manual Updates** | Application repos receive updates automatically |
 
-### Setting Up Backend or Frontend Repository
+### Setting Up a New Application Repository
 
-To enable PR reviews in the Backend or Frontend repository:
+To enable automatic rule sync for a new repository:
 
-1. **Copy the template workflow**:
-   - Template location: [`.github/workflows/templates/caller-workflow.yml`](.github/workflows/templates/caller-workflow.yml:1)
-   - Destination: `.github/workflows/pr-review.yml` in your Backend/Frontend repo
+1. **Add repository to sync workflow**:
+   - Edit [`.github/workflows/sync-copilot-instructions.yml`](.github/workflows/sync-copilot-instructions.yml:26)
+   - Add repository name to `TARGET_REPOS` environment variable
 
-2. **Replace the organization name**:
-   - Find `ORG_NAME` in the template
-   - Replace with your actual GitHub organization name
+2. **Enable Copilot code review** in the application repository:
+   - Navigate to **Settings** → **Copilot**
+   - Enable "Copilot code review"
 
-3. **Set the repository type**:
-   - Change `repository-type: backend` to match your repo (backend or frontend)
+3. **Manually trigger initial sync** (optional):
+   - Go to Actions tab in Context repository
+   - Run "Sync Copilot Instructions" workflow
+   - Select the new repository
 
-4. **Commit and push**:
-   ```bash
-   git add .github/workflows/pr-review.yml
-   git commit -m "feat: add Copilot PR review workflow"
-   git push
-   ```
-
-5. **Configure branch protection** (optional but recommended):
-   - Add "Copilot PR Review" as a required status check
-   - See [detailed setup guide](COPILOT-PR-REVIEW-SETUP.md#part-2-add-required-status-check)
-
-**That's it!** Your repository will now use the centralized rules from the Context repository for all PR reviews.
-
-### Template File
-
-The complete template is available at [`.github/workflows/templates/caller-workflow.yml`](.github/workflows/templates/caller-workflow.yml:1). Here's what it looks like:
-
-```yaml
-name: PR Review
-
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches:
-      - main
-      - develop
-
-jobs:
-  review:
-    # Replace ORG_NAME with your GitHub organization name
-    uses: ORG_NAME/inventory-management-context/.github/workflows/copilot-pr-review.yml@main
-    with:
-      repository-type: backend  # or 'frontend'
-      copilot-enabled: false
-    permissions:
-      contents: read
-      pull-requests: write
-      checks: write
-```
-
-### Architecture Documentation
-
-For complete technical details about the multi-repository architecture, see:
-- [Multi-Repository PR Review Architecture](.specify/memory/multi-repo-pr-review-architecture.md:1)
+See [COPILOT-PR-REVIEW-SETUP.md](COPILOT-PR-REVIEW-SETUP.md) for detailed setup instructions.
 
 ---
 
 ## Troubleshooting
 
-### Workflow Not Running
+### Sync Workflow Fails
 
-**Problem**: PR review workflow doesn't trigger on new PRs
-
-**Solutions**:
-1. Check that GitHub Actions are enabled in repository settings
-2. Verify the PR targets `main` or `develop` branch
-3. Check workflow permissions in Settings → Actions → General
-4. Review the Actions tab for any error messages
-
-### Rule Aggregation Fails
-
-**Problem**: Workflow fails at "Aggregate review rules" step
+**Problem**: Sync workflow fails to push to application repositories
 
 **Solutions**:
-1. Verify all rule source files exist:
+1. Verify `CROSS_REPO_TOKEN` secret is set in Context repository
+2. Check that the PAT has `repo` scope for target repositories
+3. Ensure target repositories exist and are accessible
+4. Review workflow logs for specific API errors
+
+### Instructions Not Updating
+
+**Problem**: Changes to rules don't appear in application repositories
+
+**Solutions**:
+1. Verify the sync workflow ran successfully (check Actions tab)
+2. Check that changed files are in the workflow's `paths` trigger
+3. Manually trigger the sync workflow via workflow dispatch
+4. Verify the generation script is executable:
    ```bash
-   ls -la .specify/memory/constitution.md
-   ls -la AGENTS.md
-   ls -la .github/agents/copilot-instructions.md
-   ls -la .specify/memory/agent-shared-context.md
+   chmod +x .github/scripts/generate-copilot-instructions.sh
    ```
 
-2. Check script permissions:
-   ```bash
-   chmod +x .github/scripts/aggregate-rules.sh
-   ```
+### Copilot Not Using Instructions
 
-3. Review workflow logs in the Actions tab for specific errors
-
-### Copilot Action Not Available
-
-**Problem**: Workflow shows "Copilot action is disabled" message
-
-**Expected Behavior**: This is normal! The `github/copilot-code-review-action@v1` is not yet publicly available.
-
-**Current Behavior**: The workflow posts manual review guidelines as a fallback.
-
-**When Available**: Update `COPILOT_ACTION_ENABLED` to `'true'` in the workflow file.
-
-### No Comments Posted
-
-**Problem**: Workflow completes but no review comments appear
+**Problem**: Copilot reviews don't reflect the synced rules
 
 **Solutions**:
-1. Check workflow permissions include `pull-requests: write`
-2. Verify the PR has actual code changes (not just documentation)
-3. Review the workflow logs for API errors
-4. Ensure the repository has Copilot enabled (when action is available)
+1. Verify `.github/copilot-instructions.md` exists in the application repository
+2. Check that Copilot code review is enabled in repository settings
+3. Ensure the file was synced recently (check git history)
+4. Try creating a new PR to trigger a fresh review
 
-### Constitution Version Not Detected
+### Permission Denied Errors
 
-**Problem**: Review summary shows "unknown" for constitution version
+**Problem**: Sync workflow fails with permission errors
 
 **Solutions**:
-1. Verify constitution file has version header:
-   ```markdown
-   **Version**: 1.1.0
-   ```
-
-2. Check the version format matches `X.X.X` (semantic versioning)
-3. Ensure the version line is near the top of the file
+1. Verify the PAT has not expired
+2. Check that the PAT has `repo` scope (or `public_repo` for public repos)
+3. Ensure the service account has write access to target repositories
+4. Review GitHub security logs for token usage issues
 
 ---
 
@@ -453,137 +353,43 @@ For complete technical details about the multi-repository architecture, see:
 
 ```mermaid
 graph LR
-    A[Update Constitution] --> B[Commit & Push]
-    B --> C[New PR Created]
-    C --> D[Workflow Runs]
-    D --> E[Aggregates Latest Rules]
-    E --> F[Reviews with New Rules]
+    A[Update Constitution] --> B[Commit & Push to main]
+    B --> C[Sync Workflow Triggers]
+    C --> D[Generate Instructions]
+    D --> E[Push to App Repos]
+    E --> F[Copilot Uses New Rules]
 ```
 
 **Key Points**:
-- ✅ Changes take effect **immediately** on next PR
-- ✅ No workflow updates needed
-- ✅ Version tracking ensures audit trail
-- ✅ Old PRs reviewed with old rules (based on commit)
+- ✅ Changes sync **automatically** when pushed to `main`
+- ✅ All application repositories updated simultaneously
+- ✅ Version tracking in synced file
+- ✅ Can manually trigger sync via workflow dispatch
 
 ### Version Tracking
 
-Each review includes the constitution version used:
+Each synced instructions file includes metadata:
 
 ```markdown
-## 🤖 Copilot Code Review Summary
-
-**Constitution Version**: 1.2.0
-**Review Date**: 2025-12-09T02:30:00Z
+> **Auto-synced from inventory-management-context repository**
+> 
+> | Field | Value |
+> |-------|-------|
+> | Constitution Version | 1.2.0 |
+> | Generated | 2025-12-09T17:00:00Z |
 ```
 
 This ensures:
-- **Audit Trail**: Know which rules were applied
-- **Consistency**: Same PR always reviewed with same rules
+- **Audit Trail**: Know which rules version is active
+- **Consistency**: All repos use same version
 - **Change Management**: Track when rules changed
-
----
-
-## Example Review Output
-
-### Inline Comment Example
-
-```markdown
-<!-- Copilot Review: TypeScript Compliance -->
-🔴 **CRITICAL**: Implicit `any` type detected
-
-**Rule**: Constitution §I - TypeScript Type Safety
-**Requirement**: All function parameters and return types MUST be explicitly typed
-
-**Current Code**:
-```typescript
-function processData(data) {
-  return data.map(item => item.value);
-}
-```
-
-**Suggested Fix**:
-```typescript
-function processData(data: DataItem[]): number[] {
-  return data.map((item: DataItem) => item.value);
-}
-```
-```
-
-### Summary Comment Example
-
-```markdown
-## 🤖 Copilot Code Review Summary
-
-**Constitution Version**: 1.1.0
-**Files Reviewed**: 12
-**Review Date**: 2025-12-09T02:30:00Z
-
-### Findings
-
-| Severity | Count | Category |
-|----------|-------|----------|
-| 🔴 CRITICAL | 2 | TypeScript Compliance |
-| 🟠 HIGH | 3 | AWS Best Practices |
-| 🟡 MEDIUM | 5 | Code Organization |
-| 🟢 LOW | 1 | Performance |
-
-### Critical Issues (Blocking)
-
-1. **Line 45 in `src/api/handler.ts`**: Implicit `any` type
-2. **Line 23 in `src/utils/db.ts`**: DynamoDB scan operation detected
-
-### Recommendations
-
-- [ ] Fix critical TypeScript issues before merge
-- [ ] Consider refactoring DynamoDB query to use GSI
-- [ ] Add missing test coverage for new endpoints
-
-### Verdict
-
-**Status**: FAIL ❌
-
-This PR has CRITICAL violations that must be resolved before merge.
-
----
-*Review powered by GitHub Copilot with project constitution v1.1.0*
-```
-
----
-
-## Future Enhancements
-
-### When `github/copilot-code-review-action@v1` Becomes Available
-
-GitHub is developing a native Copilot code review action. When released:
-
-1. **Enable the Action**:
-   - Set `COPILOT_ACTION_ENABLED: 'true'` in [`.github/workflows/pr-review.yml`](.github/workflows/pr-review.yml:35)
-
-2. **Benefits**:
-   - ✅ Fully automated reviews (no manual fallback)
-   - ✅ Faster review completion
-   - ✅ Better integration with GitHub UI
-   - ✅ More sophisticated code analysis
-
-3. **Migration Path**:
-   - No changes needed to rule files
-   - No changes needed to agent configuration
-   - Simply enable the feature flag
-
-### Planned Improvements
-
-- **Custom Severity Thresholds**: Configure which severities block merge
-- **File-Specific Rules**: Different rules for different file types
-- **Review Templates**: Customizable comment formats
-- **Metrics Dashboard**: Track review statistics over time
-- **Auto-Fix Suggestions**: Automated PR updates for simple fixes
 
 ---
 
 ## Additional Resources
 
-- **Architecture Documentation**: [`.specify/memory/pr-review-architecture.md`](.specify/memory/pr-review-architecture.md:1)
+- **Architecture Documentation**: [`docs/architecture/copilot-code-review-centralized-rules.md`](docs/architecture/copilot-code-review-centralized-rules.md:1)
+- **Setup Guide**: [`docs/COPILOT-PR-REVIEW-SETUP.md`](docs/COPILOT-PR-REVIEW-SETUP.md:1)
 - **GitHub Copilot Docs**: https://docs.github.com/en/copilot
 - **GitHub Actions Docs**: https://docs.github.com/en/actions
 - **Project Constitution**: [`.specify/memory/constitution.md`](.specify/memory/constitution.md:1)

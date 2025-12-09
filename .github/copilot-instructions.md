@@ -1,6 +1,13 @@
+<!--
+  SOURCE FILE - Do not edit in app repos
+  This file is the source for Copilot instructions in the context repository.
+  The sync workflow generates an aggregated version and pushes it to app repos.
+  Edit this file to update the base instructions that will be included in the aggregation.
+-->
+
 # GitHub Copilot Instructions
    
-   When working in this workspace, always follow the architecture and 
+   When working in this workspace, always follow the architecture and
    coding standards defined in `.github/agents/constitution.md`.
    
    Key points:
