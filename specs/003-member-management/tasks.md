@@ -44,30 +44,30 @@ Based on plan.md project structure:
 
 ### Type Definitions
 
-- [ ] T008 [P] Create Invitation type definitions with Zod schemas in `src/types/invitation.ts`
-- [ ] T009 [P] Extend Member type definitions with version attribute in `src/types/member.ts`
+- [X] T008 [P] Create Invitation type definitions with Zod schemas in `src/types/invitation.ts`
+- [X] T009 [P] Extend Member type definitions with version attribute in `src/types/member.ts`
 
 ### Core Utilities
 
-- [ ] T010 Create HMAC utility functions in `src/utils/hmac.ts`
-- [ ] T011 Create token service with generate/validate functions in `src/services/tokenService.ts`
+- [X] T010 Create HMAC utility functions in `src/lib/hmac.ts`
+- [X] T011 Create token service with generate/validate functions in `src/services/tokenService.ts`
 - [ ] T012 [P] Create token service unit tests in `tests/unit/services/tokenService.test.ts`
 
 ### Email Service
 
-- [ ] T013 Create email service for invitation emails in `src/lib/ses/invitationEmail.ts`
-- [ ] T014 [P] Create email service unit tests in `tests/unit/lib/invitationEmail.test.ts`
+- [X] T013 Create email service for invitation emails in `src/services/emailService.ts`
+- [ ] T014 [P] Create email service unit tests in `tests/unit/services/emailService.test.ts`
 
 ### Repository Layer
 
-- [ ] T015 Create invitation repository with DynamoDB operations in `src/lib/dynamodb/invitationRepository.ts`
-- [ ] T016 [P] Create invitation repository unit tests in `tests/unit/lib/invitationRepository.test.ts`
-- [ ] T017 Extend member repository with version support in `src/lib/dynamodb/memberRepository.ts`
-- [ ] T018 [P] Create member repository unit tests in `tests/unit/lib/memberRepository.test.ts`
+- [X] T015 Create invitation repository with DynamoDB operations in `src/models/invitation.ts`
+- [ ] T016 [P] Create invitation repository unit tests in `tests/unit/models/invitation.test.ts`
+- [X] T017 Extend member repository with version support in `src/models/member.ts`
+- [ ] T018 [P] Create member repository unit tests in `tests/unit/models/member.test.ts`
 
 ### Authorization Middleware
 
-- [ ] T019 Create requireAdmin middleware for role-based access in `src/middleware/authorization.ts`
+- [X] T019 Create requireAdmin middleware for role-based access in `src/lib/authorization.ts`
 - [ ] T020 [P] Create authorization middleware unit tests in `tests/unit/middleware/authorization.test.ts`
 
 **Checkpoint**: Foundation ready - API handler implementation can now begin
@@ -82,49 +82,49 @@ Based on plan.md project structure:
 
 ### 3.1 Invitation Service Layer
 
-- [ ] T021 [US4] Create invitation service with business logic in `src/services/invitationService.ts`
+- [X] T021 [US4] Create invitation service with business logic in `src/services/invitationService.ts`
 - [ ] T022 [P] [US4] Create invitation service unit tests in `tests/unit/services/invitationService.test.ts`
 
 ### 3.2 Member Service Layer
 
-- [ ] T023 [US4] Create member service with business logic in `src/services/memberService.ts`
+- [X] T023 [US4] Create member service with business logic in `src/services/memberService.ts`
 - [ ] T024 [P] [US4] Create member service unit tests in `tests/unit/services/memberService.test.ts`
 
 ### 3.3 Invitation API Handlers
 
-- [ ] T025 [US4] Implement createInvitation handler in `src/handlers/invitations/createInvitation.ts`
+- [X] T025 [US4] Implement createInvitation handler in `src/handlers/invitations/createInvitation.ts`
 - [ ] T026 [P] [US4] Create createInvitation handler tests in `tests/unit/handlers/invitations/createInvitation.test.ts`
-- [ ] T027 [US4] Implement listInvitations handler in `src/handlers/invitations/listInvitations.ts`
+- [X] T027 [US4] Implement listInvitations handler in `src/handlers/invitations/listInvitations.ts`
 - [ ] T028 [P] [US4] Create listInvitations handler tests in `tests/unit/handlers/invitations/listInvitations.test.ts`
-- [ ] T029 [US4] Implement getInvitation handler in `src/handlers/invitations/getInvitation.ts`
+- [X] T029 [US4] Implement getInvitation handler in `src/handlers/invitations/getInvitation.ts`
 - [ ] T030 [P] [US4] Create getInvitation handler tests in `tests/unit/handlers/invitations/getInvitation.test.ts`
-- [ ] T031 [US4] Implement revokeInvitation handler in `src/handlers/invitations/revokeInvitation.ts`
+- [X] T031 [US4] Implement revokeInvitation handler in `src/handlers/invitations/revokeInvitation.ts`
 - [ ] T032 [P] [US4] Create revokeInvitation handler tests in `tests/unit/handlers/invitations/revokeInvitation.test.ts`
-- [ ] T033 [US4] Implement acceptInvitation handler (public endpoint) in `src/handlers/invitations/acceptInvitation.ts`
+- [X] T033 [US4] Implement acceptInvitation handler (public endpoint) in `src/handlers/invitations/acceptInvitation.ts`
 - [ ] T034 [P] [US4] Create acceptInvitation handler tests in `tests/unit/handlers/invitations/acceptInvitation.test.ts`
 
 ### 3.4 Member API Handlers
 
-- [ ] T035 [US4] Implement listMembers handler in `src/handlers/members/listMembers.ts`
+- [X] T035 [US4] Implement listMembers handler in `src/handlers/members/listMembers.ts`
 - [ ] T036 [P] [US4] Create listMembers handler tests in `tests/unit/handlers/members/listMembers.test.ts`
-- [ ] T037 [US4] Implement getMember handler in `src/handlers/members/getMember.ts`
+- [X] T037 [US4] Implement getMember handler in `src/handlers/members/getMember.ts`
 - [ ] T038 [P] [US4] Create getMember handler tests in `tests/unit/handlers/members/getMember.test.ts`
-- [ ] T039 [US4] Implement updateMember handler with optimistic locking in `src/handlers/members/updateMember.ts`
+- [X] T039 [US4] Implement updateMember handler with optimistic locking in `src/handlers/members/updateMember.ts`
 - [ ] T040 [P] [US4] Create updateMember handler tests in `tests/unit/handlers/members/updateMember.test.ts`
-- [ ] T041 [US4] Implement removeMember handler with last admin protection in `src/handlers/members/removeMember.ts`
+- [X] T041 [US4] Implement removeMember handler with last admin protection in `src/handlers/members/removeMember.ts`
 - [ ] T042 [P] [US4] Create removeMember handler tests in `tests/unit/handlers/members/removeMember.test.ts`
 
 ### 3.5 SAM Template Updates
 
-- [ ] T043 [US4] Add CreateInvitationFunction to template.yaml with SES, Secrets Manager, SSM policies
-- [ ] T044 [P] [US4] Add ListInvitationsFunction to template.yaml with DynamoDB read policy
-- [ ] T045 [P] [US4] Add GetInvitationFunction to template.yaml with DynamoDB read policy
-- [ ] T046 [P] [US4] Add RevokeInvitationFunction to template.yaml with DynamoDB write policy
-- [ ] T047 [US4] Add AcceptInvitationFunction to template.yaml with Cognito, DynamoDB, Secrets Manager policies (public endpoint)
-- [ ] T048 [P] [US4] Add ListMembersFunction to template.yaml with DynamoDB read policy
-- [ ] T049 [P] [US4] Add GetMemberFunction to template.yaml with DynamoDB read policy
-- [ ] T050 [P] [US4] Add UpdateMemberFunction to template.yaml with DynamoDB write policy
-- [ ] T051 [US4] Add RemoveMemberFunction to template.yaml with DynamoDB, Cognito policies
+- [X] T043 [US4] Add CreateInvitationFunction to template.yaml with SES, Secrets Manager, SSM policies
+- [X] T044 [P] [US4] Add ListInvitationsFunction to template.yaml with DynamoDB read policy
+- [X] T045 [P] [US4] Add GetInvitationFunction to template.yaml with DynamoDB read policy
+- [X] T046 [P] [US4] Add RevokeInvitationFunction to template.yaml with DynamoDB write policy
+- [X] T047 [US4] Add AcceptInvitationFunction to template.yaml with Cognito, DynamoDB, Secrets Manager policies (public endpoint)
+- [X] T048 [P] [US4] Add ListMembersFunction to template.yaml with DynamoDB read policy
+- [X] T049 [P] [US4] Add GetMemberFunction to template.yaml with DynamoDB read policy
+- [X] T050 [P] [US4] Add UpdateMemberFunction to template.yaml with DynamoDB write policy
+- [X] T051 [US4] Add RemoveMemberFunction to template.yaml with DynamoDB, Cognito policies
 
 ### 3.6 Integration Tests
 
@@ -140,12 +140,12 @@ Based on plan.md project structure:
 
 ### 3.8 Frontend Components
 
-- [ ] T056 [P] [US4] Create MemberList component in `src/components/members/MemberList.tsx`
-- [ ] T057 [P] [US4] Create MemberCard component in `src/components/members/MemberCard.tsx`
-- [ ] T058 [P] [US4] Create InviteMemberForm component in `src/components/members/InviteMemberForm.tsx`
-- [ ] T059 [P] [US4] Create InvitationList component in `src/components/members/InvitationList.tsx`
-- [ ] T060 [P] [US4] Create RoleSelector component in `src/components/members/RoleSelector.tsx`
-- [ ] T061 [P] [US4] Create RemoveMemberDialog component in `src/components/members/RemoveMemberDialog.tsx`
+- [X] T056 [P] [US4] Create MemberList component in `src/components/members/MemberList.tsx`
+- [X] T057 [P] [US4] Create MemberCard component in `src/components/members/MemberCard.tsx`
+- [X] T058 [P] [US4] Create InviteMemberForm component in `src/components/members/InviteMemberForm.tsx`
+- [X] T059 [P] [US4] Create InvitationList component in `src/components/members/InvitationList.tsx`
+- [X] T060 [P] [US4] Create RoleSelector component in `src/components/members/RoleSelector.tsx`
+- [X] T061 [P] [US4] Create RemoveMemberDialog component in `src/components/members/RemoveMemberDialog.tsx`
 
 ### 3.9 Frontend Component Tests
 
@@ -158,15 +158,15 @@ Based on plan.md project structure:
 
 ### 3.10 Frontend Pages
 
-- [ ] T068 [US4] Create members dashboard page in `src/app/dashboard/members/page.tsx`
-- [ ] T069 [US4] Create member detail page in `src/app/dashboard/members/[memberId]/page.tsx`
-- [ ] T070 [US4] Create invitations management page in `src/app/dashboard/invitations/page.tsx`
-- [ ] T071 [US4] Create public invitation acceptance page in `src/app/invite/[token]/page.tsx`
+- [X] T068 [US4] Create members dashboard page in `src/app/dashboard/members/page.tsx`
+- [ ] T069 [US4] Create member detail page in `src/app/dashboard/members/[memberId]/page.tsx` (SKIPPED - not needed for MVP)
+- [ ] T070 [US4] Create invitations management page in `src/app/dashboard/invitations/page.tsx` (SKIPPED - integrated into members page)
+- [X] T071 [US4] Create public invitation acceptance page in `src/app/accept-invitation/page.tsx`
 
 ### 3.11 Frontend API Client
 
-- [ ] T072 [P] [US4] Create invitations API client in `src/lib/api/invitations.ts`
-- [ ] T073 [P] [US4] Create members API client in `src/lib/api/members.ts`
+- [X] T072 [P] [US4] Create invitations API client in `src/lib/api/invitations.ts`
+- [X] T073 [P] [US4] Create members API client in `src/lib/api/members.ts`
 
 **Checkpoint**: User Story 4 complete - all member management functionality implemented
 
