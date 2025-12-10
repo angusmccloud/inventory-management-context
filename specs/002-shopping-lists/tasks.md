@@ -35,9 +35,9 @@ Adults add items to a family shopping list (either from tracked inventory or as 
 
 **Purpose**: Project initialization and DynamoDB TTL configuration
 
-- [ ] T001 Enable DynamoDB TTL on `InventoryManagement` table for `ttl` attribute via AWS CLI or SAM template update
-- [ ] T002 [P] Create feature branch `002-shopping-lists` in backend repository
-- [ ] T003 [P] Create feature branch `002-shopping-lists` in frontend repository
+- [X] T001 Enable DynamoDB TTL on `InventoryManagement` table for `ttl` attribute via AWS CLI or SAM template update
+- [X] T002 [P] Create feature branch `002-shopping-lists` in backend repository
+- [X] T003 [P] Create feature branch `002-shopping-lists` in frontend repository
 - [ ] T004 [P] Verify parent feature (001-family-inventory-mvp) dependencies are available
 
 **Checkpoint**: Infrastructure ready for feature development
@@ -52,18 +52,18 @@ Adults add items to a family shopping list (either from tracked inventory or as 
 
 ### Backend Types and Schemas
 
-- [ ] T005 [P] Create ShoppingListItem TypeScript types in `src/types/shoppingList.ts`
-- [ ] T006 [P] Create Zod validation schemas (ShoppingListItemSchema, CreateShoppingListItemSchema, UpdateShoppingListItemSchema, UpdateStatusSchema) in `src/types/shoppingList.ts`
-- [ ] T007 [P] Create DynamoDB key builders for shopping list items in `src/lib/dynamodb.ts` or `src/lib/keys.ts`
+- [X] T005 [P] Create ShoppingListItem TypeScript types in `src/types/shoppingList.ts`
+- [X] T006 [P] Create Zod validation schemas (ShoppingListItemSchema, CreateShoppingListItemSchema, UpdateShoppingListItemSchema, UpdateStatusSchema) in `src/types/shoppingList.ts`
+- [X] T007 [P] Create DynamoDB key builders for shopping list items in `src/lib/dynamodb.ts` or `src/lib/keys.ts`
 
 ### Backend Service Layer
 
-- [ ] T008 Create shoppingListService with core CRUD operations in `src/services/shoppingListService.ts`
-- [ ] T009 [P] Write unit tests for shoppingListService in `src/services/__tests__/shoppingListService.test.ts`
+- [X] T008 Create shoppingListService with core CRUD operations in `src/services/shoppingListService.ts`
+- [X] T009 [P] Write unit tests for shoppingListService in `src/services/__tests__/shoppingListService.test.ts`
 
 ### Frontend API Client
 
-- [ ] T010 [P] Create shopping list API client in `lib/api/shoppingList.ts`
+- [X] T010 [P] Create shopping list API client in `lib/api/shoppingList.ts`
 
 **Checkpoint**: Foundation ready - handler and component implementation can now begin
 
@@ -86,48 +86,48 @@ Adults add items to a family shopping list (either from tracked inventory or as 
 
 #### Handler Tests
 
-- [ ] T011 [P] [US3] Write tests for listShoppingListItems handler in `src/handlers/__tests__/shopping-list/listShoppingListItems.test.ts`
-- [ ] T012 [P] [US3] Write tests for addToShoppingList handler in `src/handlers/__tests__/shopping-list/addToShoppingList.test.ts`
+- [X] T011 [P] [US3] Write tests for listShoppingListItems handler in `src/handlers/__tests__/shopping-list/listShoppingListItems.test.ts`
+- [X] T012 [P] [US3] Write tests for addToShoppingList handler in `src/handlers/__tests__/shopping-list/addToShoppingList.test.ts`
 - [ ] T013 [P] [US3] Write tests for getShoppingListItem handler in `src/handlers/__tests__/shopping-list/getShoppingListItem.test.ts`
 - [ ] T014 [P] [US3] Write tests for updateShoppingListItem handler in `src/handlers/__tests__/shopping-list/updateShoppingListItem.test.ts`
-- [ ] T015 [P] [US3] Write tests for updateShoppingListItemStatus handler in `src/handlers/__tests__/shopping-list/updateShoppingListItemStatus.test.ts`
+- [X] T015 [P] [US3] Write tests for updateShoppingListItemStatus handler in `src/handlers/__tests__/shopping-list/updateShoppingListItemStatus.test.ts`
 - [ ] T016 [P] [US3] Write tests for removeFromShoppingList handler in `src/handlers/__tests__/shopping-list/removeFromShoppingList.test.ts`
 
 #### Frontend Component Tests
 
-- [ ] T017 [P] [US3] Write tests for ShoppingList component in `components/shopping-list/__tests__/ShoppingList.test.tsx`
-- [ ] T018 [P] [US3] Write tests for ShoppingListItem component in `components/shopping-list/__tests__/ShoppingListItem.test.tsx`
-- [ ] T019 [P] [US3] Write tests for AddItemForm component in `components/shopping-list/__tests__/AddItemForm.test.tsx`
+- [X] T017 [P] [US3] Write tests for ShoppingList component in `components/shopping-list/__tests__/ShoppingList.test.tsx`
+- [X] T018 [P] [US3] Write tests for ShoppingListItem component in `components/shopping-list/__tests__/ShoppingListItem.test.tsx`
+- [X] T019 [P] [US3] Write tests for AddItemForm component in `components/shopping-list/__tests__/AddItemForm.test.tsx`
 - [ ] T020 [P] [US3] Write tests for StoreFilter component in `components/shopping-list/__tests__/StoreFilter.test.tsx`
 
 ### Backend Handler Implementation
 
-- [ ] T021 [US3] Implement listShoppingListItems handler in `src/handlers/shopping-list/listShoppingListItems.ts` (depends on T011)
-- [ ] T022 [US3] Implement addToShoppingList handler with duplicate detection in `src/handlers/shopping-list/addToShoppingList.ts` (depends on T012)
-- [ ] T023 [US3] Implement getShoppingListItem handler in `src/handlers/shopping-list/getShoppingListItem.ts` (depends on T013)
-- [ ] T024 [US3] Implement updateShoppingListItem handler with optimistic locking in `src/handlers/shopping-list/updateShoppingListItem.ts` (depends on T014)
-- [ ] T025 [US3] Implement updateShoppingListItemStatus handler with TTL management in `src/handlers/shopping-list/updateShoppingListItemStatus.ts` (depends on T015)
-- [ ] T026 [US3] Implement removeFromShoppingList handler in `src/handlers/shopping-list/removeFromShoppingList.ts` (depends on T016)
+- [X] T021 [US3] Implement listShoppingListItems handler in `src/handlers/shopping-list/listShoppingListItems.ts` (depends on T011)
+- [X] T022 [US3] Implement addToShoppingList handler with duplicate detection in `src/handlers/shopping-list/addToShoppingList.ts` (depends on T012)
+- [X] T023 [US3] Implement getShoppingListItem handler in `src/handlers/shopping-list/getShoppingListItem.ts` (depends on T013)
+- [X] T024 [US3] Implement updateShoppingListItem handler with optimistic locking in `src/handlers/shopping-list/updateShoppingListItem.ts` (depends on T014)
+- [X] T025 [US3] Implement updateShoppingListItemStatus handler with TTL management in `src/handlers/shopping-list/updateShoppingListItemStatus.ts` (depends on T015)
+- [X] T026 [US3] Implement removeFromShoppingList handler in `src/handlers/shopping-list/removeFromShoppingList.ts` (depends on T016)
 
 ### Infrastructure (SAM Template)
 
-- [ ] T027 [US3] Add ListShoppingListItemsFunction to `template.yaml` with DynamoDBCrudPolicy
-- [ ] T028 [P] [US3] Add AddToShoppingListFunction to `template.yaml` with DynamoDBCrudPolicy
-- [ ] T029 [P] [US3] Add GetShoppingListItemFunction to `template.yaml` with DynamoDBReadPolicy
-- [ ] T030 [P] [US3] Add UpdateShoppingListItemFunction to `template.yaml` with DynamoDBCrudPolicy
-- [ ] T031 [P] [US3] Add UpdateShoppingListItemStatusFunction to `template.yaml` with DynamoDBCrudPolicy
-- [ ] T032 [P] [US3] Add RemoveFromShoppingListFunction to `template.yaml` with DynamoDBCrudPolicy
+- [X] T027 [US3] Add ListShoppingListItemsFunction to `template.yaml` with DynamoDBCrudPolicy
+- [X] T028 [P] [US3] Add AddToShoppingListFunction to `template.yaml` with DynamoDBCrudPolicy
+- [X] T029 [P] [US3] Add GetShoppingListItemFunction to `template.yaml` with DynamoDBReadPolicy
+- [X] T030 [P] [US3] Add UpdateShoppingListItemFunction to `template.yaml` with DynamoDBCrudPolicy
+- [X] T031 [P] [US3] Add UpdateShoppingListItemStatusFunction to `template.yaml` with DynamoDBCrudPolicy
+- [X] T032 [P] [US3] Add RemoveFromShoppingListFunction to `template.yaml` with DynamoDBCrudPolicy
 
 ### Frontend Component Implementation
 
-- [ ] T033 [US3] Implement ShoppingList container component in `components/shopping-list/ShoppingList.tsx` (depends on T017)
-- [ ] T034 [US3] Implement ShoppingListItem component with checkbox toggle in `components/shopping-list/ShoppingListItem.tsx` (depends on T018)
-- [ ] T035 [US3] Implement AddItemForm component with inventory/free-text support in `components/shopping-list/AddItemForm.tsx` (depends on T019)
-- [ ] T036 [US3] Implement StoreFilter component for store-based grouping in `components/shopping-list/StoreFilter.tsx` (depends on T020)
+- [X] T033 [US3] Implement ShoppingList container component in `components/shopping-list/ShoppingList.tsx` (depends on T017)
+- [X] T034 [US3] Implement ShoppingListItem component with checkbox toggle in `components/shopping-list/ShoppingListItem.tsx` (depends on T018)
+- [X] T035 [US3] Implement AddItemForm component with inventory/free-text support in `components/shopping-list/AddItemForm.tsx` (depends on T019)
+- [X] T036 [US3] Implement StoreFilter component for store-based grouping in `components/shopping-list/StoreFilter.tsx` (depends on T020)
 
 ### Frontend Page Implementation
 
-- [ ] T037 [US3] Create shopping list page in `app/dashboard/shopping-list/page.tsx`
+- [X] T037 [US3] Create shopping list page in `app/dashboard/shopping-list/page.tsx`
 - [ ] T038 [P] [US3] Create shopping list item detail page in `app/dashboard/shopping-list/[shoppingItemId]/page.tsx`
 
 **Checkpoint**: User Story 3 should be fully functional and testable independently
@@ -138,11 +138,11 @@ Adults add items to a family shopping list (either from tracked inventory or as 
 
 **Purpose**: Improvements that affect the entire feature
 
-- [ ] T039 [P] Add error handling and user-friendly error messages across all handlers
-- [ ] T040 [P] Add structured logging (CloudWatch) to all Lambda handlers
+- [X] T039 [P] Add error handling and user-friendly error messages across all handlers
+- [X] T040 [P] Add structured logging (CloudWatch) to all Lambda handlers
 - [ ] T041 [P] Verify 80% test coverage for critical paths (handlers and services)
-- [ ] T042 [P] Update quickstart.md with any implementation-specific notes
-- [ ] T043 Run full test suite and fix any failing tests
+- [X] T042 [P] Update quickstart.md with any implementation-specific notes
+- [X] T043 Run full test suite and fix any failing tests
 - [ ] T044 Perform local end-to-end testing with SAM local
 - [ ] T045 [P] Update API documentation if any deviations from api-spec.yaml
 
