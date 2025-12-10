@@ -1,0 +1,1044 @@
+openapi: 3.0.3
+info:
+  title: Member Management API
+  description: |
+    RESTful API for managing family members and invitations. This API extends the Family Inventory 
+    Management System with member management functionality.
+    
+    **Feature**: 003-member-management  
+    **Parent Feature**: 001-family-inventory-mvp
+    
+    ## Authorization
+    - Most endpoints require JWT authentication via AWS Cognito
+    - Admin-only operations: invite members, revoke invitations, update roles, remove members
+    - All family members can view member lists
+    - Invitation acceptance is public (token-based authentication)
+    
+    ## Role-Based Access Control
+    
+    | Operation | Admin | Suggester |
+    |-----------|-------|-----------|
+    | Create invitation | ✓ | ✗ |
+    | List invitations | ✓ | ✗ |
+    | Revoke invitation | ✓ | ✗ |
+    | Accept invitation | Public (token-based) | Public (token-based) |
+    | List members | ✓ | ✓ |
+    | Get member details | ✓ | ✓ |
+    | Update member role | ✓ | ✗ |
+    | Remove member | ✓ | ✗ |
+    
+    ## Optimistic Locking
+    Update and remove operations require a `version` field for concurrency control.
+    On conflict, the API returns 409 with the current member state.
+    
+    ## Last Admin Protection
+    The system prevents:
+    - Removing the last admin from a family
+    - Changing the last admin's role to suggester
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: https://api.inventory-mgmt.example.com/v1
+    description: Production server
+  - url: https://api-staging.inventory-mgmt.example.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Local development server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Invitations
+    description: Member invitation management (admin only)
+  - name: Members
+    description: Family member management
+
+paths:
+  # ==================== INVITATIONS ====================
+  /families/{familyId}/invitations:
+    post:
+      tags: [Invitations]
+      summary: Create member invitation
+      description: |
+        Create and send an invitation to add a new member to the family.
+        
+        **Authorization**: Admin role required.
+        
+        **Duplicate Prevention**: If an invitation already exists for the same email 
+        with status 'pending', returns 409 Conflict.
+        
+        **Email Delivery**: An invitation email is sent to the invitee with a secure 
+        invitation link. The link expires after 7 days.
+        
+        **Token Security**: The invitation token uses UUID.HMAC format for tamper protection.
+      operationId: createInvitation
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvitationRequest'
+            examples:
+              inviteAdmin:
+                summary: Invite as admin
+                value:
+                  email: "jane@example.com"
+                  role: "admin"
+              inviteSuggester:
+                summary: Invite as suggester
+                value:
+                  email: "kid@example.com"
+                  role: "suggester"
+      responses:
+        '201':
+          description: Invitation created and email sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Family not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate invitation - pending invitation already exists for this email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DuplicateInvitationError'
+              example:
+                error: "Conflict"
+                message: "A pending invitation already exists for this email address"
+                existingInvitation:
+                  invitationId: "8f14e45f-ceea-467a-9b36-34f6c3b3e7d1"
+                  email: "jane@example.com"
+                  role: "admin"
+                  status: "pending"
+                  expiresAt: "2025-12-17T01:00:00Z"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags: [Invitations]
+      summary: List pending invitations
+      description: |
+        Retrieve all invitations for the family. By default, returns only pending invitations.
+        
+        **Authorization**: Admin role required.
+      operationId: listInvitations
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - name: status
+          in: query
+          description: Filter by invitation status
+          schema:
+            type: string
+            enum: [pending, accepted, expired, revoked, all]
+            default: pending
+      responses:
+        '200':
+          description: List of invitations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationListResponse'
+              examples:
+                pendingInvitations:
+                  summary: Pending invitations
+                  value:
+                    invitations:
+                      - invitationId: "8f14e45f-ceea-467a-9b36-34f6c3b3e7d1"
+                        familyId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                        email: "jane@example.com"
+                        role: "suggester"
+                        status: "pending"
+                        expiresAt: "2025-12-17T01:00:00Z"
+                        invitedBy: "550e8400-e29b-41d4-a716-446655440000"
+                        invitedByName: "John Smith"
+                        createdAt: "2025-12-10T01:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /families/{familyId}/invitations/{invitationId}:
+    get:
+      tags: [Invitations]
+      summary: Get invitation details
+      description: |
+        Retrieve details for a specific invitation.
+        
+        **Authorization**: Admin role required.
+      operationId: getInvitation
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/InvitationId'
+      responses:
+        '200':
+          description: Invitation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Invitations]
+      summary: Revoke invitation
+      description: |
+        Revoke a pending invitation. The invitation link becomes invalid immediately.
+        
+        **Authorization**: Admin role required.
+        
+        **Note**: Only pending invitations can be revoked. Accepted, expired, or 
+        already revoked invitations cannot be revoked.
+      operationId: revokeInvitation
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/InvitationId'
+      responses:
+        '204':
+          description: Invitation revoked successfully
+        '400':
+          description: Invitation cannot be revoked (not in pending status)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "BadRequest"
+                message: "Only pending invitations can be revoked"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /invitations/accept:
+    post:
+      tags: [Invitations]
+      summary: Accept invitation
+      description: |
+        Accept an invitation and join the family. This is a public endpoint that uses 
+        token-based authentication instead of JWT.
+        
+        **Authentication**: Token-based (no JWT required)
+        
+        **Token Validation**:
+        - Token must be valid and not expired
+        - Token signature is verified using HMAC-SHA256
+        - Token is single-use (invitation status changes to 'accepted')
+        
+        **Side Effects**:
+        - Creates a new Cognito user account (if not exists)
+        - Creates a Member record in DynamoDB
+        - Updates invitation status to 'accepted'
+        
+        **Note**: If the user already has a Cognito account with the invitation email,
+        they will be linked to the family without creating a new account.
+      operationId: acceptInvitation
+      security: []  # No JWT required - token-based auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptInvitationRequest'
+            example:
+              token: "a1b2c3d4-e5f6-7890-abcd-ef1234567890.abc123def456789012345678901234567890123456789012345678901234"
+              name: "Jane Smith"
+              password: "SecurePassword123!"
+      responses:
+        '201':
+          description: Invitation accepted, member created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcceptInvitationResponse'
+              example:
+                member:
+                  memberId: "660e8400-e29b-41d4-a716-446655440001"
+                  familyId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                  email: "jane@example.com"
+                  name: "Jane Smith"
+                  role: "suggester"
+                  status: "active"
+                  version: 1
+                  createdAt: "2025-12-10T10:30:00Z"
+                  updatedAt: "2025-12-10T10:30:00Z"
+                family:
+                  familyId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                  name: "Smith Family"
+        '400':
+          description: Invalid request (missing fields, weak password, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidToken:
+                  summary: Invalid token
+                  value:
+                    error: "Unauthorized"
+                    message: "Invalid invitation token"
+                expiredToken:
+                  summary: Expired token
+                  value:
+                    error: "Unauthorized"
+                    message: "Invitation has expired"
+                usedToken:
+                  summary: Already used token
+                  value:
+                    error: "Unauthorized"
+                    message: "Invitation has already been accepted"
+        '409':
+          description: Member already exists in this family
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Conflict"
+                message: "A member with this email already exists in the family"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==================== MEMBERS ====================
+  /families/{familyId}/members:
+    get:
+      tags: [Members]
+      summary: List family members
+      description: |
+        Retrieve all members of the family. By default, returns only active members.
+        
+        **Authorization**: Any family member can view the member list.
+        
+        **Admin-only**: Admins can view removed members by setting `includeRemoved=true`.
+      operationId: listMembers
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - name: includeRemoved
+          in: query
+          description: Include removed members in the list (admin only)
+          schema:
+            type: boolean
+            default: false
+        - name: status
+          in: query
+          description: Filter by member status (admin only)
+          schema:
+            type: string
+            enum: [active, removed, all]
+            default: active
+      responses:
+        '200':
+          description: List of family members
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberListResponse'
+              examples:
+                activeMembers:
+                  summary: Active members only
+                  value:
+                    members:
+                      - memberId: "550e8400-e29b-41d4-a716-446655440000"
+                        familyId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                        email: "john@example.com"
+                        name: "John Smith"
+                        role: "admin"
+                        status: "active"
+                        version: 1
+                        createdAt: "2025-12-08T10:00:00Z"
+                        updatedAt: "2025-12-08T10:00:00Z"
+                      - memberId: "660e8400-e29b-41d4-a716-446655440001"
+                        familyId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                        email: "jane@example.com"
+                        name: "Jane Smith"
+                        role: "suggester"
+                        status: "active"
+                        version: 1
+                        createdAt: "2025-12-10T10:30:00Z"
+                        updatedAt: "2025-12-10T10:30:00Z"
+                    summary:
+                      total: 2
+                      admins: 1
+                      suggesters: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /families/{familyId}/members/{memberId}:
+    get:
+      tags: [Members]
+      summary: Get member details
+      description: |
+        Retrieve details for a specific family member.
+        
+        **Authorization**: Any family member can view member details.
+      operationId: getMember
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '200':
+          description: Member details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Members]
+      summary: Update member role
+      description: |
+        Update a member's role within the family.
+        
+        **Authorization**: Admin role required.
+        
+        **Optimistic Locking**: Include the current `version` in the request.
+        On conflict, returns 409 with the current member state.
+        
+        **Last Admin Protection**: Cannot change the last admin's role to suggester.
+        The system ensures at least one admin exists at all times.
+      operationId: updateMember
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMemberRequest'
+            examples:
+              changeToSuggester:
+                summary: Change role to suggester
+                value:
+                  role: "suggester"
+                  version: 1
+              changeToAdmin:
+                summary: Promote to admin
+                value:
+                  role: "admin"
+                  version: 1
+              updateName:
+                summary: Update member name
+                value:
+                  name: "Jane Doe"
+                  version: 2
+      responses:
+        '200':
+          description: Member updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+        '400':
+          description: Invalid request or last admin protection triggered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                lastAdminProtection:
+                  summary: Cannot change last admin role
+                  value:
+                    error: "BadRequest"
+                    message: "Cannot change role of the last admin. At least one admin must exist."
+                invalidRole:
+                  summary: Invalid role value
+                  value:
+                    error: "BadRequest"
+                    message: "Role must be 'admin' or 'suggester'"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+
+    delete:
+      tags: [Members]
+      summary: Remove member from family
+      description: |
+        Remove a member from the family. The member's status is set to 'removed' 
+        (soft delete) and their access is revoked immediately.
+        
+        **Authorization**: Admin role required.
+        
+        **Optimistic Locking**: Include the current `version` in the request body.
+        On conflict, returns 409 with the current member state.
+        
+        **Last Admin Protection**: Cannot remove the last admin from the family.
+        The system ensures at least one admin exists at all times.
+        
+        **Self-Removal**: Admins can remove themselves if another admin exists.
+        
+        **Data Integrity**: Items created by the removed member (inventory items, 
+        shopping list items, suggestions) are preserved with references to the 
+        removed member.
+      operationId: removeMember
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoveMemberRequest'
+            example:
+              version: 1
+      responses:
+        '204':
+          description: Member removed successfully
+        '400':
+          description: Cannot remove member (last admin protection)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "BadRequest"
+                message: "Cannot remove the last admin. At least one admin must exist."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+
+# ==================== COMPONENTS ====================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: AWS Cognito JWT token
+
+  parameters:
+    FamilyId:
+      name: familyId
+      in: path
+      required: true
+      description: Family UUID
+      schema:
+        type: string
+        format: uuid
+      example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+
+    MemberId:
+      name: memberId
+      in: path
+      required: true
+      description: Member UUID (matches Cognito user sub)
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+
+    InvitationId:
+      name: invitationId
+      in: path
+      required: true
+      description: Invitation UUID
+      schema:
+        type: string
+        format: uuid
+      example: "8f14e45f-ceea-467a-9b36-34f6c3b3e7d1"
+
+  schemas:
+    # ========== REQUEST SCHEMAS ==========
+    CreateInvitationRequest:
+      type: object
+      description: Request to create a member invitation
+      required:
+        - email
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Email address of the person to invite
+          example: "jane@example.com"
+        role:
+          type: string
+          enum: [admin, suggester]
+          description: Role to assign to the new member
+          example: "suggester"
+
+    AcceptInvitationRequest:
+      type: object
+      description: Request to accept an invitation and join a family
+      required:
+        - token
+        - name
+      properties:
+        token:
+          type: string
+          minLength: 90
+          maxLength: 110
+          description: |
+            Secure invitation token from the invitation email.
+            Format: UUID.HMAC-SHA256 signature
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890.abc123def456789012345678901234567890123456789012345678901234"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Display name for the new member
+          example: "Jane Smith"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: |
+            Password for the new Cognito account. Required if the user does not 
+            already have a Cognito account. Must meet Cognito password policy.
+          example: "SecurePassword123!"
+
+    UpdateMemberRequest:
+      type: object
+      description: Request to update a member's details
+      required:
+        - version
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Updated display name
+          example: "Jane Doe"
+        role:
+          type: string
+          enum: [admin, suggester]
+          description: Updated role
+          example: "admin"
+        version:
+          type: integer
+          minimum: 1
+          description: Current version for optimistic locking
+          example: 1
+
+    RemoveMemberRequest:
+      type: object
+      description: Request to remove a member from the family
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
+          description: Current version for optimistic locking
+          example: 1
+
+    # ========== RESPONSE SCHEMAS ==========
+    InvitationResponse:
+      type: object
+      description: Invitation details
+      required:
+        - invitationId
+        - familyId
+        - email
+        - role
+        - status
+        - expiresAt
+        - invitedBy
+        - createdAt
+        - updatedAt
+      properties:
+        invitationId:
+          type: string
+          format: uuid
+          description: Unique identifier for the invitation
+          example: "8f14e45f-ceea-467a-9b36-34f6c3b3e7d1"
+        familyId:
+          type: string
+          format: uuid
+          description: Family the invitation is for
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        email:
+          type: string
+          format: email
+          description: Invitee email address
+          example: "jane@example.com"
+        role:
+          type: string
+          enum: [admin, suggester]
+          description: Role assigned upon acceptance
+          example: "suggester"
+        status:
+          type: string
+          enum: [pending, accepted, expired, revoked]
+          description: Current invitation status
+          example: "pending"
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the invitation expires
+          example: "2025-12-17T01:00:00Z"
+        invitedBy:
+          type: string
+          format: uuid
+          description: Member ID of the admin who sent the invitation
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        invitedByName:
+          type: string
+          nullable: true
+          description: Name of the admin who sent the invitation (for display)
+          example: "John Smith"
+        acceptedBy:
+          type: string
+          format: uuid
+          nullable: true
+          description: Member ID of the user who accepted (after acceptance)
+          example: null
+        acceptedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the invitation was accepted
+          example: null
+        revokedBy:
+          type: string
+          format: uuid
+          nullable: true
+          description: Member ID of the admin who revoked (if revoked)
+          example: null
+        revokedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the invitation was revoked
+          example: null
+        createdAt:
+          type: string
+          format: date-time
+          description: When the invitation was created
+          example: "2025-12-10T01:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the invitation was last updated
+          example: "2025-12-10T01:00:00Z"
+
+    InvitationListResponse:
+      type: object
+      description: List of invitations
+      required:
+        - invitations
+      properties:
+        invitations:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvitationResponse'
+          description: List of invitations
+
+    AcceptInvitationResponse:
+      type: object
+      description: Response after successfully accepting an invitation
+      required:
+        - member
+        - family
+      properties:
+        member:
+          $ref: '#/components/schemas/MemberResponse'
+        family:
+          type: object
+          required:
+            - familyId
+            - name
+          properties:
+            familyId:
+              type: string
+              format: uuid
+              description: Family ID
+              example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+            name:
+              type: string
+              description: Family name
+              example: "Smith Family"
+
+    MemberResponse:
+      type: object
+      description: Family member details
+      required:
+        - memberId
+        - familyId
+        - email
+        - name
+        - role
+        - status
+        - version
+        - createdAt
+        - updatedAt
+      properties:
+        memberId:
+          type: string
+          format: uuid
+          description: Unique identifier (matches Cognito user sub)
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        familyId:
+          type: string
+          format: uuid
+          description: Family this member belongs to
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        email:
+          type: string
+          format: email
+          description: Member email address
+          example: "john@example.com"
+        name:
+          type: string
+          description: Display name
+          example: "John Smith"
+        role:
+          type: string
+          enum: [admin, suggester]
+          description: Member role within the family
+          example: "admin"
+        status:
+          type: string
+          enum: [active, removed]
+          description: Member status
+          example: "active"
+        version:
+          type: integer
+          minimum: 1
+          description: Version for optimistic locking
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          description: When the member joined the family
+          example: "2025-12-08T10:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the member was last updated
+          example: "2025-12-08T10:00:00Z"
+
+    MemberListResponse:
+      type: object
+      description: List of family members
+      required:
+        - members
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberResponse'
+          description: List of family members
+        summary:
+          type: object
+          description: Summary statistics for the member list
+          properties:
+            total:
+              type: integer
+              minimum: 0
+              description: Total number of members returned
+              example: 2
+            admins:
+              type: integer
+              minimum: 0
+              description: Number of admin members
+              example: 1
+            suggesters:
+              type: integer
+              minimum: 0
+              description: Number of suggester members
+              example: 1
+
+    DuplicateInvitationError:
+      type: object
+      description: Error response when a duplicate invitation is detected
+      required:
+        - error
+        - message
+        - existingInvitation
+      properties:
+        error:
+          type: string
+          example: "Conflict"
+        message:
+          type: string
+          example: "A pending invitation already exists for this email address"
+        existingInvitation:
+          type: object
+          properties:
+            invitationId:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+            role:
+              type: string
+              enum: [admin, suggester]
+            status:
+              type: string
+              enum: [pending]
+            expiresAt:
+              type: string
+              format: date-time
+
+    VersionConflictError:
+      type: object
+      description: Error response when optimistic locking fails
+      required:
+        - error
+        - message
+        - currentState
+      properties:
+        error:
+          type: string
+          example: "Conflict"
+        message:
+          type: string
+          example: "Member was modified by another user. Please refresh and try again."
+        currentState:
+          $ref: '#/components/schemas/MemberResponse'
+
+    ErrorResponse:
+      type: object
+      description: Standard error response
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "BadRequest"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Validation failed"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field that failed validation
+              message:
+                type: string
+                description: Validation error message
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "BadRequest"
+            message: "Validation failed"
+            details:
+              - field: "email"
+                message: "Invalid email address format"
+
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Unauthorized"
+            message: "Missing or invalid authentication token"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Forbidden"
+            message: "Admin role required for this operation"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "NotFound"
+            message: "Resource not found"
+
+    VersionConflict:
+      description: Version conflict - optimistic locking failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VersionConflictError'
+          example:
+            error: "Conflict"
+            message: "Member was modified by another user. Please refresh and try again."
+            currentState:
+              memberId: "550e8400-e29b-41d4-a716-446655440000"
+              familyId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+              email: "john@example.com"
+              name: "John Smith"
+              role: "admin"
+              status: "active"
+              version: 3
+              createdAt: "2025-12-08T10:00:00Z"
+              updatedAt: "2025-12-10T14:30:00Z"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "InternalServerError"
+            message: "An unexpected error occurred"

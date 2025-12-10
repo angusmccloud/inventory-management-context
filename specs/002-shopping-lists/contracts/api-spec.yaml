@@ -1,0 +1,752 @@
+openapi: 3.0.3
+info:
+  title: Shopping List Management API
+  description: |
+    RESTful API for managing family shopping lists. This API extends the Family Inventory 
+    Management System with shopping list functionality.
+    
+    **Feature**: 002-shopping-lists  
+    **Parent Feature**: 001-family-inventory-mvp
+    
+    ## Authorization
+    - All endpoints require JWT authentication via AWS Cognito
+    - Write operations (POST, PUT, PATCH, DELETE) require `admin` role
+    - Read operations (GET) allow any family member
+    
+    ## Optimistic Locking
+    Update and status change operations require a `version` field for concurrency control.
+    On conflict, the API returns 409 with the current item state.
+    
+    ## Duplicate Prevention
+    Adding an inventory-linked item that already exists on the shopping list returns 409.
+    Include `force: true` in the request body to override.
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: https://api.inventory-mgmt.example.com/v1
+    description: Production server
+  - url: https://api-staging.inventory-mgmt.example.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Local development server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Shopping List
+    description: Shopping list item management
+
+paths:
+  # ==================== SHOPPING LIST ====================
+  /families/{familyId}/shopping-list:
+    get:
+      tags: [Shopping List]
+      summary: List shopping list items
+      description: |
+        Retrieve all shopping list items for the family. Supports filtering by store and status.
+        
+        **Authorization**: Any family member can view the shopping list.
+        
+        **Grouping**: When no store filter is applied, items are returned grouped by store,
+        with unassigned items in a separate group.
+      operationId: listShoppingListItems
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - name: storeId
+          in: query
+          description: Filter by store ID. Use 'unassigned' for items without a store.
+          schema:
+            type: string
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: status
+          in: query
+          description: Filter by purchase status
+          schema:
+            type: string
+            enum: [pending, purchased, all]
+            default: all
+      responses:
+        '200':
+          description: Shopping list items retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListResponse'
+              examples:
+                allItems:
+                  summary: All items grouped by store
+                  value:
+                    items:
+                      - shoppingItemId: "8f14e45f-ceea-467a-9b36-34f6c3b3e7d1"
+                        familyId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                        itemId: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                        name: "Paper Towels"
+                        storeId: "123e4567-e89b-12d3-a456-426614174000"
+                        storeName: "Whole Foods"
+                        status: "pending"
+                        quantity: 2
+                        notes: "Prefer double-roll"
+                        version: 1
+                        addedBy: "550e8400-e29b-41d4-a716-446655440000"
+                        createdAt: "2025-12-10T12:00:00Z"
+                        updatedAt: "2025-12-10T12:00:00Z"
+                    groupedByStore:
+                      - storeId: "123e4567-e89b-12d3-a456-426614174000"
+                        storeName: "Whole Foods"
+                        itemCount: 3
+                        pendingCount: 2
+                      - storeId: null
+                        storeName: "Unassigned"
+                        itemCount: 1
+                        pendingCount: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Shopping List]
+      summary: Add item to shopping list
+      description: |
+        Add an item to the family shopping list. Can be linked to an inventory item 
+        or added as a free-text item.
+        
+        **Authorization**: Admin role required.
+        
+        **Duplicate Prevention**: If adding an inventory-linked item that already exists
+        on the shopping list with status 'pending', returns 409 Conflict. Include 
+        `force: true` to add anyway.
+        
+        **Store Assignment**: If `itemId` is provided and `storeId` is not, the item's
+        preferred store from inventory is used automatically.
+      operationId: addToShoppingList
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddToShoppingListRequest'
+            examples:
+              fromInventory:
+                summary: Add from inventory item
+                value:
+                  itemId: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                  quantity: 2
+                  notes: "Prefer double-roll"
+              freeText:
+                summary: Add free-text item
+                value:
+                  name: "Birthday cake"
+                  quantity: 1
+                  notes: "For Sarah's party"
+              withStore:
+                summary: Add with specific store
+                value:
+                  name: "Specialty cheese"
+                  storeId: "123e4567-e89b-12d3-a456-426614174000"
+                  quantity: 1
+              forceDuplicate:
+                summary: Force add duplicate
+                value:
+                  itemId: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                  quantity: 1
+                  force: true
+      responses:
+        '201':
+          description: Item added to shopping list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Family or referenced inventory item/store not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate item already exists on shopping list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DuplicateItemError'
+              example:
+                error: "Conflict"
+                message: "This item is already on your shopping list"
+                existingItem:
+                  shoppingItemId: "8f14e45f-ceea-467a-9b36-34f6c3b3e7d1"
+                  name: "Paper Towels"
+                  quantity: 2
+                  status: "pending"
+
+  /families/{familyId}/shopping-list/{shoppingItemId}:
+    get:
+      tags: [Shopping List]
+      summary: Get shopping list item
+      description: |
+        Retrieve a specific shopping list item by ID.
+        
+        **Authorization**: Any family member can view.
+      operationId: getShoppingListItem
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ShoppingItemId'
+      responses:
+        '200':
+          description: Shopping list item retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Shopping List]
+      summary: Update shopping list item
+      description: |
+        Update a shopping list item's details (name, store, quantity, notes).
+        Does NOT update status - use PATCH /status for that.
+        
+        **Authorization**: Admin role required.
+        
+        **Optimistic Locking**: Include the current `version` in the request.
+        On conflict, returns 409 with the current item state.
+      operationId: updateShoppingListItem
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ShoppingItemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateShoppingListItemRequest'
+            example:
+              name: "Paper Towels (Large)"
+              storeId: "223e4567-e89b-12d3-a456-426614174001"
+              quantity: 3
+              notes: "Updated notes"
+              version: 1
+      responses:
+        '200':
+          description: Shopping list item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListItemResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+
+    delete:
+      tags: [Shopping List]
+      summary: Remove item from shopping list
+      description: |
+        Permanently delete a shopping list item.
+        
+        **Authorization**: Admin role required.
+      operationId: removeFromShoppingList
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ShoppingItemId'
+      responses:
+        '204':
+          description: Item removed from shopping list
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /families/{familyId}/shopping-list/{shoppingItemId}/status:
+    patch:
+      tags: [Shopping List]
+      summary: Toggle item purchase status
+      description: |
+        Change the purchase status of a shopping list item between 'pending' and 'purchased'.
+        
+        **Authorization**: Admin role required.
+        
+        **Optimistic Locking**: Include the current `version` in the request.
+        On conflict, returns 409 with the current item state.
+        
+        **TTL Behavior**:
+        - When status changes to 'purchased': TTL is set to 7 days from now
+        - When status changes to 'pending': TTL is cleared
+        
+        **Note**: Checking off an item does NOT automatically update inventory quantities.
+        This is intentional to allow verification before updating inventory.
+      operationId: updateShoppingListItemStatus
+      parameters:
+        - $ref: '#/components/parameters/FamilyId'
+        - $ref: '#/components/parameters/ShoppingItemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStatusRequest'
+            examples:
+              markPurchased:
+                summary: Mark as purchased
+                value:
+                  status: "purchased"
+                  version: 1
+              markPending:
+                summary: Uncheck (mark as pending)
+                value:
+                  status: "pending"
+                  version: 2
+      responses:
+        '200':
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListItemResponse'
+              example:
+                shoppingItemId: "8f14e45f-ceea-467a-9b36-34f6c3b3e7d1"
+                familyId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                itemId: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                name: "Paper Towels"
+                storeId: "123e4567-e89b-12d3-a456-426614174000"
+                status: "purchased"
+                quantity: 2
+                notes: "Prefer double-roll"
+                version: 2
+                addedBy: "550e8400-e29b-41d4-a716-446655440000"
+                createdAt: "2025-12-10T12:00:00Z"
+                updatedAt: "2025-12-10T14:00:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+
+# ==================== COMPONENTS ====================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: AWS Cognito JWT token
+
+  parameters:
+    FamilyId:
+      name: familyId
+      in: path
+      required: true
+      description: Family UUID
+      schema:
+        type: string
+        format: uuid
+      example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+
+    ShoppingItemId:
+      name: shoppingItemId
+      in: path
+      required: true
+      description: Shopping list item UUID
+      schema:
+        type: string
+        format: uuid
+      example: "8f14e45f-ceea-467a-9b36-34f6c3b3e7d1"
+
+  schemas:
+    # ========== REQUEST SCHEMAS ==========
+    AddToShoppingListRequest:
+      type: object
+      description: Request to add an item to the shopping list
+      properties:
+        itemId:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            Link to inventory item. If provided, the item name and preferred store 
+            are automatically populated from the inventory item.
+          example: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: |
+            Item name. Required if itemId is not provided. If itemId is provided,
+            this overrides the inventory item name.
+          example: "Paper Towels"
+        storeId:
+          type: string
+          format: uuid
+          nullable: true
+          description: |
+            Store to assign the item to. If not provided and itemId is given,
+            uses the inventory item's preferred store.
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        quantity:
+          type: integer
+          minimum: 1
+          nullable: true
+          description: Quantity to purchase
+          example: 2
+        notes:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Optional notes for the item
+          example: "Prefer double-roll"
+        force:
+          type: boolean
+          default: false
+          description: |
+            If true, add the item even if a duplicate exists on the shopping list.
+            Only applicable when itemId is provided.
+
+    UpdateShoppingListItemRequest:
+      type: object
+      description: Request to update a shopping list item
+      required:
+        - version
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Updated item name
+          example: "Paper Towels (Large)"
+        storeId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Updated store assignment. Set to null to unassign.
+          example: "223e4567-e89b-12d3-a456-426614174001"
+        quantity:
+          type: integer
+          minimum: 1
+          nullable: true
+          description: Updated quantity
+          example: 3
+        notes:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Updated notes
+          example: "Updated notes"
+        version:
+          type: integer
+          minimum: 1
+          description: Current version for optimistic locking
+          example: 1
+
+    UpdateStatusRequest:
+      type: object
+      description: Request to update item purchase status
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          enum: [pending, purchased]
+          description: New purchase status
+          example: "purchased"
+        version:
+          type: integer
+          minimum: 1
+          description: Current version for optimistic locking
+          example: 1
+
+    # ========== RESPONSE SCHEMAS ==========
+    ShoppingListResponse:
+      type: object
+      description: Response containing shopping list items
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShoppingListItemResponse'
+          description: List of shopping list items
+        groupedByStore:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoreGroupSummary'
+          description: Summary of items grouped by store
+
+    StoreGroupSummary:
+      type: object
+      description: Summary of items for a store
+      required:
+        - storeId
+        - storeName
+        - itemCount
+        - pendingCount
+      properties:
+        storeId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Store ID (null for unassigned items)
+        storeName:
+          type: string
+          description: Store name or "Unassigned"
+        itemCount:
+          type: integer
+          minimum: 0
+          description: Total number of items for this store
+        pendingCount:
+          type: integer
+          minimum: 0
+          description: Number of pending (not purchased) items
+
+    ShoppingListItemResponse:
+      type: object
+      description: A shopping list item
+      required:
+        - shoppingItemId
+        - familyId
+        - name
+        - status
+        - version
+        - addedBy
+        - createdAt
+        - updatedAt
+      properties:
+        shoppingItemId:
+          type: string
+          format: uuid
+          description: Unique identifier for the shopping list item
+          example: "8f14e45f-ceea-467a-9b36-34f6c3b3e7d1"
+        familyId:
+          type: string
+          format: uuid
+          description: Family this item belongs to
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        itemId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Linked inventory item ID (null for free-text items)
+          example: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+        name:
+          type: string
+          description: Item name
+          example: "Paper Towels"
+        storeId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Assigned store ID (null for unassigned)
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        storeName:
+          type: string
+          nullable: true
+          description: Store name (for display convenience)
+          example: "Whole Foods"
+        status:
+          type: string
+          enum: [pending, purchased]
+          description: Purchase status
+          example: "pending"
+        quantity:
+          type: integer
+          minimum: 1
+          nullable: true
+          description: Quantity to purchase
+          example: 2
+        notes:
+          type: string
+          nullable: true
+          description: Optional notes
+          example: "Prefer double-roll"
+        version:
+          type: integer
+          minimum: 1
+          description: Version for optimistic locking
+          example: 1
+        addedBy:
+          type: string
+          format: uuid
+          description: Member who added the item
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        addedByName:
+          type: string
+          nullable: true
+          description: Name of member who added the item (for display)
+          example: "John Smith"
+        createdAt:
+          type: string
+          format: date-time
+          description: When the item was added
+          example: "2025-12-10T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the item was last updated
+          example: "2025-12-10T12:00:00Z"
+
+    DuplicateItemError:
+      type: object
+      description: Error response when a duplicate item is detected
+      required:
+        - error
+        - message
+        - existingItem
+      properties:
+        error:
+          type: string
+          example: "Conflict"
+        message:
+          type: string
+          example: "This item is already on your shopping list"
+        existingItem:
+          type: object
+          properties:
+            shoppingItemId:
+              type: string
+              format: uuid
+            name:
+              type: string
+            quantity:
+              type: integer
+              nullable: true
+            status:
+              type: string
+              enum: [pending, purchased]
+
+    VersionConflictError:
+      type: object
+      description: Error response when optimistic locking fails
+      required:
+        - error
+        - message
+        - currentItem
+      properties:
+        error:
+          type: string
+          example: "Conflict"
+        message:
+          type: string
+          example: "Item was modified by another user. Please refresh and try again."
+        currentItem:
+          $ref: '#/components/schemas/ShoppingListItemResponse'
+
+    ErrorResponse:
+      type: object
+      description: Standard error response
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "BadRequest"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Validation failed"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field that failed validation
+              message:
+                type: string
+                description: Validation error message
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "BadRequest"
+            message: "Validation failed"
+            details:
+              - field: "name"
+                message: "Name must be 1-100 characters"
+
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Unauthorized"
+            message: "Missing or invalid authentication token"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Forbidden"
+            message: "Admin role required for this operation"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "NotFound"
+            message: "Shopping list item not found"
+
+    VersionConflict:
+      description: Version conflict - optimistic locking failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VersionConflictError'
+          example:
+            error: "Conflict"
+            message: "Item was modified by another user. Please refresh and try again."
+            currentItem:
+              shoppingItemId: "8f14e45f-ceea-467a-9b36-34f6c3b3e7d1"
+              familyId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+              name: "Paper Towels"
+              status: "purchased"
+              version: 3
+              updatedAt: "2025-12-10T14:30:00Z"
