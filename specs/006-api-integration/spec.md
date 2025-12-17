@@ -84,6 +84,13 @@ External systems (e.g., NFC scanning devices, smart home integrations, custom sc
 - **FR-062**: System MUST support API key rotation without service interruption
 - **FR-063**: System MUST limit the number of active API keys per family to prevent resource exhaustion
 
+#### Non-Functional & Compliance
+
+- **FR-064**: Any UI for API key management MUST meet WCAG 2.1 AA color-contrast standards and maintain visible focus states; low-contrast (e.g., white-on-white) inputs are prohibited
+- **FR-065**: Automated accessibility checks (e.g., axe) MUST run in CI for new or changed API-key management pages/components and block merges on failures
+- **FR-066**: CI MUST run `npm run type-check` and fail the pipeline on any TypeScript errors for this feature
+- **FR-067**: CI MUST run the Vite production build via `npm run build` and block merges on build failures for this feature
+
 ### Key Entities
 
 **APIKey**: A credential that allows external systems to authenticate and access family inventory programmatically.

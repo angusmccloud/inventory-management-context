@@ -93,6 +93,13 @@ Adults manage reference data for the family, including storage locations (pantry
 - **FR-071**: System MUST provide confirmation dialogs before deleting reference data
 - **FR-072**: System MUST show real-time validation feedback during data entry
 
+#### Non-Functional & Compliance
+
+- **FR-073**: Reference data management UI MUST meet WCAG 2.1 AA color-contrast standards and maintain visible focus states; white-on-white or other low-contrast combinations are prohibited
+- **FR-074**: Automated accessibility checks (e.g., axe) MUST run in CI for all new or changed reference-data pages/components and block merges on failures
+- **FR-075**: CI MUST run `npm run type-check` and fail the pipeline on any TypeScript errors for this feature
+- **FR-076**: CI MUST run the Vite production build via `npm run build` and block merges on build failures for this feature
+
 ### Key Entities
 
 **StorageLocation**: A reference location where items are kept (e.g., pantry, garage, refrigerator). Defined per family.
