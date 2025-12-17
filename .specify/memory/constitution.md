@@ -190,6 +190,8 @@ Follow-up TODOs: None - all templates are aligned with constitution principles
 - Environment variables MUST be used for all configuration
 - Frontend environment variables MUST be prefixed with `NEXT_PUBLIC_` or `VITE_`
 - Code MUST follow consistent formatting (use Prettier or similar)
+- UI MUST meet WCAG 2.1 AA color-contrast requirements; white-on-white or other low-contrast text/background combinations are prohibited and form elements MUST retain visible focus states
+- Automated accessibility checks (e.g., axe) MUST run in CI for new or changed pages/components and block merges on failures
 
 ## Development Workflow
 
@@ -206,6 +208,8 @@ Follow-up TODOs: None - all templates are aligned with constitution principles
 - TypeScript compilation MUST succeed with no errors
 - Linting MUST pass with no errors (warnings acceptable with justification)
 - All tests MUST pass
+- Type checking (`npm run type-check`) MUST pass in CI for every pull request
+- Vite production build (`npm run build`) MUST succeed in CI for every pull request
 - Code coverage MUST meet requirements (80% for critical paths)
 - Security audit MUST show no high-severity vulnerabilities
 
