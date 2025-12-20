@@ -29,7 +29,7 @@ Based on plan.md project structure:
 - [ ] T003 [P] Create Parameter Store value for invitation expiration at `/inventory-mgmt/{env}/invitation-expiration-seconds` (604800 = 7 days)
 - [ ] T004 [P] Create Parameter Store value for TTL grace period at `/inventory-mgmt/{env}/invitation-ttl-grace-seconds` (604800 = 7 days)
 - [ ] T005 [P] Create Parameter Store value for email template at `/inventory-mgmt/{env}/email-templates/invitation`
-- [ ] T006 Verify SES domain verification and sender email configuration
+- [ ] ~~T006 Verify SES domain verification and sender email configuration~~ **MOVED TO SPEC 007** - Email domain configuration is now part of domain integration feature
 - [ ] T007 Verify GSI1 index exists on InventoryManagement table for token lookup pattern
 
 **Checkpoint**: Infrastructure ready - code implementation can begin
