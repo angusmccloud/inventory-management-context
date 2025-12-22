@@ -109,7 +109,7 @@
 - [X] T048 [P] [US1] Implement POST /families/{familyId}/inventory/{itemId}/archive handler in inventory-management-backend/src/handlers/archiveInventoryItem.ts
 - [X] T049 [P] [US1] Implement DELETE /families/{familyId}/inventory/{itemId} handler in inventory-management-backend/src/handlers/deleteInventoryItem.ts
 - [X] T050 [US1] Add all US1 API Gateway routes and Lambda functions to inventory-management-backend/template.yaml
-- [ ] T051 [US1] Deploy backend updates with `sam build && sam deploy`
+- [X] T051 [US1] Deploy backend updates with `sam build && sam deploy`
 
 **Frontend Implementation:**
 
@@ -147,7 +147,7 @@
 - [X] T070 [P] [US2] Create SES email template for low-stock notifications in inventory-management-backend/src/templates/low-stock-email.html
 - [X] T071 [US2] Add notification routes to inventory-management-backend/template.yaml
 - [X] T072 [US2] Add SES permissions to Lambda execution role in inventory-management-backend/template.yaml
-- [ ] T073 [US2] Deploy backend updates with `sam build && sam deploy`
+- [X] T073 [US2] Deploy backend updates with `sam build && sam deploy`
 
 **Frontend Implementation:**
 

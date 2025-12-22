@@ -38,7 +38,7 @@ Adults add items to a family shopping list (either from tracked inventory or as 
 - [X] T001 Enable DynamoDB TTL on `InventoryManagement` table for `ttl` attribute via AWS CLI or SAM template update
 - [X] T002 [P] Create feature branch `002-shopping-lists` in backend repository
 - [X] T003 [P] Create feature branch `002-shopping-lists` in frontend repository
-- [ ] T004 [P] Verify parent feature (001-family-inventory-mvp) dependencies are available
+- [X] T004 [P] Verify parent feature (001-family-inventory-mvp) dependencies are available
 
 **Checkpoint**: Infrastructure ready for feature development
 

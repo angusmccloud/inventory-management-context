@@ -27,11 +27,11 @@ Based on plan.md project structure:
 
 **Purpose**: AWS infrastructure setup and DNS configuration required before any code implementation
 
-- [ ] T001 [P] Verify domain inventoryhg.io is accessible in Namecheap DNS management interface
-- [ ] T002 [P] Document DNS record requirements for inventoryhg.io (A, CNAME, MX records needed)
-- [ ] T003 Create domain configuration constants file in `src/config/domain.ts` with inventoryhg.io domain constant
-- [ ] T004 [P] Update environment configuration file `env.json` to set FRONTEND_URL to https://inventoryhg.io
-- [ ] T005 [P] Update environment configuration file `env.json` to set SES_FROM_EMAIL to noreply@inventoryhg.io
+- [X] T001 [P] Verify domain inventoryhg.io is accessible in Namecheap DNS management interface
+- [X] T002 [P] Document DNS record requirements for inventoryhg.io (A, CNAME, MX records needed)
+- [X] T003 Create domain configuration constants file in `src/config/domain.ts` with inventoryhg.io domain constant
+- [X] T004 [P] Update environment configuration file `env.json` to set FRONTEND_URL to https://inventoryhg.io
+- [X] T005 [P] Update environment configuration file `env.json` to set SES_FROM_EMAIL to noreply@inventoryhg.io
 
 **Checkpoint**: Domain configuration ready - branding and email implementation can begin
 
@@ -45,8 +45,8 @@ Based on plan.md project structure:
 
 ### Domain Configuration
 
-- [ ] T006 [P] Create domain configuration module in `src/config/domain.ts` with domain constants and helper functions
-- [ ] T007 [P] Create domain configuration unit tests in `tests/unit/config/domain.test.ts`
+- [X] T006 [P] Create domain configuration module in `src/config/domain.ts` with domain constants and helper functions
+- [X] T007 [P] Create domain configuration unit tests in `tests/unit/config/domain.test.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -60,17 +60,17 @@ Based on plan.md project structure:
 
 ### 3.1 Frontend Branding Updates
 
-- [ ] T008 [US1] Update root layout metadata title to "Inventory HQ" in `app/layout.tsx`
-- [ ] T009 [P] [US1] Update landing page hero heading to "Inventory HQ" in `app/page.tsx`
-- [ ] T010 [P] [US1] Update dashboard navigation header to display "Inventory HQ" in `app/dashboard/layout.tsx`
-- [ ] T011 [P] [US1] Search codebase for all instances of "Family Inventory Management" and "Family Inventory" and update to "Inventory HQ"
-- [ ] T012 [P] [US1] Verify all page-specific titles include "Inventory HQ" (check all page.tsx files in app directory)
+- [X] T008 [US1] Update root layout metadata title to "Inventory HQ" in `app/layout.tsx`
+- [X] T009 [P] [US1] Update landing page hero heading to "Inventory HQ" in `app/page.tsx`
+- [X] T010 [P] [US1] Update dashboard navigation header to display "Inventory HQ" in `app/dashboard/layout.tsx`
+- [X] T011 [P] [US1] Search codebase for all instances of "Family Inventory Management" and "Family Inventory" and update to "Inventory HQ"
+- [X] T012 [P] [US1] Verify all page-specific titles include "Inventory HQ" (check all page.tsx files in app directory)
 
 ### 3.2 Email Template Branding Updates
 
-- [ ] T013 [US1] Update invitation email template in Parameter Store at `/inventory-mgmt/{env}/email-templates/invitation` to include "Inventory HQ" branding
-- [ ] T014 [P] [US1] Update low-stock notification email template to include "Inventory HQ" branding (check Parameter Store or email service code)
-- [ ] T015 [P] [US1] Verify all email links in templates point to inventoryhg.io domain (update FRONTEND_URL references)
+- [X] T013 [US1] Update invitation email template in Parameter Store at `/inventory-mgmt/{env}/email-templates/invitation` to include "Inventory HQ" branding
+- [X] T014 [P] [US1] Update low-stock notification email template to include "Inventory HQ" branding (check Parameter Store or email service code)
+- [X] T015 [P] [US1] Verify all email links in templates point to inventoryhg.io domain (update FRONTEND_URL references)
 
 **Checkpoint**: US1 complete - branding is consistent across UI and email templates
 
@@ -84,31 +84,31 @@ Based on plan.md project structure:
 
 ### 4.1 AWS SES Domain Configuration
 
-- [ ] T016 [US2] Verify AWS SES domain verification for inventoryhg.io in AWS Console
-- [ ] T017 [US2] Configure SPF record for inventoryhg.io in Namecheap DNS (add TXT record with AWS SES SPF value)
-- [ ] T018 [US2] Configure DKIM records for inventoryhg.io in Namecheap DNS (add CNAME records from AWS SES)
-- [ ] T019 [US2] Configure DMARC record for inventoryhg.io in Namecheap DNS (add TXT record with DMARC policy)
-- [ ] T020 [US2] Verify all email authentication records (SPF, DKIM, DMARC) validate correctly using DNS lookup tools
+- [X] T016 [US2] Verify AWS SES domain verification for inventoryhg.io in AWS Console
+- [X] T017 [US2] Configure SPF record for inventoryhg.io in Namecheap DNS (add TXT record with AWS SES SPF value)
+- [X] T018 [US2] Configure DKIM records for inventoryhg.io in Namecheap DNS (add CNAME records from AWS SES)
+- [X] T019 [US2] Configure DMARC record for inventoryhg.io in Namecheap DNS (add TXT record with DMARC policy)
+- [X] T020 [US2] Verify all email authentication records (SPF, DKIM, DMARC) validate correctly using DNS lookup tools
 
 ### 4.2 SES Email Sender Configuration
 
-- [ ] T021 [US2] Update email service sender address to use noreply@inventoryhg.io in `src/services/emailService.ts`
-- [ ] T022 [P] [US2] Update environment variable SES_FROM_EMAIL to noreply@inventoryhg.io in all environment files
-- [ ] T023 [P] [US2] Update invitation email service to use inventoryhg.io domain sender address in `src/services/emailService.ts`
-- [ ] T024 [P] [US2] Update low-stock notification email service to use inventoryhg.io domain sender address (check notification service implementation)
+- [X] T021 [US2] Update email service sender address to use noreply@inventoryhq.io in `src/services/emailService.ts`
+- [X] T022 [P] [US2] Update environment variable SES_FROM_EMAIL to noreply@inventoryhq.io in all environment files
+- [X] T023 [P] [US2] Update invitation email service to use inventoryhq.io domain sender address in `src/services/emailService.ts`
+- [X] T024 [P] [US2] Update low-stock notification email service to use inventoryhq.io domain sender address (check notification service implementation)
 
 ### 4.3 Cognito Email Configuration
 
-- [ ] T025 [US2] Configure Cognito User Pool to use custom domain for email sending (inventoryhg.io)
-- [ ] T026 [US2] Verify Cognito email configuration uses SES verified domain inventoryhg.io
-- [ ] T027 [P] [US2] Update Cognito email templates (if customizable) to include "Inventory HQ" branding
+- [X] T025 [US2] Configure Cognito User Pool to use custom domain for email sending (inventoryhg.io)
+- [X] T026 [US2] Verify Cognito email configuration uses SES verified domain inventoryhg.io
+- [X] T027 [P] [US2] Update Cognito email templates (if customizable) to include "Inventory HQ" branding
 - [ ] T028 [P] [US2] Test Cognito password reset email to verify sender address uses inventoryhg.io domain
 
 ### 4.4 Email Link Updates
 
-- [ ] T029 [US2] Update all email links in invitation templates to use inventoryhg.io domain
-- [ ] T030 [P] [US2] Update all email links in notification templates to use inventoryhg.io domain
-- [ ] T031 [P] [US2] Update FRONTEND_URL references in email service to use inventoryhg.io domain
+- [X] T029 [US2] Update all email links in invitation templates to use inventoryhq.io domain
+- [X] T030 [P] [US2] Update all email links in notification templates to use inventoryhq.io domain
+- [X] T031 [P] [US2] Update FRONTEND_URL references in email service to use inventoryhq.io domain
 
 ### 4.5 Email Testing
 
@@ -135,23 +135,29 @@ Based on plan.md project structure:
 
 ### 5.2 SSL Certificate Configuration
 
-- [ ] T039 [US3] Request SSL certificate for inventoryhg.io in AWS Certificate Manager
-- [ ] T040 [US3] Verify DNS validation for SSL certificate (add CNAME records from Certificate Manager to Namecheap DNS)
-- [ ] T041 [US3] Verify SSL certificate is issued and active for inventoryhg.io
-- [ ] T042 [P] [US3] Configure SSL certificate for www.inventoryhg.io if using www variant
+**Note**: AWS Amplify automatically provisions and manages SSL certificates. No manual template.yaml configuration needed.
 
-### 5.3 AWS Amplify/CloudFront Configuration
+- [ ] T039 [US3] Configure custom domain in Amplify Console for inventoryhg.io
+- [ ] T040 [US3] Add DNS validation records from Amplify to Namecheap DNS (MANUAL - only required step)
+- [ ] T041 [US3] Verify SSL certificate is issued and active in Amplify Console
+- [ ] T042 [P] [US3] Verify www.inventoryhg.io is included in Amplify domain configuration
 
-- [ ] T043 [US3] Configure AWS Amplify app (or CloudFront distribution) to use custom domain inventoryhg.io
-- [ ] T044 [US3] Associate SSL certificate with Amplify app (or CloudFront distribution)
-- [ ] T045 [US3] Configure domain redirects (www to non-www or vice versa) in Amplify/CloudFront settings
-- [ ] T046 [P] [US3] Update SAM template `template.yaml` with Amplify/CloudFront custom domain configuration if needed
+### 5.3 AWS Amplify Hosting Configuration
+
+**Note**: AWS Amplify automatically handles CloudFront distribution and S3 bucket creation.
+
+- [ ] T043 [US3] Connect frontend repository to AWS Amplify
+- [ ] T044 [US3] Configure Amplify build settings for Next.js
+- [ ] T045 [US3] Add custom domain inventoryhg.io in Amplify Console
+- [ ] T046 [P] [US3] Verify Amplify provides DNS records for domain configuration
 
 ### 5.4 API Domain Configuration
 
-- [ ] T047 [US3] Verify API Gateway or Lambda function URLs work correctly with custom domain
-- [ ] T048 [US3] Update CORS configuration to allow requests from inventoryhg.io domain
-- [ ] T049 [P] [US3] Update API client configuration in frontend to use inventoryhg.io domain for API calls
+**Note**: API Gateway custom domain MUST be configured via template.yaml using AWS::ApiGateway::DomainName resource.
+
+- [X] T047 [US3] Verify API Gateway or Lambda function URLs work correctly with custom domain
+- [X] T048 [US3] Update CORS configuration to allow requests from inventoryhq.io domain
+- [X] T049 [P] [US3] Update API client configuration in frontend to use inventoryhq.io domain for API calls
 
 ### 5.5 Domain Routing Testing
 
@@ -173,7 +179,7 @@ Based on plan.md project structure:
 ### 6.1 Backward Compatibility
 
 - [ ] T056 Configure redirects from old domain to inventoryhg.io (if old domain exists)
-- [ ] T057 [P] Update any hardcoded domain references in codebase to use domain configuration constants
+- [X] T057 [P] Update any hardcoded domain references in codebase to use domain configuration constants
 - [ ] T058 [P] Verify backward compatibility during domain transition period (old bookmarks still work via redirects)
 
 ### 6.2 Documentation

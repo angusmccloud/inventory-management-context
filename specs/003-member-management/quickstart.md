@@ -934,6 +934,41 @@ sam logs -n CreateInvitationFunction --stack-name inventory-mgmt-dev --tail
 sam logs -n AcceptInvitationFunction --stack-name inventory-mgmt-dev --tail
 ```
 
+## Security & Performance Features (Phase 4)
+
+### Security Headers
+
+All API responses include the following security headers (configured in `src/lib/response.ts`):
+
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+- `Content-Security-Policy: default-src 'self'`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+### Rate Limiting
+
+The public `AcceptInvitationFunction` is rate-limited to prevent abuse:
+- **Reserved Concurrent Executions**: 10
+- Configured in `template.yaml`
+- Prevents token validation attacks
+
+### Token Security
+
+- Tokens are masked in logs using `maskToken()` function
+- Only first 8 characters logged: `abcd1234...`
+- HMAC-SHA256 signature prevents tampering
+- Tokens expire after 7 days
+- Single-use tokens (marked as accepted after use)
+
+### HTTPS-Only
+
+All invitation links use HTTPS protocol:
+- Configured in `src/config/domain.ts`
+- `FRONTEND_BASE_URL = 'https://inventoryhg.io'`
+- Cannot be overridden to HTTP
+
 ## Resources
 
 ### Feature Documentation
