@@ -15,6 +15,7 @@ The constitution at `.specify/memory/constitution.md` is the **NON-NEGOTIABLE** 
 1. **TypeScript 5 with strict mode** - No implicit `any` types allowed
 2. **Test-first development** - 80% coverage required for critical paths
 3. **Jest and React Testing Library** - Mandatory testing frameworks
+4. **Infrastructure as Code** - ALWAYS use template.yaml for AWS configuration (see docs/INFRASTRUCTURE-AS-CODE-BEST-PRACTICES.md)
 
 ## Technology Stack (for actual codebase)
 
@@ -53,6 +54,7 @@ Available commands:
 3. Task format: `- [ ] [TaskID] [P?] [Story?] Description with file path`
 4. Templates are in `.specify/templates/`
 5. Scripts are in `.specify/scripts/bash/`
+6. **ALWAYS use template.yaml for AWS configurations** - Manual console operations only for SES domain verification and third-party DNS (see docs/INFRASTRUCTURE-AS-CODE-BEST-PRACTICES.md)
 
 ## Agent Context Synchronization
 

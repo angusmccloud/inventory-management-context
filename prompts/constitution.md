@@ -37,6 +37,18 @@ Create a constitution for a modern web application with the following specificat
 - Use CloudWatch for logging and monitoring
 - Implement proper IAM roles and permissions in SAM template
 
+## Infrastructure as Code (IaC) Standards
+- **ALWAYS prefer YAML-based configuration in `template.yaml` over manual AWS Console operations**
+- All AWS resource configurations MUST be defined in the SAM template when possible
+- Manual console operations should ONLY be used for:
+  - Initial one-time setup (e.g., domain registration, Route 53 hosted zone creation)
+  - Operations that cannot be automated via CloudFormation/SAM (e.g., third-party DNS provider configuration)
+  - Emergency troubleshooting and debugging
+- Document any manual steps that cannot be automated and explain why
+- Infrastructure changes MUST be version-controlled and repeatable across environments
+- Use SAM template parameters for environment-specific configuration (dev, staging, prod)
+- Validate template changes with `sam validate` before deployment
+
 ## Testing Requirements
 - Unit tests for business logic and utility functions
 - Integration tests for API routes

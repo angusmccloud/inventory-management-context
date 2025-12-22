@@ -24,13 +24,13 @@ Based on plan.md project structure:
 
 **Purpose**: AWS infrastructure setup and secrets configuration required before any code implementation
 
-- [ ] T001 Verify DynamoDB TTL is enabled on `ttl` attribute for InventoryManagement table
-- [ ] T002 Create Secrets Manager secret for HMAC signing key at `/inventory-mgmt/{env}/invitation-hmac-secret`
-- [ ] T003 [P] Create Parameter Store value for invitation expiration at `/inventory-mgmt/{env}/invitation-expiration-seconds` (604800 = 7 days)
-- [ ] T004 [P] Create Parameter Store value for TTL grace period at `/inventory-mgmt/{env}/invitation-ttl-grace-seconds` (604800 = 7 days)
-- [ ] T005 [P] Create Parameter Store value for email template at `/inventory-mgmt/{env}/email-templates/invitation`
-- [ ] T006 Verify SES domain verification and sender email configuration
-- [ ] T007 Verify GSI1 index exists on InventoryManagement table for token lookup pattern
+- [X] T001 Verify DynamoDB TTL is enabled on `ttl` attribute for InventoryManagement table
+- [X] T002 Create Secrets Manager secret for HMAC signing key at `/inventory-mgmt/{env}/invitation-hmac-secret`
+- [X] T003 [P] Create Parameter Store value for invitation expiration at `/inventory-mgmt/{env}/invitation-expiration-seconds` (604800 = 7 days)
+- [X] T004 [P] Create Parameter Store value for TTL grace period at `/inventory-mgmt/{env}/invitation-ttl-grace-seconds` (604800 = 7 days)
+- [X] T005 [P] Create Parameter Store value for email template at `/inventory-mgmt/{env}/email-templates/invitation`
+- [ ] ~~T006 Verify SES domain verification and sender email configuration~~ **MOVED TO SPEC 007** - Email domain configuration is now part of domain integration feature
+- [X] T007 Verify GSI1 index exists on InventoryManagement table for token lookup pattern
 
 **Checkpoint**: Infrastructure ready - code implementation can begin
 
@@ -178,20 +178,20 @@ Based on plan.md project structure:
 
 ### Error Handling & Logging
 
-- [ ] T074 Add structured logging for all invitation operations
-- [ ] T075 Add structured logging for all member operations
-- [ ] T076 Implement rate limiting for token validation endpoint
+- [X] T074 Add structured logging for all invitation operations
+- [X] T075 Add structured logging for all member operations
+- [X] T076 Implement rate limiting for token validation endpoint
 
 ### Security Hardening
 
-- [ ] T077 Implement token masking in logs (never log full tokens)
-- [ ] T078 Add security headers to all API responses
-- [ ] T079 Verify HTTPS-only for all invitation links
+- [X] T077 Implement token masking in logs (never log full tokens)
+- [X] T078 Add security headers to all API responses
+- [X] T079 Verify HTTPS-only for all invitation links
 
 ### Documentation
 
-- [ ] T080 [P] Update quickstart.md with any implementation changes
-- [ ] T081 [P] Add inline code documentation for complex logic
+- [X] T080 [P] Update quickstart.md with any implementation changes
+- [X] T081 [P] Add inline code documentation for complex logic
 
 ### Validation
 

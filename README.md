@@ -175,6 +175,16 @@ Provides quick reference for AI assistants including:
 - SpecKit workflow commands
 - Critical gotchas and best practices
 
+### Infrastructure as Code Best Practices
+**File:** [`docs/INFRASTRUCTURE-AS-CODE-BEST-PRACTICES.md`](docs/INFRASTRUCTURE-AS-CODE-BEST-PRACTICES.md)
+
+**⚠️ CRITICAL for AWS backend work** - Comprehensive guide on:
+- **Always prefer YAML configuration** in `template.yaml` over manual AWS Console operations
+- When manual AWS Console steps are acceptable (SES verification, third-party DNS)
+- How to migrate console configurations to template.yaml
+- Environment-specific configuration with SAM parameters
+- Common mistakes to avoid (manual IAM roles, Lambda env vars, Cognito settings)
+
 ### Onboarding Guide
 **File:** [`ONBOARDING.md`](ONBOARDING.md)
 
