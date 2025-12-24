@@ -1,6 +1,6 @@
-# DNS Requirements for inventoryhg.io
+# DNS Requirements for inventoryhq.io
 
-**Domain**: inventoryhg.io  
+**Domain**: inventoryhq.io  
 **Registrar**: Namecheap  
 **Target Platform**: AWS (SES, Certificate Manager, Amplify/CloudFront)  
 **Date**: December 20, 2025
@@ -9,7 +9,7 @@
 
 ## Overview
 
-This document outlines all DNS records required to configure inventoryhg.io for the Inventory HQ application. These records enable email authentication, SSL certificate validation, and application hosting.
+This document outlines all DNS records required to configure inventoryhq.io for the Inventory HQ application. These records enable email authentication, SSL certificate validation, and application hosting.
 
 ---
 
@@ -26,7 +26,7 @@ Configure AWS SES for email sending with proper authentication to ensure deliver
 **Value**: `v=spf1 include:amazonses.com ~all`  
 **TTL**: 3600 (1 hour)
 
-**Purpose**: Authorizes AWS SES to send emails on behalf of inventoryhg.io
+**Purpose**: Authorizes AWS SES to send emails on behalf of inventoryhq.io
 
 #### 2. DKIM Records (DomainKeys Identified Mail)
 **Type**: CNAME  
@@ -51,12 +51,12 @@ Configure AWS SES for email sending with proper authentication to ensure deliver
 #### 3. DMARC Policy Record
 **Type**: TXT  
 **Host**: `_dmarc`  
-**Value**: `v=DMARC1; p=quarantine; rua=mailto:dmarc@inventoryhg.io; pct=100`  
+**Value**: `v=DMARC1; p=quarantine; rua=mailto:dmarc@inventoryhq.io; pct=100`  
 **TTL**: 3600
 
 **Purpose**: Specifies policy for handling emails that fail SPF/DKIM validation
 - `p=quarantine`: Failed emails should be marked as spam
-- `rua=mailto:dmarc@inventoryhg.io`: Reports sent to this address (optional)
+- `rua=mailto:dmarc@inventoryhq.io`: Reports sent to this address (optional)
 - `pct=100`: Apply policy to 100% of emails
 
 ---
@@ -83,13 +83,13 @@ Validate domain ownership for AWS Certificate Manager to issue SSL certificate.
 ## Phase 3: Application Hosting (US3 - Priority P2)
 
 ### Purpose
-Route traffic from inventoryhg.io to AWS hosting infrastructure (Amplify or CloudFront).
+Route traffic from inventoryhq.io to AWS hosting infrastructure (Amplify or CloudFront).
 
 ### Required Records
 
 #### Option A: AWS Amplify Hosting
 
-**For root domain (inventoryhg.io)**:
+**For root domain (inventoryhq.io)**:
 **Type**: A (Alias)  
 **Host**: `@`  
 **Value**: Amplify domain (e.g., `<branch-name>.<app-id>.amplifyapp.com`)  
@@ -103,7 +103,7 @@ Route traffic from inventoryhg.io to AWS hosting infrastructure (Amplify or Clou
 
 #### Option B: CloudFront + S3 Hosting
 
-**For root domain (inventoryhg.io)**:
+**For root domain (inventoryhq.io)**:
 **Type**: A (Alias)  
 **Host**: `@`  
 **Value**: CloudFront distribution domain (e.g., `d123abc.cloudfront.net`)  
@@ -122,7 +122,7 @@ Route traffic from inventoryhg.io to AWS hosting infrastructure (Amplify or Clou
 ## Phase 4: API Gateway Custom Domain (Optional)
 
 ### Purpose
-Route API calls to AWS API Gateway with custom domain (e.g., api.inventoryhg.io).
+Route API calls to AWS API Gateway with custom domain (e.g., api.inventoryhq.io).
 
 ### Required Records
 
@@ -146,7 +146,7 @@ Route API calls to AWS API Gateway with custom domain (e.g., api.inventoryhg.io)
 6. Complete SES domain verification in AWS Console
 
 ### Step 2: SSL Certificate (Before Hosting - US3)
-1. Request SSL certificate in AWS Certificate Manager for inventoryhg.io and www.inventoryhg.io
+1. Request SSL certificate in AWS Certificate Manager for inventoryhq.io and www.inventoryhq.io
 2. Add certificate validation CNAME record (from Certificate Manager)
 3. Wait for certificate validation (usually 5-30 minutes)
 4. Verify certificate is issued
@@ -163,34 +163,34 @@ Route API calls to AWS API Gateway with custom domain (e.g., api.inventoryhg.io)
 
 ### Check SPF Record
 ```bash
-dig inventoryhg.io TXT +short | grep spf
+dig inventoryhq.io TXT +short | grep spf
 # Expected: "v=spf1 include:amazonses.com ~all"
 ```
 
 ### Check DKIM Records
 ```bash
-dig <token1>._domainkey.inventoryhg.io CNAME +short
-dig <token2>._domainkey.inventoryhg.io CNAME +short
-dig <token3>._domainkey.inventoryhg.io CNAME +short
+dig <token1>._domainkey.inventoryhq.io CNAME +short
+dig <token2>._domainkey.inventoryhq.io CNAME +short
+dig <token3>._domainkey.inventoryhq.io CNAME +short
 # Expected: Each returns a .dkim.amazonses.com domain
 ```
 
 ### Check DMARC Record
 ```bash
-dig _dmarc.inventoryhg.io TXT +short
+dig _dmarc.inventoryhq.io TXT +short
 # Expected: "v=DMARC1; p=quarantine; ..."
 ```
 
 ### Check SSL Certificate Validation
 ```bash
-dig <validation-token>.inventoryhg.io CNAME +short
+dig <validation-token>.inventoryhq.io CNAME +short
 # Expected: Returns acm-validations.aws domain
 ```
 
 ### Check Domain Routing
 ```bash
-dig inventoryhg.io A +short
-dig www.inventoryhg.io CNAME +short
+dig inventoryhq.io A +short
+dig www.inventoryhq.io CNAME +short
 # Expected: Returns Amplify or CloudFront addresses
 ```
 
@@ -211,7 +211,7 @@ dig www.inventoryhg.io CNAME +short
 ### Adding Records in Namecheap
 
 1. Log in to Namecheap account
-2. Navigate to **Domain List** → **Manage** (next to inventoryhg.io)
+2. Navigate to **Domain List** → **Manage** (next to inventoryhq.io)
 3. Go to **Advanced DNS** tab
 4. Click **Add New Record** for each DNS entry
 5. Select record type (A, CNAME, TXT)
@@ -226,7 +226,7 @@ Namecheap supports ALIAS records for root domain (@) routing. Use this for Cloud
 ### Limitations
 
 - Some DNS changes may take 30-60 minutes to propagate through Namecheap's nameservers
-- Wildcard records are supported if needed (e.g., `*.inventoryhg.io`)
+- Wildcard records are supported if needed (e.g., `*.inventoryhq.io`)
 - Maximum TXT record length: 255 characters (SPF/DMARC fit within this limit)
 
 ---

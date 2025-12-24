@@ -7,7 +7,7 @@
 
 ## Summary
 
-Integrate the custom domain inventoryhg.io across all user-facing touchpoints, including updating the application name to "Inventory HQ" throughout the UI, configuring AWS SES and Cognito to send emails from the custom domain, and setting up domain hosting via AWS/Amplify. This feature establishes professional branding and improves email deliverability by using a verified custom domain for all communications.
+Integrate the custom domain inventoryhq.io across all user-facing touchpoints, including updating the application name to "Inventory HQ" throughout the UI, configuring AWS SES and Cognito to send emails from the custom domain, and setting up domain hosting via AWS/Amplify. This feature establishes professional branding and improves email deliverability by using a verified custom domain for all communications.
 
 **Key Changes from Spec 003**: Email domain configuration tasks (SES domain verification, sender email configuration) that were planned for spec 003-member-management are now included in this spec 007, as they are essential for the domain integration feature.
 
@@ -37,7 +37,7 @@ Integrate the custom domain inventoryhg.io across all user-facing touchpoints, i
 - Must support both www and non-www variants (FR-018)
 
 **Scale/Scope**: 
-- Single domain: inventoryhg.io
+- Single domain: inventoryhq.io
 - All email types: Cognito authentication emails, invitation emails, low-stock notifications
 - All UI pages: Update branding across entire application
 - DNS records: SPF, DKIM, DMARC for email authentication
@@ -141,7 +141,7 @@ app/
 # Backend changes (email configuration)
 src/
 ├── services/
-│   └── emailService.ts   # Update sender email to use inventoryhg.io domain
+│   └── emailService.ts   # Update sender email to use inventoryhq.io domain
 ├── lib/
 │   └── cognito/          # Cognito email configuration utilities (if needed)
 └── config/
@@ -151,7 +151,7 @@ src/
 template.yaml             # Add SES domain verification, Certificate Manager, Amplify config
 
 # Environment configuration
-env.json                  # Update FRONTEND_URL, SES_FROM_EMAIL to use inventoryhg.io
+env.json                  # Update FRONTEND_URL, SES_FROM_EMAIL to use inventoryhq.io
 ```
 
 **Structure Decision**: Web application structure maintained. This feature primarily involves configuration changes (DNS, email services, branding) rather than new code. Frontend changes are limited to branding updates in existing files. Backend changes focus on email service configuration and environment variables.
@@ -169,16 +169,16 @@ The following items require clarification before proceeding to Phase 1 design:
 - **Recommendation**: AWS Amplify for simplicity, but document S3 + CloudFront alternative
 
 ### 2. Email Sender Address Configuration
-- **Question**: What specific email address should be used for sending emails from inventoryhg.io?
+- **Question**: What specific email address should be used for sending emails from inventoryhq.io?
 - **Options**:
-  - Option A: noreply@inventoryhg.io (standard for automated emails)
-  - Option B: notifications@inventoryhg.io (more descriptive)
-  - Option C: support@inventoryhg.io (allows replies)
+  - Option A: noreply@inventoryhq.io (standard for automated emails)
+  - Option B: notifications@inventoryhq.io (more descriptive)
+  - Option C: support@inventoryhq.io (allows replies)
 - **Impact**: Affects email deliverability and user experience
-- **Recommendation**: noreply@inventoryhg.io for automated emails, with option to add support@ later
+- **Recommendation**: noreply@inventoryhq.io for automated emails, with option to add support@ later
 
 ### 3. Cognito Custom Domain Email Configuration
-- **Question**: How should Cognito be configured to send emails from inventoryhg.io domain?
+- **Question**: How should Cognito be configured to send emails from inventoryhq.io domain?
 - **Needs**:
   - Cognito custom domain setup process
   - Email template customization for Cognito emails
@@ -250,9 +250,9 @@ The following tasks from spec 003-member-management are now part of spec 007-dom
 
 ### From Spec 003 Tasks (T006: Verify SES domain verification and sender email configuration)
 - **Moved**: T006 task from spec 003 to spec 007
-- **New Task in Spec 007**: Configure SES domain verification for inventoryhg.io
-- **New Task in Spec 007**: Configure sender email address using inventoryhg.io domain
-- **New Task in Spec 007**: Set up SPF, DKIM, and DMARC records for inventoryhg.io
+- **New Task in Spec 007**: Configure SES domain verification for inventoryhq.io
+- **New Task in Spec 007**: Configure sender email address using inventoryhq.io domain
+- **New Task in Spec 007**: Set up SPF, DKIM, and DMARC records for inventoryhq.io
 
 **Note**: Spec 003's email service implementation (emailService.ts) remains in spec 003, but the domain configuration tasks are now part of spec 007.
 

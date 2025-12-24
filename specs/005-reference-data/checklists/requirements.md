@@ -45,32 +45,27 @@
 
 ✅ **No clarification markers**: The specification contains zero [NEEDS CLARIFICATION] markers. All requirements are concrete and well-defined based on the original User Story 6.
 
-✅ **Testable requirements**: All 33 functional requirements (FR-040 through FR-072) are written as testable capabilities with clear success/failure conditions:
-  - FR-040: "System MUST allow adults to create storage locations with a unique name per family"
+✅ **Testable requirements**: All functional requirements are written as testable capabilities with clear success/failure conditions:
+  - FR-040: "System MUST allow adults to create storage locations"
   - FR-044: "System MUST prevent deletion of storage locations that are referenced by active inventory items"
-  - FR-046: "System MUST enforce unique storage location names per family (case-insensitive)"
-  - FR-056: "System MUST enforce unique store names per family (case-insensitive)"
   - FR-066: "System MUST maintain referential integrity when reference data is modified"
 
 ✅ **Measurable success criteria**: All 7 success criteria include specific metrics that can be objectively measured:
   - SC-001: "Adults can create storage locations and stores in under 15 seconds per entry"
   - SC-002: "95% of inventory items use reference data instead of free-text after 2 weeks of use"
-  - SC-003: "Zero duplicate storage locations or stores exist per family (enforced by system)"
   - SC-004: "100% of deletion attempts on referenced data are prevented with clear messaging"
   - SC-005: "All reference data changes propagate to referencing items within 1 second"
 
 ✅ **Technology-agnostic success criteria**: Success criteria focus on user outcomes and system behaviors without referencing implementation technologies. The only technical reference is to DynamoDB in the dependencies section where appropriate.
 
-✅ **Acceptance scenarios defined**: User Story 6 includes 6 detailed Given/When/Then acceptance scenarios covering:
+✅ **Acceptance scenarios defined**: User Story 6 includes detailed Given/When/Then acceptance scenarios covering:
   - Adding storage locations and verifying availability in inventory
   - Adding stores and verifying availability for store selection
   - Editing/removing reference data and seeing changes reflected
-  - Preventing duplicate names
   - Preventing deletion of referenced data
   - Propagating name changes to referencing items
 
-✅ **Edge cases identified**: 7 edge cases are explicitly documented:
-  - Duplicate name handling
+✅ **Edge cases identified**: Edge cases are explicitly documented:
   - Deletion with references
   - Name changes with references
   - Case sensitivity considerations
@@ -108,7 +103,6 @@
   - Creating storage locations and stores
   - Editing reference data
   - Deleting reference data (with referential integrity checks)
-  - Handling duplicate names
   - Propagating changes to referencing items
   - Viewing reference data in selection lists
 

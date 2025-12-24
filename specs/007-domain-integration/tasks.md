@@ -27,11 +27,11 @@ Based on plan.md project structure:
 
 **Purpose**: AWS infrastructure setup and DNS configuration required before any code implementation
 
-- [X] T001 [P] Verify domain inventoryhg.io is accessible in Namecheap DNS management interface
-- [X] T002 [P] Document DNS record requirements for inventoryhg.io (A, CNAME, MX records needed)
-- [X] T003 Create domain configuration constants file in `src/config/domain.ts` with inventoryhg.io domain constant
-- [X] T004 [P] Update environment configuration file `env.json` to set FRONTEND_URL to https://inventoryhg.io
-- [X] T005 [P] Update environment configuration file `env.json` to set SES_FROM_EMAIL to noreply@inventoryhg.io
+- [X] T001 [P] Verify domain inventoryhq.io is accessible in Namecheap DNS management interface
+- [X] T002 [P] Document DNS record requirements for inventoryhq.io (A, CNAME, MX records needed)
+- [X] T003 Create domain configuration constants file in `src/config/domain.ts` with inventoryhq.io domain constant
+- [X] T004 [P] Update environment configuration file `env.json` to set FRONTEND_URL to https://inventoryhq.io
+- [X] T005 [P] Update environment configuration file `env.json` to set SES_FROM_EMAIL to noreply@inventoryhq.io
 
 **Checkpoint**: Domain configuration ready - branding and email implementation can begin
 
@@ -54,7 +54,7 @@ Based on plan.md project structure:
 
 ## Phase 3: User Story 1 - Application Displays Custom Domain and Branding (Priority: P1)
 
-**Goal**: Users access the application via the custom domain (inventoryhg.io) and see "Inventory HQ" as the application name throughout the user interface, including page titles, navigation headers, and email communications.
+**Goal**: Users access the application via the custom domain (inventoryhq.io) and see "Inventory HQ" as the application name throughout the user interface, including page titles, navigation headers, and email communications.
 
 **Independent Test**: Can be fully tested by accessing the application via the custom domain and verifying that all page titles display "Inventory HQ", navigation shows the branded name, and the domain appears correctly in the browser address bar.
 
@@ -70,7 +70,7 @@ Based on plan.md project structure:
 
 - [X] T013 [US1] Update invitation email template in Parameter Store at `/inventory-mgmt/{env}/email-templates/invitation` to include "Inventory HQ" branding
 - [X] T014 [P] [US1] Update low-stock notification email template to include "Inventory HQ" branding (check Parameter Store or email service code)
-- [X] T015 [P] [US1] Verify all email links in templates point to inventoryhg.io domain (update FRONTEND_URL references)
+- [X] T015 [P] [US1] Verify all email links in templates point to inventoryhq.io domain (update FRONTEND_URL references)
 
 **Checkpoint**: US1 complete - branding is consistent across UI and email templates
 
@@ -78,16 +78,16 @@ Based on plan.md project structure:
 
 ## Phase 4: User Story 2 - Email Communications Use Custom Domain (Priority: P1)
 
-**Goal**: All system-generated emails (authentication emails from Cognito, invitation emails, low-stock notifications) are sent from email addresses using the inventoryhg.io domain, ensuring consistent branding and improved deliverability.
+**Goal**: All system-generated emails (authentication emails from Cognito, invitation emails, low-stock notifications) are sent from email addresses using the inventoryhq.io domain, ensuring consistent branding and improved deliverability.
 
-**Independent Test**: Can be tested by triggering each email type (password reset, invitation, notification) and verifying that the sender address uses inventoryhg.io and emails are successfully delivered.
+**Independent Test**: Can be tested by triggering each email type (password reset, invitation, notification) and verifying that the sender address uses inventoryhq.io and emails are successfully delivered.
 
 ### 4.1 AWS SES Domain Configuration
 
-- [X] T016 [US2] Verify AWS SES domain verification for inventoryhg.io in AWS Console
-- [X] T017 [US2] Configure SPF record for inventoryhg.io in Namecheap DNS (add TXT record with AWS SES SPF value)
-- [X] T018 [US2] Configure DKIM records for inventoryhg.io in Namecheap DNS (add CNAME records from AWS SES)
-- [X] T019 [US2] Configure DMARC record for inventoryhg.io in Namecheap DNS (add TXT record with DMARC policy)
+- [X] T016 [US2] Verify AWS SES domain verification for inventoryhq.io in AWS Console
+- [X] T017 [US2] Configure SPF record for inventoryhq.io in Namecheap DNS (add TXT record with AWS SES SPF value)
+- [X] T018 [US2] Configure DKIM records for inventoryhq.io in Namecheap DNS (add CNAME records from AWS SES)
+- [X] T019 [US2] Configure DMARC record for inventoryhq.io in Namecheap DNS (add TXT record with DMARC policy)
 - [X] T020 [US2] Verify all email authentication records (SPF, DKIM, DMARC) validate correctly using DNS lookup tools
 
 ### 4.2 SES Email Sender Configuration
@@ -99,10 +99,10 @@ Based on plan.md project structure:
 
 ### 4.3 Cognito Email Configuration
 
-- [X] T025 [US2] Configure Cognito User Pool to use custom domain for email sending (inventoryhg.io)
-- [X] T026 [US2] Verify Cognito email configuration uses SES verified domain inventoryhg.io
+- [X] T025 [US2] Configure Cognito User Pool to use custom domain for email sending (inventoryhq.io)
+- [X] T026 [US2] Verify Cognito email configuration uses SES verified domain inventoryhq.io
 - [X] T027 [P] [US2] Update Cognito email templates (if customizable) to include "Inventory HQ" branding
-- [ ] T028 [P] [US2] Test Cognito password reset email to verify sender address uses inventoryhg.io domain
+- [ ] T028 [P] [US2] Test Cognito password reset email to verify sender address uses inventoryhq.io domain
 
 ### 4.4 Email Link Updates
 
@@ -112,35 +112,35 @@ Based on plan.md project structure:
 
 ### 4.5 Email Testing
 
-- [ ] T032 [US2] Test invitation email delivery and verify sender address is noreply@inventoryhg.io
-- [ ] T033 [P] [US2] Test low-stock notification email delivery and verify sender address uses inventoryhg.io domain
-- [ ] T034 [P] [US2] Test Cognito password reset email and verify sender address uses inventoryhg.io domain
+- [ ] T032 [US2] Test invitation email delivery and verify sender address is noreply@inventoryhq.io
+- [ ] T033 [P] [US2] Test low-stock notification email delivery and verify sender address uses inventoryhq.io domain
+- [ ] T034 [P] [US2] Test Cognito password reset email and verify sender address uses inventoryhq.io domain
 - [ ] T035 [US2] Verify email deliverability rate remains above 95% after domain migration
 
-**Checkpoint**: US2 complete - all emails sent from inventoryhg.io domain with proper authentication records
+**Checkpoint**: US2 complete - all emails sent from inventoryhq.io domain with proper authentication records
 
 ---
 
 ## Phase 5: User Story 3 - Application Hosting Uses Custom Domain (Priority: P2)
 
-**Goal**: The application is accessible via the custom domain (inventoryhg.io) through AWS/Amplify hosting, with proper SSL certificate configuration and domain routing.
+**Goal**: The application is accessible via the custom domain (inventoryhq.io) through AWS/Amplify hosting, with proper SSL certificate configuration and domain routing.
 
-**Independent Test**: Can be tested by accessing inventoryhg.io in a browser and verifying the application loads correctly with a valid SSL certificate, and all API calls work correctly with the custom domain.
+**Independent Test**: Can be tested by accessing inventoryhq.io in a browser and verifying the application loads correctly with a valid SSL certificate, and all API calls work correctly with the custom domain.
 
 ### 5.1 DNS Configuration for Hosting
 
-- [ ] T036 [US3] Configure A record or CNAME record in Namecheap DNS to point inventoryhg.io to AWS hosting (Amplify or CloudFront)
-- [ ] T037 [US3] Configure www.inventoryhg.io CNAME record to redirect to inventoryhg.io (or point to same hosting)
+- [ ] T036 [US3] Configure A record or CNAME record in Namecheap DNS to point inventoryhq.io to AWS hosting (Amplify or CloudFront)
+- [ ] T037 [US3] Configure www.inventoryhq.io CNAME record to redirect to inventoryhq.io (or point to same hosting)
 - [ ] T038 [P] [US3] Document DNS record values needed for Namecheap to AWS routing (for future implementation)
 
 ### 5.2 SSL Certificate Configuration
 
 **Note**: AWS Amplify automatically provisions and manages SSL certificates. No manual template.yaml configuration needed.
 
-- [ ] T039 [US3] Configure custom domain in Amplify Console for inventoryhg.io
+- [ ] T039 [US3] Configure custom domain in Amplify Console for inventoryhq.io
 - [ ] T040 [US3] Add DNS validation records from Amplify to Namecheap DNS (MANUAL - only required step)
 - [ ] T041 [US3] Verify SSL certificate is issued and active in Amplify Console
-- [ ] T042 [P] [US3] Verify www.inventoryhg.io is included in Amplify domain configuration
+- [ ] T042 [P] [US3] Verify www.inventoryhq.io is included in Amplify domain configuration
 
 ### 5.3 AWS Amplify Hosting Configuration
 
@@ -148,7 +148,7 @@ Based on plan.md project structure:
 
 - [ ] T043 [US3] Connect frontend repository to AWS Amplify
 - [ ] T044 [US3] Configure Amplify build settings for Next.js
-- [ ] T045 [US3] Add custom domain inventoryhg.io in Amplify Console
+- [ ] T045 [US3] Add custom domain inventoryhq.io in Amplify Console
 - [ ] T046 [P] [US3] Verify Amplify provides DNS records for domain configuration
 
 ### 5.4 API Domain Configuration
@@ -161,14 +161,14 @@ Based on plan.md project structure:
 
 ### 5.5 Domain Routing Testing
 
-- [ ] T050 [US3] Test application loads successfully via inventoryhg.io in browser
-- [ ] T051 [US3] Verify SSL certificate displays correctly (valid certificate for inventoryhg.io)
+- [ ] T050 [US3] Test application loads successfully via inventoryhq.io in browser
+- [ ] T051 [US3] Verify SSL certificate displays correctly (valid certificate for inventoryhq.io)
 - [ ] T052 [US3] Test API calls work correctly with custom domain configuration
 - [ ] T053 [US3] Verify domain remains consistent during page navigation (no redirects to other domains)
-- [ ] T054 [US3] Test www.inventoryhg.io redirects appropriately (to non-www or loads correctly)
+- [ ] T054 [US3] Test www.inventoryhq.io redirects appropriately (to non-www or loads correctly)
 - [ ] T055 [US3] Verify application loads within 3 seconds for 95th percentile of requests (SC-007)
 
-**Checkpoint**: US3 complete - application accessible via inventoryhg.io with valid SSL certificate
+**Checkpoint**: US3 complete - application accessible via inventoryhq.io with valid SSL certificate
 
 ---
 
@@ -178,7 +178,7 @@ Based on plan.md project structure:
 
 ### 6.1 Backward Compatibility
 
-- [ ] T056 Configure redirects from old domain to inventoryhg.io (if old domain exists)
+- [ ] T056 Configure redirects from old domain to inventoryhq.io (if old domain exists)
 - [X] T057 [P] Update any hardcoded domain references in codebase to use domain configuration constants
 - [ ] T058 [P] Verify backward compatibility during domain transition period (old bookmarks still work via redirects)
 
@@ -191,8 +191,8 @@ Based on plan.md project structure:
 ### 6.3 Final Validation
 
 - [ ] T062 Verify 100% of page titles display "Inventory HQ" or include it in the title (SC-001)
-- [ ] T063 Verify 100% of system-generated emails are sent from inventoryhg.io domain addresses (SC-002)
-- [ ] T064 Verify all email authentication records (SPF, DKIM, DMARC) validate successfully for inventoryhg.io (SC-005)
+- [ ] T063 Verify 100% of system-generated emails are sent from inventoryhq.io domain addresses (SC-002)
+- [ ] T064 Verify all email authentication records (SPF, DKIM, DMARC) validate successfully for inventoryhq.io (SC-005)
 - [ ] T065 Verify zero broken links or API calls after domain configuration (SC-006)
 - [ ] T066 Verify users report consistent "Inventory HQ" branding across all touchpoints (UI and emails) (SC-008)
 
@@ -272,7 +272,7 @@ Based on plan.md project structure:
 **MVP Scope**: User Stories 1 and 2 (P1 priorities) - 35 tasks total
 
 **Independent Test Criteria**:
-- **US1**: Access application via inventoryhg.io, verify "Inventory HQ" branding in all UI elements
-- **US2**: Trigger each email type, verify sender uses inventoryhg.io domain
-- **US3**: Access inventoryhg.io, verify SSL certificate and application loads correctly
+- **US1**: Access application via inventoryhq.io, verify "Inventory HQ" branding in all UI elements
+- **US2**: Trigger each email type, verify sender uses inventoryhq.io domain
+- **US3**: Access inventoryhq.io, verify SSL certificate and application loads correctly
 
