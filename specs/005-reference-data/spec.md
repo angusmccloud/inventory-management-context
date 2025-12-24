@@ -36,7 +36,6 @@ Adults manage reference data for the family, including storage locations (pantry
 
 ### Edge Cases
 
-- **Duplicate Names**: What happens when a user tries to add a store or location with a name that already exists for their family?
 - **Deletion with References**: What happens when a location or store is deleted but inventory items still reference it?
 - **Name Changes with References**: How should the system handle editing a location/store name that's referenced by many items?
 - **Case Sensitivity**: Should "Pantry" and "pantry" be considered duplicates?
@@ -50,26 +49,24 @@ Adults manage reference data for the family, including storage locations (pantry
 
 #### Storage Location Management (US6)
 
-- **FR-040**: System MUST allow adults to create storage locations with a unique name per family
+- **FR-040**: System MUST allow adults to create storage locations
 - **FR-041**: System MUST allow adults to add an optional description to storage locations
 - **FR-042**: System MUST allow adults to edit storage location names and descriptions
 - **FR-043**: System MUST allow adults to delete storage locations that are not referenced by any inventory items
 - **FR-044**: System MUST prevent deletion of storage locations that are referenced by active inventory items
 - **FR-045**: System MUST display which inventory items reference a storage location when deletion is prevented
-- **FR-046**: System MUST enforce unique storage location names per family (case-insensitive)
 - **FR-047**: System MUST trim leading and trailing whitespace from storage location names
 - **FR-048**: System MUST make storage locations available as selection options when creating/editing inventory items
 - **FR-049**: System MUST update all referencing inventory items when a storage location name is changed
 
 #### Store/Vendor Management (US6)
 
-- **FR-050**: System MUST allow adults to create stores with a unique name per family
+- **FR-050**: System MUST allow adults to create stores
 - **FR-051**: System MUST allow adults to add an optional address to stores
 - **FR-052**: System MUST allow adults to edit store names and addresses
 - **FR-053**: System MUST allow adults to delete stores that are not referenced by any inventory items or shopping list items
 - **FR-054**: System MUST prevent deletion of stores that are referenced by active inventory items or shopping list items
 - **FR-055**: System MUST display which items reference a store when deletion is prevented
-- **FR-056**: System MUST enforce unique store names per family (case-insensitive)
 - **FR-057**: System MUST trim leading and trailing whitespace from store names
 - **FR-058**: System MUST make stores available as selection options when creating/editing inventory items
 - **FR-059**: System MUST make stores available as selection options when managing shopping list items

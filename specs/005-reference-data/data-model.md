@@ -280,11 +280,9 @@ export type UpdateStoreRequest = z.infer<typeof UpdateStoreSchema>;
 |----------------|-----------|-----------|-------|
 | List all storage locations for family | Query | PK = `FAMILY#{familyId}`, SK begins_with `LOCATION#` | Returns all locations |
 | Get storage location by ID | GetItem | PK = `FAMILY#{familyId}`, SK = `LOCATION#{locationId}` | Single item lookup |
-| Check location name uniqueness | Query + Filter | PK = `FAMILY#{familyId}`, SK begins_with `LOCATION#`, Filter: `nameLower = :nameLower` | Case-insensitive check |
 | Check location references | Query + Filter | PK = `FAMILY#{familyId}`, SK begins_with `ITEM#`, Filter: `locationId = :locationId` | Before deletion |
 | List all stores for family | Query | PK = `FAMILY#{familyId}`, SK begins_with `STORE#` | Returns all stores |
 | Get store by ID | GetItem | PK = `FAMILY#{familyId}`, SK = `STORE#{storeId}` | Single item lookup |
-| Check store name uniqueness | Query + Filter | PK = `FAMILY#{familyId}`, SK begins_with `STORE#`, Filter: `nameLower = :nameLower` | Case-insensitive check |
 | Check store references (inventory) | Query + Filter | PK = `FAMILY#{familyId}`, SK begins_with `ITEM#`, Filter: `preferredStoreId = :storeId OR contains(alternateStoreIds, :storeId)` | Before deletion |
 | Check store references (shopping) | Query + Filter | PK = `FAMILY#{familyId}`, SK begins_with `SHOPPING#`, Filter: `storeId = :storeId` | Before deletion |
 

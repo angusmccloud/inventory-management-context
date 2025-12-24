@@ -3,11 +3,11 @@
 **Feature Branch**: `007-domain-integration`  
 **Created**: December 9, 2025  
 **Status**: Draft  
-**Input**: User description: "Add a new Spec for integrating a live domain: inventoryhg.io. It should be full-stack: - UI setup for domain, AWS/Amplify using it - UI renamed to Inventory HQ (no folder structure changes, just page titles) - All emails (Cognito, Invitations, etc) sent with this domain - Domain is purchased on namecheap, can/will be routed to AWS (but should include that in later plans)"
+**Input**: User description: "Add a new Spec for integrating a live domain: inventoryhq.io. It should be full-stack: - UI setup for domain, AWS/Amplify using it - UI renamed to Inventory HQ (no folder structure changes, just page titles) - All emails (Cognito, Invitations, etc) sent with this domain - Domain is purchased on namecheap, can/will be routed to AWS (but should include that in later plans)"
 
 ## Purpose and Problem Statement
 
-The application currently operates under generic branding and uses placeholder domains for email communications. To establish a professional, branded presence, the system needs to integrate a custom domain (inventoryhg.io) across all user-facing touchpoints. This includes updating the application name to "Inventory HQ", configuring the domain for web hosting, and ensuring all email communications (authentication, invitations, notifications) are sent from the custom domain.
+The application currently operates under generic branding and uses placeholder domains for email communications. To establish a professional, branded presence, the system needs to integrate a custom domain (inventoryhq.io) across all user-facing touchpoints. This includes updating the application name to "Inventory HQ", configuring the domain for web hosting, and ensuring all email communications (authentication, invitations, notifications) are sent from the custom domain.
 
 The goal is to provide a cohesive branded experience that builds trust and recognition, while maintaining all existing functionality and ensuring reliable email delivery.
 
@@ -15,7 +15,7 @@ The goal is to provide a cohesive branded experience that builds trust and recog
 
 ### User Story 1 - Application Displays Custom Domain and Branding (Priority: P1)
 
-Users access the application via the custom domain (inventoryhg.io) and see "Inventory HQ" as the application name throughout the user interface, including page titles, navigation headers, and email communications.
+Users access the application via the custom domain (inventoryhq.io) and see "Inventory HQ" as the application name throughout the user interface, including page titles, navigation headers, and email communications.
 
 **Why this priority**: This is the foundational branding change that establishes the professional identity. Without consistent branding, users may not recognize the application or trust email communications.
 
@@ -23,46 +23,46 @@ Users access the application via the custom domain (inventoryhg.io) and see "Inv
 
 **Acceptance Scenarios**:
 
-1. **Given** a user accesses the application via inventoryhg.io, **When** they view any page, **Then** the browser tab title displays "Inventory HQ" or a page-specific title with "Inventory HQ"
+1. **Given** a user accesses the application via inventoryhq.io, **When** they view any page, **Then** the browser tab title displays "Inventory HQ" or a page-specific title with "Inventory HQ"
 2. **Given** a user is logged into the application, **When** they view the navigation header, **Then** it displays "Inventory HQ" as the application name
 3. **Given** a user views the landing page, **When** they see the hero section, **Then** it displays "Inventory HQ" as the primary heading
-4. **Given** a user receives any email from the system, **When** they view the email sender address, **Then** it shows an address from the inventoryhg.io domain (e.g., noreply@inventoryhg.io)
+4. **Given** a user receives any email from the system, **When** they view the email sender address, **Then** it shows an address from the inventoryhq.io domain (e.g., noreply@inventoryhq.io)
 5. **Given** a user receives any email from the system, **When** they view the email content, **Then** it references "Inventory HQ" as the application name
 
 ---
 
 ### User Story 2 - Email Communications Use Custom Domain (Priority: P1)
 
-All system-generated emails (authentication emails from Cognito, invitation emails, low-stock notifications) are sent from email addresses using the inventoryhg.io domain, ensuring consistent branding and improved deliverability.
+All system-generated emails (authentication emails from Cognito, invitation emails, low-stock notifications) are sent from email addresses using the inventoryhq.io domain, ensuring consistent branding and improved deliverability.
 
 **Why this priority**: Email deliverability and trust depend on using a verified custom domain. Generic or placeholder domains can trigger spam filters and reduce user confidence in email communications.
 
-**Independent Test**: Can be tested by triggering each email type (password reset, invitation, notification) and verifying that the sender address uses inventoryhg.io and emails are successfully delivered.
+**Independent Test**: Can be tested by triggering each email type (password reset, invitation, notification) and verifying that the sender address uses inventoryhq.io and emails are successfully delivered.
 
 **Acceptance Scenarios**:
 
-1. **Given** a user requests a password reset, **When** Cognito sends the password reset email, **Then** the email is sent from an address using inventoryhg.io domain
-2. **Given** an admin invites a new family member, **When** the invitation email is sent, **Then** the sender address uses inventoryhg.io domain and the email content references "Inventory HQ"
-3. **Given** an inventory item falls below threshold, **When** a low-stock notification email is sent, **Then** the sender address uses inventoryhg.io domain
-4. **Given** any system email is sent, **When** the recipient views email headers, **Then** SPF, DKIM, and DMARC records validate correctly for inventoryhg.io
-5. **Given** a user receives an email with a link, **When** they click the link, **Then** it directs to the inventoryhg.io domain
+1. **Given** a user requests a password reset, **When** Cognito sends the password reset email, **Then** the email is sent from an address using inventoryhq.io domain
+2. **Given** an admin invites a new family member, **When** the invitation email is sent, **Then** the sender address uses inventoryhq.io domain and the email content references "Inventory HQ"
+3. **Given** an inventory item falls below threshold, **When** a low-stock notification email is sent, **Then** the sender address uses inventoryhq.io domain
+4. **Given** any system email is sent, **When** the recipient views email headers, **Then** SPF, DKIM, and DMARC records validate correctly for inventoryhq.io
+5. **Given** a user receives an email with a link, **When** they click the link, **Then** it directs to the inventoryhq.io domain
 
 ---
 
 ### User Story 3 - Application Hosting Uses Custom Domain (Priority: P2)
 
-The application is accessible via the custom domain (inventoryhg.io) through AWS/Amplify hosting, with proper SSL certificate configuration and domain routing.
+The application is accessible via the custom domain (inventoryhq.io) through AWS/Amplify hosting, with proper SSL certificate configuration and domain routing.
 
 **Why this priority**: While branding and email are critical for user trust, the hosting configuration ensures users can actually access the application via the custom domain. This can be implemented after initial branding changes are complete.
 
-**Independent Test**: Can be tested by accessing inventoryhg.io in a browser and verifying the application loads correctly with a valid SSL certificate, and all API calls work correctly with the custom domain.
+**Independent Test**: Can be tested by accessing inventoryhq.io in a browser and verifying the application loads correctly with a valid SSL certificate, and all API calls work correctly with the custom domain.
 
 **Acceptance Scenarios**:
 
-1. **Given** the domain is configured, **When** a user navigates to inventoryhg.io, **Then** the application loads successfully
-2. **Given** the application is accessed via inventoryhg.io, **When** the browser displays the connection, **Then** it shows a valid SSL certificate for inventoryhg.io
+1. **Given** the domain is configured, **When** a user navigates to inventoryhq.io, **Then** the application loads successfully
+2. **Given** the application is accessed via inventoryhq.io, **When** the browser displays the connection, **Then** it shows a valid SSL certificate for inventoryhq.io
 3. **Given** a user interacts with the application, **When** API calls are made, **Then** they use the correct domain configuration
-4. **Given** the application is accessed via inventoryhg.io, **When** users navigate between pages, **Then** the domain remains consistent (no redirects to other domains)
+4. **Given** the application is accessed via inventoryhq.io, **When** users navigate between pages, **Then** the domain remains consistent (no redirects to other domains)
 
 ---
 
@@ -71,7 +71,7 @@ The application is accessible via the custom domain (inventoryhg.io) through AWS
 - What happens if the domain DNS configuration is incorrect or incomplete?
 - How does the system handle email delivery failures when using the custom domain?
 - What happens if SSL certificate provisioning fails for the custom domain?
-- How does the system handle subdomain routing (e.g., www.inventoryhg.io vs inventoryhg.io)?
+- How does the system handle subdomain routing (e.g., www.inventoryhq.io vs inventoryhq.io)?
 - What happens if domain verification fails for email services (SES, Cognito)?
 - How does the system handle domain expiration or transfer scenarios?
 - What happens if users have bookmarked the old domain or application name?
@@ -91,34 +91,34 @@ The application is accessible via the custom domain (inventoryhg.io) through AWS
 
 #### Email Configuration (US2)
 
-- **FR-007**: System MUST send all invitation emails from an address using inventoryhg.io domain
-- **FR-008**: System MUST send all low-stock notification emails from an address using inventoryhg.io domain
-- **FR-009**: System MUST configure Cognito to send authentication emails (password reset, verification) from inventoryhg.io domain
-- **FR-010**: System MUST configure email services with SPF records for inventoryhg.io
-- **FR-011**: System MUST configure email services with DKIM records for inventoryhg.io
-- **FR-012**: System MUST configure email services with DMARC records for inventoryhg.io
+- **FR-007**: System MUST send all invitation emails from an address using inventoryhq.io domain
+- **FR-008**: System MUST send all low-stock notification emails from an address using inventoryhq.io domain
+- **FR-009**: System MUST configure Cognito to send authentication emails (password reset, verification) from inventoryhq.io domain
+- **FR-010**: System MUST configure email services with SPF records for inventoryhq.io
+- **FR-011**: System MUST configure email services with DKIM records for inventoryhq.io
+- **FR-012**: System MUST configure email services with DMARC records for inventoryhq.io
 - **FR-013**: System MUST include "Inventory HQ" branding in all email templates
-- **FR-014**: System MUST ensure all email links point to inventoryhg.io domain
+- **FR-014**: System MUST ensure all email links point to inventoryhq.io domain
 
 #### Domain Hosting (US3)
 
-- **FR-015**: System MUST make the application accessible via inventoryhg.io domain
-- **FR-016**: System MUST configure SSL certificate for inventoryhg.io domain
+- **FR-015**: System MUST make the application accessible via inventoryhq.io domain
+- **FR-016**: System MUST configure SSL certificate for inventoryhq.io domain
 - **FR-017**: System MUST ensure API endpoints work correctly with the custom domain
 - **FR-018**: System MUST handle both www and non-www variants of the domain (redirect appropriately)
 - **FR-019**: System MUST maintain backward compatibility during domain transition period
 
 #### Domain Routing (Future Planning)
 
-- **FR-020**: System MUST document the process for routing inventoryhg.io from Namecheap to AWS
+- **FR-020**: System MUST document the process for routing inventoryhq.io from Namecheap to AWS
 - **FR-021**: System MUST identify required DNS records for domain routing
 - **FR-022**: System MUST document Amplify hosting configuration requirements
 
 ### Key Entities
 
-- **Domain Configuration**: The DNS and hosting setup that routes inventoryhg.io to the application infrastructure. Includes DNS records, SSL certificates, and routing rules.
+- **Domain Configuration**: The DNS and hosting setup that routes inventoryhq.io to the application infrastructure. Includes DNS records, SSL certificates, and routing rules.
 
-- **Email Domain**: The email sending configuration that uses inventoryhg.io for all outbound emails. Includes SES domain verification, Cognito email configuration, and email template branding.
+- **Email Domain**: The email sending configuration that uses inventoryhq.io for all outbound emails. Includes SES domain verification, Cognito email configuration, and email template branding.
 
 - **Application Branding**: The user-facing name "Inventory HQ" that replaces generic application names throughout the interface and communications.
 
@@ -127,10 +127,10 @@ The application is accessible via the custom domain (inventoryhg.io) through AWS
 ### Measurable Outcomes
 
 - **SC-001**: 100% of page titles display "Inventory HQ" or include it in the title
-- **SC-002**: 100% of system-generated emails are sent from inventoryhg.io domain addresses
+- **SC-002**: 100% of system-generated emails are sent from inventoryhq.io domain addresses
 - **SC-003**: Email deliverability rate remains above 95% after domain migration
-- **SC-004**: Application is accessible via inventoryhg.io with valid SSL certificate
-- **SC-005**: All email authentication records (SPF, DKIM, DMARC) validate successfully for inventoryhg.io
+- **SC-004**: Application is accessible via inventoryhq.io with valid SSL certificate
+- **SC-005**: All email authentication records (SPF, DKIM, DMARC) validate successfully for inventoryhq.io
 - **SC-006**: Zero broken links or API calls after domain configuration
 - **SC-007**: Application loads via custom domain within 3 seconds for 95th percentile of requests
 - **SC-008**: Users report consistent "Inventory HQ" branding across all touchpoints (UI and emails)
@@ -143,7 +143,7 @@ The following capabilities are explicitly excluded from this specification:
 
 - Domain purchase process (domain is already purchased on Namecheap)
 - Detailed DNS routing implementation from Namecheap to AWS (documented for future plans only)
-- Subdomain configuration (e.g., api.inventoryhg.io, admin.inventoryhg.io)
+- Subdomain configuration (e.g., api.inventoryhq.io, admin.inventoryhq.io)
 - Email marketing campaigns or bulk email features
 - Custom email template redesign (only branding updates to existing templates)
 - Multi-domain support or domain aliasing
@@ -159,7 +159,7 @@ The following capabilities are explicitly excluded from this specification:
 
 ## Assumptions
 
-- Domain inventoryhg.io is already purchased and accessible for DNS configuration
+- Domain inventoryhq.io is already purchased and accessible for DNS configuration
 - Namecheap DNS management interface is available for configuring DNS records
 - AWS SES and Cognito support custom domain configuration for email sending
 - Amplify or equivalent AWS hosting service supports custom domain configuration

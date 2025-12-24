@@ -6,7 +6,7 @@
 
 ## Overview
 
-This guide covers the deployment of the inventoryhg.io domain integration. AWS Amplify handles frontend hosting, SSL certificates, and CloudFront distribution automatically.
+This guide covers the deployment of the inventoryhq.io domain integration. AWS Amplify handles frontend hosting, SSL certificates, and CloudFront distribution automatically.
 
 ## Completed Infrastructure
 
@@ -16,7 +16,7 @@ This guide covers the deployment of the inventoryhg.io domain integration. AWS A
 - Email service uses domain configuration for sender addresses
 
 ✅ **Backend API Configuration** (T047-T049)
-- CORS configured to allow requests from inventoryhg.io
+- CORS configured to allow requests from inventoryhq.io
 - API Gateway ready for custom domain integration
 
 ## Deployment Steps
@@ -45,7 +45,7 @@ sam deploy
 ⚠️ **AMPLIFY CONFIGURATION REQUIRED**
 
 AWS Amplify automatically handles:
-- ✅ SSL certificate provisioning for inventoryhg.io
+- ✅ SSL certificate provisioning for inventoryhq.io
 - ✅ CloudFront distribution creation
 - ✅ S3 bucket for static assets
 - ✅ Custom domain configuration
@@ -82,7 +82,7 @@ AWS Amplify automatically handles:
 3. **Add Custom Domain in Amplify**:
    - In Amplify Console → Your App → Domain Management
    - Click "Add domain"
-   - Enter: `inventoryhg.io`
+   - Enter: `inventoryhq.io`
    - Amplify will automatically:
      - Request SSL certificate from AWS Certificate Manager
      - Create CloudFront distribution
@@ -102,7 +102,7 @@ After Amplify requests the SSL certificate, add the validation records to Namech
 
 2. **Add CNAME records to Namecheap**:
    - Log in to Namecheap account
-   - Navigate to Domain List → inventoryhg.io → Advanced DNS
+   - Navigate to Domain List → inventoryhq.io → Advanced DNS
    - Add the CNAME records provided by Amplify:
      - Type: CNAME Record
      - Host: [from Amplify Console]
@@ -124,7 +124,7 @@ After SSL certificate validation, configure the domain routing in Namecheap:
 
 Amplify Console will provide specific DNS records. Typically:
 
-**For apex domain (inventoryhg.io)**:
+**For apex domain (inventoryhq.io)**:
 ```
 Type: CNAME Record (or ALIAS if supported)
 Host: @
@@ -156,24 +156,24 @@ TTL: Automatic
 ```
 Type: TXT Record
 Host: _dmarc
-Value: v=DMARC1; p=none; rua=mailto:postmaster@inventoryhg.io
+Value: v=DMARC1; p=none; rua=mailto:postmaster@inventoryhq.io
 TTL: Automatic
 ```
 
 **DKIM Records**:
-- Get from AWS SES Console → Verified Identities → inventoryhg.io → DKIM
+- Get from AWS SES Console → Verified Identities → inventoryhq.io → DKIM
 - Add all CNAME records provided by AWS SES
 
 ### 5. Verify Deployment
 
 After DNS propagation (24-48 hours, but often faster):
 
-- [ ] Visit https://inventoryhg.io → Application loads correctly
-- [ ] Visit https://www.inventoryhg.io → Redirects or loads application
-- [ ] Check SSL certificate → Valid for inventoryhg.io
+- [ ] Visit https://inventoryhq.io → Application loads correctly
+- [ ] Visit https://www.inventoryhq.io → Redirects or loads application
+- [ ] Check SSL certificate → Valid for inventoryhq.io
 - [ ] Verify page title shows "Inventory HQ"
 - [ ] Test API calls work correctly
-- [ ] Trigger test email → Sender shows noreply@inventoryhg.io
+- [ ] Trigger test email → Sender shows noreply@inventoryhq.io
 
 ## CloudFormation Outputs Reference
 
@@ -192,7 +192,7 @@ After deployment, these outputs will be available:
 
 ### SSL Certificate Stuck in Pending Validation
 - Verify CNAME records are correct in Namecheap
-- Check DNS propagation: `dig _[hash].inventoryhg.io CNAME`
+- Check DNS propagation: `dig _[hash].inventoryhq.io CNAME`
 - Wait up to 30 minutes for validation
 
 ### Application Not Loading After DNS Configuration
@@ -201,7 +201,7 @@ After deployment, these outputs will be available:
 
 ### SSL Certificate Stuck in Pending Validation
 - Verify CNAME records are correct in Namecheap
-- Check DNS propagation: `dig _[hash].inventoryhg.io CNAME`
+- Check DNS propagation: `dig _[hash].inventoryhq.io CNAME`
 - Wait up to 30 minutes for validation
 - Check Amplify Console for validation status
 
@@ -214,12 +214,12 @@ After deployment, these outputs will be available:
 ### Email Deliverability Issues
 - Verify SPF, DKIM, DMARC records in Namecheap
 - Check SES reputation in AWS Console
-- Ensure sender email (noreply@inventoryhg.io) is verified in SES
+- Ensure sender email (noreply@inventoryhq.io) is verified in SES
 - Test email delivery using SES Console
 
 ### DNS Propagation Delay
-- Use `dig inventoryhg.io` to check DNS resolution
-- Try different DNS servers: `dig @8.8.8.8 inventoryhg.io`
+- Use `dig inventoryhq.io` to check DNS resolution
+- Try different DNS servers: `dig @8.8.8.8 inventoryhq.io`
 - Global propagation can take 24-48 hours
 - Flush local DNS cache if needed
 
@@ -229,7 +229,7 @@ After deployment, these outputs will be available:
 - [ ] HTTPS enforced (Amplify default)
 - [ ] Email authentication records (SPF, DKIM, DMARC) configured
 - [ ] SES domain verification complete
-- [ ] API Gateway CORS configured for inventoryhg.io
+- [ ] API Gateway CORS configured for inventoryhq.io
 
 ## Cost Estimation
 
@@ -254,7 +254,7 @@ After successful deployment:
 ## Tasks Status Summary
 
 ### ✅ Completed (Code Changes)
-- T047-T049: API CORS configuration for inventoryhg.io
+- T047-T049: API CORS configuration for inventoryhq.io
 - T057: Domain configuration constants in codebase
 
 ### ⏳ Manual Configuration Required

@@ -966,7 +966,7 @@ The public `AcceptInvitationFunction` is rate-limited to prevent abuse:
 
 All invitation links use HTTPS protocol:
 - Configured in `src/config/domain.ts`
-- `FRONTEND_BASE_URL = 'https://inventoryhg.io'`
+- `FRONTEND_BASE_URL = 'https://inventoryhq.io'`
 - Cannot be overridden to HTTP
 
 ## Resources
