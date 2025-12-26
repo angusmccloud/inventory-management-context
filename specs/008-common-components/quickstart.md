@@ -760,7 +760,9 @@ npm test -- --testNamePattern="accessibility"
 
 ## Migration from One-Off Implementations
 
-### Before (one-off button):
+### 1. Replace Custom Buttons
+
+**Before (one-off button)**:
 ```typescript
 <button 
   onClick={handleSave}
@@ -771,19 +773,154 @@ npm test -- --testNamePattern="accessibility"
 </button>
 ```
 
-### After (common Button):
+**After (common Button)**:
 ```typescript
 <Button variant="primary" onClick={handleSave} loading={isSaving}>
   Save
 </Button>
 ```
 
-**Benefits**:
-- 60% less code
-- Automatic theme integration
-- Built-in accessibility
-- Consistent styling across app
-- Loading state included
+### 2. Replace Typography
+
+**Before (custom heading)**:
+```typescript
+<h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+  Inventory Management
+</h1>
+```
+
+**After (Text component)**:
+```typescript
+<Text as="h1" variant="h1">
+  Inventory Management
+</Text>
+```
+
+### 3. Replace Custom Empty States
+
+**Before (custom empty view)**:
+```typescript
+<div className="flex flex-col items-center justify-center p-12 text-center">
+  <div className="rounded-full bg-gray-100 p-6 mb-4">
+    <MapPinIcon className="h-12 w-12 text-gray-400" />
+  </div>
+  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Locations</h3>
+  <p className="text-gray-600 mb-6">Add storage locations to organize items.</p>
+  <button onClick={onAdd} className="...">Add Location</button>
+</div>
+```
+
+**After (EmptyState component)**:
+```typescript
+<EmptyState
+  icon={<MapPinIcon />}
+  title="No Locations"
+  description="Add storage locations to organize items."
+  action={{
+    label: 'Add Location',
+    onClick: onAdd,
+    variant: 'primary'
+  }}
+/>
+```
+
+### 4. Replace Status Indicators with Badges
+
+**Before (custom badge)**:
+```typescript
+<span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800">
+  Active
+</span>
+```
+
+**After (Badge component)**:
+```typescript
+<Badge variant="error">Active</Badge>
+```
+
+### 5. Replace Custom Alerts
+
+**Before (custom error message)**:
+```typescript
+{error && (
+  <div className="rounded-md bg-red-50 p-4">
+    <div className="flex">
+      <div className="flex-shrink-0">
+        <svg className="h-5 w-5 text-red-400" ...>...</svg>
+      </div>
+      <div className="ml-3">
+        <p className="text-sm text-red-800">{error}</p>
+      </div>
+    </div>
+  </div>
+)}
+```
+
+**After (Alert component)**:
+```typescript
+{error && (
+  <Alert severity="error">{error}</Alert>
+)}
+```
+
+### 6. Replace Page Headers
+
+**Before (custom header)**:
+```typescript
+<div className="flex items-center justify-between mb-8">
+  <div>
+    <h1 className="text-3xl font-bold">Inventory</h1>
+    <p className="text-gray-600 mt-2">Manage your household items</p>
+  </div>
+  <button onClick={onAdd} className="...">
+    <PlusIcon className="h-5 w-5 mr-2" />
+    Add Item
+  </button>
+</div>
+```
+
+**After (PageHeader component)**:
+```typescript
+<PageHeader
+  title="Inventory"
+  description="Manage your household items"
+  action={{
+    label: 'Add Item',
+    onClick: onAdd,
+    icon: <PlusIcon />,
+    variant: 'primary'
+  }}
+/>
+```
+
+### Migration Benefits
+
+**Code Reduction**:
+- 60-80% less code per component
+- Example: Custom empty state (50 lines) → EmptyState (5 lines)
+- Example: Custom page header (20 lines) → PageHeader (6 lines)
+
+**Consistency**:
+- Automatic theme integration (light/dark mode)
+- Standardized spacing and sizing
+- Unified color palette
+
+**Maintainability**:
+- Single source of truth for component behavior
+- TypeScript ensures correct prop usage
+- Built-in accessibility (ARIA labels, keyboard nav)
+
+**Performance**:
+- Components are memoized where beneficial
+- Tree-shaking removes unused variants
+- No prop drilling - use context for theme
+
+**Discovered Patterns**:
+1. **Always wrap form buttons in Button component** for loading states
+2. **Use Text component for all typography** to ensure theme consistency
+3. **Replace custom icons with Heroicons** for standardization
+4. **Use EmptyState for all "no data" scenarios** across features
+5. **Prefer PageHeader over manual header layouts** for consistency
 
 ---
 
