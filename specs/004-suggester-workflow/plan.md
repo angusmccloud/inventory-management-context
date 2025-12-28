@@ -1,100 +1,127 @@
 # Implementation Plan: Suggester Workflow
 
-**Branch**: `004-suggester-workflow` | **Date**: 2025-12-10 | **Spec**: [spec.md](./spec.md)
+**Branch**: `004-suggester-workflow` | **Date**: 2025-12-28 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/004-suggester-workflow/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-Enable suggester users (typically children) to view family inventory and submit suggestions for adding items to the shopping list or creating new inventory items. Admins review and approve or reject these suggestions, maintaining control while fostering family participation. This feature builds upon the Member entity with role-based permissions from 003-member-management and the Suggestion entity defined in 001-family-inventory-mvp. Technical approach uses DynamoDB for suggestion records with optimistic locking for concurrent approval handling, and role-based access control via Lambda authorizer.
+Enable suggester role family members (typically children) to participate in household inventory management by viewing inventory items and submitting suggestions for shopping list additions or new item creation. Suggestions require admin approval, creating a safe workflow that teaches responsibility while maintaining data integrity.
+
+The feature builds upon existing infrastructure (001-family-inventory-mvp and 003-member-management) by adding a new Suggestion entity with approval workflow, dedicated API endpoints for suggestion CRUD operations, and UI components for suggester submission and admin review.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5 with strict mode enabled
-**Primary Dependencies**: Next.js 16 (App Router), AWS SDK v3, Zod (validation)
-**Storage**: Amazon DynamoDB (single-table design, reusing `InventoryManagement` table from 001-family-inventory-mvp)
-**Testing**: Jest and React Testing Library (80% coverage required for critical paths)
-**Target Platform**: AWS Lambda (serverless), Web browser (frontend)
-**Project Type**: Web application (frontend + backend)
-**Performance Goals**: Suggestion submission in under 30 seconds (SC-001), approval/rejection in under 15 seconds (SC-003)
-**Constraints**: Stateless Lambda functions, idempotent operations, least-privilege IAM, role-based access control
-**Scale/Scope**: 2-6 members per family (typical), small-scale multi-user access
+**Language/Version**: TypeScript 5 with strict mode enabled  
+**Primary Dependencies**: 
+- Frontend: Next.js 16 (App Router), React 18+, Vite (build tool), React Testing Library, common component library
+- Backend: AWS SDK v3 (modular imports), AWS Lambda runtime (Node.js 24.x)
+- Infrastructure: AWS SAM (Serverless Application Model)
+- Deployment: AWS S3 + CloudFront (frontend), AWS Lambda (backend)
 
-### Key Entities
+**Storage**: Amazon DynamoDB (single-table design pattern, extends existing table from 001)  
+**Testing**: Jest and React Testing Library (80% coverage required for critical paths)  
+**Target Platform**: Web browsers (Chrome, Firefox, Safari, Edge) with serverless backend on AWS Lambda  
+**Project Type**: Web application (frontend + backend serverless APIs)  
+**Performance Goals**: 
+- API response time: <200ms p95 for read operations, <300ms p95 for write operations (suggestion approval may include item creation)
+- Frontend: <30 seconds to submit suggestion, <15 seconds to review/approve suggestion
 
-**Suggestion** (from parent feature 001-family-inventory-mvp, lines 463-539):
-- PK: `FAMILY#{familyId}`, SK: `SUGGESTION#{suggestionId}`
-- GSI2PK: `FAMILY#{familyId}#SUGGESTIONS`, GSI2SK: `STATUS#{status}#CREATED#{createdAt}`
-- Attributes: suggestionId, familyId, suggestedBy, type (add_to_shopping/create_item), status (pending/approved/rejected), itemId, proposedItemName, proposedQuantity, proposedThreshold, notes, reviewedBy, reviewedAt, entityType, createdAt, updatedAt
+**Constraints**: 
+- Must integrate with existing DynamoDB single-table design from 001-family-inventory-mvp
+- Must use existing Lambda authorizer for role-based access control (suggester vs admin)
+- Suggestions must maintain family isolation (familyId filtering)
+- Must handle edge cases: deleted items, removed suggesters, duplicate names
+- Approval operations must be atomic (status update + action execution)
+- MUST use common component library (components/common/) per Constitution Principle VIII
 
-**Member** (from parent feature 003-member-management):
-- PK: `FAMILY#{familyId}`, SK: `MEMBER#{memberId}`
-- GSI1PK: `MEMBER#{memberId}`, GSI1SK: `FAMILY#{familyId}`
-- Attributes: memberId, familyId, email, name, role (admin/suggester), status (active/removed), version, entityType, createdAt, updatedAt
-
-**InventoryItem** (from parent feature 001-family-inventory-mvp):
-- PK: `FAMILY#{familyId}`, SK: `ITEM#{itemId}`
-- Referenced by "add_to_shopping" suggestions
-
-**ShoppingListItem** (from parent feature 001-family-inventory-mvp):
-- PK: `FAMILY#{familyId}`, SK: `SHOPPING#{shoppingItemId}`
-- Created when "add_to_shopping" suggestions are approved
-
-### Integration Points
-
-1. **Lambda Authorizer**: Role-based access control validation (admin vs suggester permissions)
-2. **DynamoDB**: Suggestion, Member, InventoryItem, and ShoppingListItem records in `InventoryManagement` table
-3. **AWS Cognito**: User authentication (from parent features)
-
-### Dependencies on Parent Features
-
-**From 001-family-inventory-mvp:**
-- Family entity and family isolation mechanisms
-- InventoryItem entity with all attributes
-- ShoppingListItem entity for approved "add_to_shopping" suggestions
-- Suggestion entity schema (lines 463-539 of data-model.md)
-- DynamoDB single-table design with GSI2 for suggestion queries
-- Authentication system (AWS Cognito user pool)
-
-**From 003-member-management:**
-- Member entity with role-based permissions (admin/suggester)
-- Role validation and enforcement
-- Member status management (active/removed)
-- Lambda authorizer for role-based access control
-- Optimistic locking pattern (version attribute)
+**Scale/Scope**: 
+- 4 new backend API endpoints (create, list, approve, reject suggestions)
+- 2 new frontend pages (suggester submission, admin review)
+- 1 new entity type (Suggestion)
+- Extends existing DynamoDB table with new entity patterns
+- ~200 lines backend code, ~300 lines frontend code
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-### NON-NEGOTIABLE Requirements (from constitution v1.1.0)
+### I. TypeScript Type Safety (NON-NEGOTIABLE)
+- ✅ All code will be TypeScript 5 with strict mode
+- ✅ No implicit `any` types allowed
+- ✅ Explicit typing for Suggestion entity, API request/response types
+- ✅ Shared types in dedicated type definition files (types/entities.ts extension)
+- ✅ Generic types for reusable components
 
-| Principle | Requirement | Status | Notes |
-|-----------|-------------|--------|-------|
-| **I. TypeScript Type Safety** | All code in TypeScript 5 strict mode, no implicit `any` | ✅ COMPLIANT | Will use Zod schemas for Suggestion entity |
-| **II. Serverless Architecture** | All backend logic as AWS Lambda functions | ✅ COMPLIANT | Suggestion management APIs via Lambda |
-| **II. Serverless Architecture** | DynamoDB single-table design | ✅ COMPLIANT | Reusing `InventoryManagement` table |
-| **II. Serverless Architecture** | Lambda functions stateless and idempotent | ✅ COMPLIANT | Suggestion operations designed for idempotency |
-| **III. Testing Excellence** | Test-first development, 80% coverage for critical paths | ✅ COMPLIANT | Will require tests for all suggestion management logic |
-| **III. Testing Excellence** | Jest and React Testing Library | ✅ COMPLIANT | Standard testing frameworks |
-| **IV. AWS Best Practices** | AWS SDK v3 with modular imports | ✅ COMPLIANT | Tree-shaking for DynamoDB client |
-| **IV. AWS Best Practices** | IAM least-privilege principle | ✅ COMPLIANT | Separate roles for suggestion management Lambdas |
-| **IV. AWS Best Practices** | Avoid DynamoDB scans | ✅ COMPLIANT | GSI2 for efficient suggestion queries |
-| **V. Security First** | All user inputs validated and sanitized | ✅ COMPLIANT | Zod validation for all API inputs |
-| **V. Security First** | Authentication and authorization for protected resources | ✅ COMPLIANT | Lambda authorizer validates JWT and role |
-| **VI. Performance Optimization** | Lambda cold start optimization | ✅ COMPLIANT | Minimal dependencies, modular SDK imports |
-| **VII. Code Organization** | Next.js App Router conventions | ✅ COMPLIANT | API routes in `app/api/` directory |
+**Status**: PASS - Architecture supports strict TypeScript throughout
 
-### Gate Evaluation
+### II. Serverless Architecture
+- ✅ Backend logic implemented as AWS Lambda functions (suggestion CRUD handlers)
+- ✅ Extends existing DynamoDB single-table design
+- ✅ Lambda functions stateless and idempotent
+- ✅ Infrastructure defined in AWS SAM templates (extends template.yaml)
+- ✅ Cold start optimization via tree-shaking and minimal dependencies
 
-**GATE STATUS: ✅ PASS** - No constitution violations identified. All requirements align with constitution principles.
+**Status**: PASS - Serverless-first architecture planned
 
-### Deployment Requirements (from constitution)
+### III. Testing Excellence (NON-NEGOTIABLE)
+- ✅ Test-first development for suggestion workflow
+- ✅ Unit tests for suggestion model and service logic
+- ✅ Integration tests for all suggestion API handlers
+- ✅ 80% code coverage for critical paths (approval workflow, edge cases)
+- ✅ Jest and React Testing Library
+- ✅ Mock DynamoDB operations in unit tests
 
-- Frontend: AWS S3 + CloudFront (NOT Vercel/Netlify)
-- Backend: AWS SAM (`sam deploy`)
-- Infrastructure: All resources in `template.yaml`
+**Status**: PASS - Test-driven approach mandatory
+
+### IV. AWS Best Practices
+- ✅ AWS SDK v3 with modular imports
+- ✅ DynamoDB Document Client for suggestion data operations
+- ✅ CloudWatch for structured logging
+- ✅ IAM least-privilege principle (suggestion handlers require item read/write for approval)
+- ✅ Queries with proper indexes (no scans, filter by familyId + status)
+- ✅ Atomic operations for approval (transactional writes if needed)
+
+**Status**: PASS - AWS best practices integrated
+
+### V. Security First
+- ✅ No secrets in version control
+- ✅ Input validation with Zod (suggestion type, proposed item details)
+- ✅ Role-based access control (suggester can create, admin can approve/reject)
+- ✅ Family isolation enforced (all queries scoped by familyId from JWT)
+- ✅ Prevent status manipulation (only pending→approved/rejected transitions allowed)
+
+**Status**: PASS - Security designed into architecture
+
+### VI. Performance Optimization
+- ✅ DynamoDB query optimization (GSI for status filtering if needed)
+- ✅ Lambda cold start optimization
+- ✅ Code splitting for suggestion components
+- ✅ Common component library reduces bundle size
+
+**Status**: PASS - Performance considerations included
+
+### VII. Code Organization
+- ✅ Next.js 16 App Router directory structure
+- ✅ Business logic separated from presentation (services/suggestions.ts)
+- ✅ File colocation (components, styles, tests)
+- ✅ SAM template extension in project root
+- ✅ Type definitions colocated with modules
+
+**Status**: PASS - Organization follows Next.js conventions
+
+### VIII. Component Library (NON-NEGOTIABLE)
+- ✅ UI components sourced from components/common/ library
+- ✅ Use existing Button, Input, Card, Select components
+- ✅ No one-off component implementations in feature directory
+- ✅ Feature-specific components compose common components
+
+**Status**: PASS - Common component library will be used
+
+**OVERALL GATE STATUS: ✅ PASS - All constitutional requirements satisfied**
+
+---
 
 ## Project Structure
 
@@ -107,72 +134,313 @@ specs/004-suggester-workflow/
 ├── data-model.md        # Phase 1 output (/speckit.plan command)
 ├── quickstart.md        # Phase 1 output (/speckit.plan command)
 ├── contracts/           # Phase 1 output (/speckit.plan command)
-│   └── api-spec.yaml    # OpenAPI specification for suggestion management APIs
 └── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
 
 ```text
-# Web application structure (frontend + backend)
-src/
-├── app/
-│   └── api/
-│       └── families/
-│           └── [familyId]/
-│               ├── inventory/           # Inventory viewing for suggesters
-│               │   └── route.ts         # GET (list items - read-only for suggesters)
-│               └── suggestions/         # Suggestion management API routes
-│                   ├── route.ts         # GET (list), POST (create)
-│                   └── [suggestionId]/
-│                       ├── route.ts     # GET (details)
-│                       ├── approve/
-│                       │   └── route.ts # POST (approve - admin only)
-│                       └── reject/
-│                           └── route.ts # POST (reject - admin only)
-├── components/
-│   └── suggestions/                     # Suggestion management UI components
-│       ├── SuggestionList.tsx
-│       ├── CreateSuggestionForm.tsx
-│       ├── SuggestionCard.tsx
-│       ├── SuggestionReviewPanel.tsx
-│       └── SuggestionStatusBadge.tsx
-├── lib/
-│   └── dynamodb/
-│       └── suggestionRepository.ts
-├── services/
-│   └── suggestionService.ts             # Suggestion management business logic
-└── types/
-    └── suggestion.ts                    # Suggestion type definitions
-
-tests/
-├── unit/
+inventory-management-backend/
+├── src/
+│   ├── handlers/
+│   │   ├── suggestions/              # NEW: Suggestion API handlers
+│   │   │   ├── create-suggestion.ts
+│   │   │   ├── list-suggestions.ts
+│   │   │   ├── approve-suggestion.ts
+│   │   │   └── reject-suggestion.ts
+│   ├── models/
+│   │   ├── suggestion.ts             # NEW: Suggestion DynamoDB model
 │   ├── services/
-│   │   └── suggestionService.test.ts
-│   └── lib/
-│       └── suggestionRepository.test.ts
-├── integration/
-│   └── api/
-│       └── suggestions.test.ts
-└── contract/
-    └── suggestionApi.contract.test.ts
+│   │   ├── suggestions.ts            # NEW: Suggestion business logic
+│   ├── types/
+│   │   ├── entities.ts               # EXTEND: Add Suggestion type
+│   │   ├── api.ts                    # EXTEND: Add suggestion API types
+├── tests/
+│   ├── unit/
+│   │   ├── services/
+│   │   │   └── suggestions.test.ts   # NEW: Service unit tests
+│   ├── integration/
+│   │   ├── handlers/
+│   │   │   └── suggestions.test.ts   # NEW: Handler integration tests
+├── template.yaml                      # EXTEND: Add suggestion Lambda functions
+
+inventory-management-frontend/
+├── app/
+│   ├── dashboard/
+│   │   ├── suggestions/              # NEW: Suggestion pages
+│   │   │   ├── page.tsx              # List/review suggestions (admin view)
+│   │   │   └── suggest/
+│   │   │       └── page.tsx          # Submit suggestions (suggester view)
+├── components/
+│   ├── common/                       # USE: Button, Input, Card, Select, Badge, etc.
+│   ├── suggestions/                  # NEW: Feature-specific suggestion components
+│   │   ├── SuggestionForm.tsx        # Compose common components
+│   │   ├── SuggestionList.tsx        # Compose common components
+│   │   ├── SuggestionCard.tsx        # Compose common components
+│   │   └── __tests__/
+│   │       ├── SuggestionForm.test.tsx
+│   │       ├── SuggestionList.test.tsx
+│   │       └── SuggestionCard.test.tsx
+├── lib/
+│   ├── api/
+│   │   ├── suggestions.ts            # NEW: Suggestion API client
+├── types/
+│   ├── entities.ts                   # EXTEND: Add Suggestion type
+
+inventory-management-context/
+├── specs/
+│   └── 004-suggester-workflow/
+│       ├── spec.md                   # Feature specification (input)
+│       ├── plan.md                   # This file
+│       ├── research.md               # Phase 0 output (to be generated)
+│       ├── data-model.md             # Phase 1 output (to be generated)
+│       ├── quickstart.md             # Phase 1 output (to be generated)
+│       └── contracts/                # API contracts (to be generated)
 ```
 
-**Structure Decision**: Web application structure selected. This feature adds suggestion management APIs and UI components to the existing Next.js App Router application from parent features.
+**Structure Decision**: This feature extends the existing web application architecture by adding suggestion-specific handlers, models, services, and UI components. Backend adds 4 new Lambda function handlers for suggestion CRUD operations. Frontend adds 2 new pages under dashboard/suggestions/ and suggestion-specific components that compose common library components. The Suggestion entity extends the existing DynamoDB single-table design. This approach maintains separation of concerns while integrating seamlessly with the existing family inventory system (001) and member management (003).
 
-## Phase 0 Research Items (RESOLVED)
+## Complexity Tracking
 
-All clarification items have been resolved. See [`research.md`](./research.md) for detailed decisions.
+> **Fill ONLY if Constitution Check has violations that must be justified**
 
-| # | Question | Decision | Rationale |
-|---|----------|----------|-----------|
-| 1 | Concurrent approvals | Status + version locking | Defense in depth, clear error handling |
-| 2 | Orphaned suggestions | Store name snapshot, fail gracefully | Preserves audit trail, admin control |
-| 3 | Duplicate suggestions | Allow duplicates | Simplicity, aligns with spec |
-| 4 | Retention policy | Indefinite retention | Audit trail, minimal storage cost |
-| 5 | Atomic execution | DynamoDB TransactWriteItems | ACID guarantees, single API call |
-| 6 | Role validation | Both authorizer and service | Defense in depth, detailed errors |
-| 7 | Removed suggester | Keep pending, show name | Preserves history, admin control |
+No violations detected. All architectural decisions align with constitutional principles.
+
+---
+
+## Post-Design Constitutional Re-Evaluation
+
+*Re-evaluated after Phase 1 design completion (2025-12-28)*
+
+### Verification Against Completed Artifacts
+
+✅ **TypeScript Type Safety**: 
+- Data model defines strict TypeScript types for Suggestion entity
+- All suggestion attributes have explicit type definitions
+- API contracts enforce typed request/response schemas for suggestion endpoints
+- No implicit `any` types in suggestion workflow
+
+✅ **Serverless Architecture**:
+- Data model extends existing DynamoDB single-table design (constitutional requirement)
+- API contracts define REST endpoints suitable for Lambda handlers
+- Research confirms atomic operations using TransactWriteItems
+- Suggestion entity follows established entity patterns from 001
+
+✅ **Testing Excellence**:
+- Research documents comprehensive testing strategy (RT-010)
+- Unit, integration, and component test patterns defined
+- 80% coverage target for critical paths (approval workflow, edge cases)
+- Mock strategies defined for AWS services
+
+✅ **AWS Best Practices**:
+- Data model uses DynamoDB best practices (single-table, GSI for status filtering)
+- Research documents AWS SDK v3 usage with modular imports
+- TransactWriteItems ensures atomic approval operations
+- Optimistic locking pattern for concurrent approval handling
+- Role-based access control using existing Lambda authorizer
+
+✅ **Security First**:
+- API contracts include authentication (Bearer JWT) for all endpoints
+- Family isolation enforced in data model (all queries scoped by familyId)
+- Role-based access control enforced (suggester can create, admin can approve/reject)
+- Input validation with Zod schemas for suggestion types and proposed item details
+- Defense-in-depth validation at both authorizer and service layers
+
+✅ **Performance Optimization**:
+- DynamoDB queries optimized (GSI1 for status filtering, no scans)
+- Cursor-based pagination for suggestion lists
+- Lambda cold start optimization through common library usage
+- Efficient atomic operations reduce DynamoDB calls
+
+✅ **Code Organization**:
+- Project structure follows Next.js App Router conventions
+- Backend organized by handlers, services, models (extends existing structure)
+- Frontend suggestion components in dashboard/suggestions/
+- Type definitions extend existing entities.ts
+- Colocation of tests with source code
+
+✅ **Component Library**:
+- Research RT-008 confirms use of common components (Button, Input, Card, Badge, Modal)
+- Feature-specific components compose common library components
+- No one-off component implementations
+- Maintains visual consistency and accessibility (WCAG 2.1 AA)
+
+**POST-DESIGN GATE STATUS: ✅ PASS - All constitutional requirements validated in design artifacts**
+
+**Artifacts Generated**:
+- ✅ `research.md` - 10 research tasks with technical decisions and rationale
+- ✅ `data-model.md` - Suggestion entity definition with DynamoDB patterns
+- ✅ `contracts/api-spec.yaml` - OpenAPI 3.0 specification for suggestion endpoints
+- ✅ `contracts/api-spec.md` - Human-readable API documentation
+- ✅ `quickstart.md` - Developer implementation guide for suggestion workflow
+- ✅ `.github/agents/copilot-instructions.md` - Agent context updated with tech stack
+
+**Phase 1 Status**: ✅ COMPLETE
+
+---
+
+## Implementation Plan Execution Summary
+
+**Executed**: 2025-12-28  
+**Command**: `/speckit.plan`  
+**Branch**: `004-suggester-workflow`
+
+### Phases Completed
+
+#### ✅ Phase 0: Outline & Research
+**Status**: Complete  
+**Output**: `research.md` (10 research tasks completed)
+
+Key decisions documented:
+- DynamoDB single-table extension with SUGGESTION# pattern and GSI1
+- Atomic approval operations using TransactWriteItems
+- Item snapshot storage for orphaned suggestion handling
+- Pre-query validation for duplicate item names
+- Role-based access control reusing existing Lambda authorizer
+- GSI1 for status filtering with cursor-based pagination
+- Indefinite retention policy for audit trail
+- Common component library usage for UI (Button, Input, Card, Badge)
+- Structured error responses with user-friendly messages
+- Multi-layered testing strategy with mocked AWS services
+
+#### ✅ Phase 1: Design & Contracts
+**Status**: Complete  
+**Outputs**: 
+- `data-model.md` - Suggestion entity with complete schema
+- `contracts/api-spec.yaml` - OpenAPI 3.0 specification (4 suggestion endpoints)
+- `contracts/api-spec.md` - Human-readable API documentation
+- `quickstart.md` - Developer onboarding guide
+- `.github/agents/copilot-instructions.md` - Agent context updated
+
+**Data Model Entities**:
+- Suggestion (extends existing DynamoDB table from 001-family-inventory-mvp)
+  - Attributes: suggestionId, familyId, suggestedBy, type, status, itemId, proposedItemName, etc.
+  - DynamoDB pattern: PK=`FAMILY#<familyId>`, SK=`SUGGESTION#<suggestionId>`
+  - GSI1: Status filtering (PK=`FAMILY#<familyId>#STATUS#<status>`, SK=`SUGGESTION#<createdAt>`)
+
+**API Domains**:
+- POST /families/{familyId}/suggestions - Create suggestion (suggester only)
+- GET /families/{familyId}/suggestions - List suggestions with filtering
+- POST /families/{familyId}/suggestions/{suggestionId}/approve - Approve suggestion (admin only)
+- POST /families/{familyId}/suggestions/{suggestionId}/reject - Reject suggestion (admin only)
+
+**Agent Context**:
+- Technology stack documented for GitHub Copilot
+- TypeScript 5 strict mode noted
+- DynamoDB single-table design extension recorded
+- Common component library usage requirement added
+
+### Constitutional Compliance
+
+**Pre-Design Check**: ✅ PASS (all 8 principles satisfied)  
+**Post-Design Check**: ✅ PASS (validated against completed artifacts)
+
+No violations. No complexity justifications required.
+
+### Next Steps
+
+1. ⏳ **Tasks Generation**: Run `/speckit.tasks` to create detailed task breakdown
+2. ⏳ **Implementation**: Execute tasks from tasks.md
+3. ⏳ **Testing**: Achieve 80% coverage for critical paths
+4. ⏳ **Deployment**: Deploy to development environment
+
+### Artifacts Location
+
+All artifacts are in: `/Users/connortyrrell/Repos/inventory-management/inventory-management-context/specs/004-suggester-workflow/`
+
+```
+specs/004-suggester-workflow/
+├── spec.md              # Feature specification (input)
+├── plan.md              # This file (implementation plan)
+├── research.md          # Technical decisions and rationale
+├── data-model.md        # Suggestion entity schema
+├── quickstart.md        # Developer implementation guide
+└── contracts/
+    ├── api-spec.yaml    # OpenAPI 3.0 API specification
+    └── api-spec.md      # Human-readable API documentation
+```
+
+---
+
+## Related Features
+
+This specification builds upon and extends the following features:
+
+| Feature ID | Name | Relationship | Status |
+|------------|------|--------------|--------|
+| `001-family-inventory-mvp` | Family Inventory MVP | **Parent** - Provides foundation (Family, InventoryItem, ShoppingListItem entities) | Implementation Complete |
+| `003-member-management` | Family Member Management | **Parent** - Provides suggester role and member permissions | Specification Complete |
+| `002-shopping-lists` | Shopping List Management | **Sibling** - Receives shopping list items from approved suggestions | Specification Complete |
+
+**Note**: This specification focuses on the suggester workflow (viewing inventory and creating suggestions) and the admin workflow for reviewing suggestions. The suggester role itself is defined in feature 003-member-management.
+
+---
+
+**Plan Status**: ✅ PHASE 0 & 1 COMPLETE  
+**Constitution Compliance**: ✅ VERIFIED  
+**Next Command**: `/speckit.tasks` to generate implementation tasks  
+**Branch**: `004-suggester-workflow`
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/[###-feature]/
+├── plan.md              # This file (/speckit.plan command output)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+```
+
+### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
+
+```text
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+src/
+├── models/
+├── services/
+├── cli/
+└── lib/
+
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
+```
+
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Complexity Tracking
 
@@ -180,77 +448,5 @@ All clarification items have been resolved. See [`research.md`](./research.md) f
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| None | N/A | N/A |
-
-**Note**: No constitution violations identified. All requirements align with established patterns from parent features.
-
----
-
-## Post-Design Constitution Check
-
-*GATE: Re-evaluated after Phase 1 design completion.*
-
-### Verification Against Constitution v1.1.0
-
-| Principle | Requirement | Status | Evidence |
-|-----------|-------------|--------|----------|
-| **I. TypeScript Type Safety** | All code in TypeScript 5 strict mode, no implicit `any` | ✅ PASS | Zod schemas in data-model.md with explicit types for all entities |
-| **I. TypeScript Type Safety** | All function parameters and return types explicitly typed | ✅ PASS | quickstart.md examples show typed functions |
-| **II. Serverless Architecture** | All backend logic as AWS Lambda functions | ✅ PASS | API routes designed for Lambda deployment |
-| **II. Serverless Architecture** | DynamoDB single-table design | ✅ PASS | Suggestion entity uses PK=`FAMILY#{familyId}`, SK=`SUGGESTION#{suggestionId}` |
-| **II. Serverless Architecture** | Lambda functions stateless and idempotent | ✅ PASS | Optimistic locking pattern ensures idempotency |
-| **III. Testing Excellence** | Test-first development, 80% coverage for critical paths | ✅ PASS | Test structure and examples in quickstart.md |
-| **III. Testing Excellence** | Jest and React Testing Library | ✅ PASS | Mock patterns and test examples use Jest |
-| **IV. AWS Best Practices** | AWS SDK v3 with modular imports | ✅ PASS | Modular imports shown: `@aws-sdk/lib-dynamodb`, etc. |
-| **IV. AWS Best Practices** | IAM least-privilege principle | ✅ PASS | Each Lambda has specific policies |
-| **IV. AWS Best Practices** | Avoid DynamoDB scans | ✅ PASS | All access patterns use Query operations via GSI2 |
-| **V. Security First** | All user inputs validated and sanitized | ✅ PASS | Zod validation schemas for all API inputs |
-| **V. Security First** | Authentication and authorization for protected resources | ✅ PASS | JWT auth via Cognito, role-based access control |
-| **VI. Performance Optimization** | Lambda cold start optimization | ✅ PASS | Modular SDK imports, minimal dependencies |
-| **VI. Performance Optimization** | DynamoDB queries optimized | ✅ PASS | GSI2 for efficient suggestion queries by status |
-| **VII. Code Organization** | Next.js App Router conventions | ✅ PASS | Project structure follows conventions |
-| **VII. Code Organization** | Business logic separated from presentation | ✅ PASS | Services layer separate from handlers |
-
-### Post-Design Gate Evaluation
-
-**GATE STATUS: ✅ PASS** - All 16 constitution requirements verified against design artifacts.
-
-### Generated Artifacts Summary
-
-| Artifact | Path | Description |
-|----------|------|-------------|
-| Research | [`specs/004-suggester-workflow/research.md`](./research.md) | 7 research decisions with rationale |
-| Data Model | [`specs/004-suggester-workflow/data-model.md`](./data-model.md) | Suggestion entity with TypeScript/Zod schemas |
-| API Spec | [`specs/004-suggester-workflow/contracts/api-spec.md`](./contracts/api-spec.md) | REST API specification with 6 endpoints |
-| Quickstart | [`specs/004-suggester-workflow/quickstart.md`](./quickstart.md) | Developer implementation guide |
-
-### Recommendations for Implementation Phase
-
-1. **Type Definitions First**: Implement Zod schemas before repository layer
-2. **Repository Layer Priority**: Implement and thoroughly test DynamoDB operations
-3. **Test Coverage**: Ensure 80%+ coverage on critical paths:
-   - Role validation logic
-   - Optimistic locking conflict handling
-   - Atomic transaction execution
-4. **Transaction Testing**: Test TransactWriteItems with various failure scenarios
-5. **Migration Strategy**: Plan for adding `version`, `itemNameSnapshot`, `suggestedByName` to existing suggestions
-
----
-
-## Phase 1 Status
-
-**✅ PHASE 1 COMPLETE** - Design phase finished on 2025-12-10
-
-### Completed Deliverables
-
-- [x] Phase 0 Research: All 7 clarification items resolved
-- [x] Phase 1 Design: data-model.md with Suggestion entity details
-- [x] Phase 1 Design: API contracts (api-spec.md) with 6 endpoints
-- [x] Phase 1 Design: quickstart.md developer guide
-- [x] Post-Design Constitution Check: All 16 requirements verified
-
-### Next Steps
-
-1. **Phase 2 Tasks**: Run `/speckit.tasks` to generate detailed task breakdown
-2. **Implementation**: Follow quickstart.md implementation order
-3. **Quality Gates**: Use checklists/requirements.md for validation
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |

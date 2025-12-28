@@ -1,6 +1,38 @@
 <!--
 SYNC IMPACT REPORT
 ===================
+Version Change: 1.2.1 → 1.2.2
+Rationale: Add implementation patterns from Spec004 learnings: type system hierarchy, security layers, DynamoDB patterns, error handling, and type validation
+Date: 2025-12-28
+
+Changes Made:
+1. Added Type System Patterns section with feature-specific vs generic type file guidance
+2. Added Security Implementation Layers section with backend+frontend enforcement
+3. Added DynamoDB Patterns section for atomic operations and KeyBuilder utilities
+4. Added Error Handling Patterns section for structured errors with context
+5. Added Type Validation Standards section for production-first validation
+
+Impact:
+- Type imports MUST prefer feature-specific files over generic entities.ts
+- Duplicate type definitions MUST be checked when debugging field name errors
+- Security MUST be implemented in both backend (requireRole) and frontend (conditional rendering)
+- DynamoDB operations MUST use KeyBuilder utilities and TransactWriteCommand for atomic operations
+- Error messages MUST include context and correlation IDs for debugging
+- Type validation MUST assume production backend strictness
+
+Templates Impact:
+- plan-template.md: ✅ Tasks should reference type hierarchy and security patterns
+- spec-template.md: ✅ No changes needed
+- tasks-template.md: ✅ Implementation tasks should follow DynamoDB and error handling patterns
+- All templates will automatically enforce implementation best practices
+
+Breaking Changes: No - these patterns codify lessons learned from production debugging
+Migration Required: No - existing code already follows these patterns where implemented
+
+---
+
+PREVIOUS VERSION: 1.2.1
+===================
 Version Change: 1.2.0 → 1.2.1
 Rationale: Add API Design Patterns section from prompts/constitution.md to standardize response formats and authentication patterns
 Date: 2025-12-28
@@ -274,6 +306,164 @@ Follow-up TODOs: None - all templates are aligned with constitution principles
   - Docker Desktop MUST NOT be used in this environment
   - Use Docker Engine directly via package manager (apt, yum, homebrew)
 
+### Type System Patterns
+
+**Type definitions MUST follow a clear hierarchy to prevent schema conflicts.**
+
+- **Feature-specific type files** (e.g., `types/shoppingList.ts`, `types/inventory.ts`) are the **SINGLE SOURCE OF TRUTH** for their domain
+- **Generic entity files** (e.g., `types/entities.ts`) MAY contain legacy or shared types but MUST NOT be used when feature-specific definitions exist
+- When importing types, ALWAYS check for feature-specific type files FIRST before falling back to generic entity files
+- Duplicate type definitions across files indicate a migration in progress - ALWAYS use the feature-specific version
+- Field name errors (e.g., `itemName` vs `name`) are often caused by importing from the wrong type file
+
+**Example - Correct Type Import Priority**:
+```typescript
+// ✅ CORRECT - Import from feature-specific file
+import { ShoppingListItem } from '../types/shoppingList';
+
+// ❌ WRONG - Generic entities.ts may have outdated schema
+import { ShoppingListItem } from '../types/entities';
+```
+
+**Rationale**: As schemas evolve, type definitions may exist in multiple files. Feature-specific files contain the current production schema, while generic files may contain legacy definitions. This hierarchy prevents schema mismatches that cause silent data corruption (e.g., creating records with undefined fields due to wrong property names).
+
+### Security Implementation Layers
+
+**Security MUST be enforced at BOTH backend and frontend layers with different mechanisms.**
+
+- **Backend Layer** (Authorization): 
+  - Use `requireAdmin()` or `requireSuggester()` functions from `lib/auth`
+  - Validate roles before ANY business logic execution
+  - Return HTTP 403 Forbidden for unauthorized access attempts
+  - Log all authorization failures for security monitoring
+  
+- **Frontend Layer** (UI Visibility):
+  - Use conditional rendering based on `userContext.role` to hide unauthorized UI elements
+  - Prevent users from seeing actions they cannot perform
+  - Improve UX by removing confusing/broken functionality
+  - Update BOTH desktop and mobile navigation when hiding nav items
+
+**Example - Two-Layer Security**:
+```typescript
+// Backend - Authorization
+import { requireAdmin } from '../lib/auth';
+
+export const handler = async (event) => {
+  const userContext = getUserContext(event, logger);
+  await requireAdmin(userContext, familyId); // Throws 403 if not admin
+  // ... business logic
+};
+
+// Frontend - UI Visibility  
+const isAdmin = userContext?.role === 'admin';
+
+{isAdmin && (
+  <Button onClick={handleAdminAction}>Admin Action</Button>
+)}
+```
+
+**Rationale**: Backend authorization prevents unauthorized API access (security), while frontend conditional rendering prevents confusing UX (usability). Both layers are required - frontend alone can be bypassed, backend alone creates confusing UI with broken buttons.
+
+### DynamoDB Patterns
+
+**DynamoDB operations MUST follow established patterns for consistency and correctness.**
+
+- **KeyBuilder Utilities**: ALWAYS use `KeyBuilder` functions for generating partition/sort keys
+  - Example: `KeyBuilder.shoppingListItem(familyId, itemId, storeId, isPurchased)`
+  - Never construct keys manually with string concatenation
+  
+- **Atomic Operations**: Use `TransactWriteCommand` for operations that create multiple related items
+  - Maximum 3 items per transaction (DynamoDB limit: 25, but keep simple)
+  - Ensures all items are created together or none at all
+  - Required for operations like "create inventory item AND add to shopping list"
+  
+- **Schema Compliance**: All DynamoDB items MUST include ALL required schema fields
+  - Include version numbers for optimistic locking (`version: 1`)
+  - Include TTL fields even if null (`ttl: null`)
+  - Use `null` for nullable fields, not `undefined` (DynamoDB removes undefined fields)
+  
+- **Query Optimization**: Always use queries with proper indexes, NEVER scan operations
+  - All queries MUST filter by `familyId` for family isolation
+  - Use GSI2 for low-stock queries and shopping list filtering
+
+**Example - Atomic Transaction**:
+```typescript
+import { TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
+
+const command = new TransactWriteCommand({
+  TransactItems: [
+    { Put: { TableName, Item: inventoryItem } },
+    { Put: { TableName, Item: shoppingListItem } },
+  ],
+});
+await docClient.send(command);
+```
+
+**Rationale**: KeyBuilder utilities prevent key format errors, atomic transactions prevent partial writes that corrupt data relationships, and schema compliance ensures all records work correctly with query patterns and application code.
+
+### Error Handling Patterns
+
+**Error responses MUST include sufficient context for debugging production issues.**
+
+- All errors MUST include correlation IDs for tracing across logs
+- Validation errors MUST include specific field errors from Zod
+- Error messages MUST be helpful for developers while avoiding sensitive data exposure
+- Log errors with CloudWatch structured JSON format including full context
+- Return appropriate HTTP status codes: 400 (validation), 401 (auth), 403 (forbidden), 404 (not found), 500 (server error)
+
+**Example - Structured Error Response**:
+```typescript
+catch (error) {
+  logger.error('Failed to process suggestion', {
+    correlationId,
+    suggestionId,
+    familyId,
+    error: error instanceof Error ? error.message : 'Unknown error',
+  });
+  
+  return {
+    statusCode: 500,
+    body: JSON.stringify({
+      error: 'Internal server error',
+      correlationId,
+      message: process.env.NODE_ENV === 'development' ? error.message : undefined,
+    }),
+  };
+}
+```
+
+**Rationale**: Production debugging in serverless environments is challenging because you cannot attach debuggers or inspect live state. Rich error context with correlation IDs allows tracing request flow across Lambda invocations and DynamoDB operations through CloudWatch Logs.
+
+### Type Validation Standards
+
+**Type validation MUST assume production AWS backend strictness, not local development leniency.**
+
+- Write TypeScript types to match PRODUCTION DynamoDB schema and Lambda validation
+- Do not rely on local development skipping validation (e.g., `IS_LOCAL` bypasses)
+- Test with validation enabled to catch type mismatches before deployment
+- Use strict type checking for nullable vs optional fields:
+  - `fieldName: string | null` when field must exist but can be null
+  - `fieldName?: string` when field may be omitted entirely
+  
+**Example - Production-First Types**:
+```typescript
+// ✅ CORRECT - Matches production validation
+interface ShoppingListItem {
+  name: string;              // Required field
+  storeId: string | null;    // Required but nullable
+  version: number;           // Required for optimistic locking
+  ttl: number | null;        // Required for TTL cleanup
+}
+
+// ❌ WRONG - Assumes local development leniency
+interface ShoppingListItem {
+  name?: string;             // Optional in dev, breaks in prod
+  storeId?: string;          // Undefined gets stripped by DynamoDB
+}
+```
+
+**Rationale**: Local development may skip certain validation checks for convenience, but production environments enforce strict validation. Types that work locally but fail in production cause deployment failures and runtime errors. Always code against production requirements.
+
 ### Development Standards
 
 - All asynchronous operations MUST use async/await (no raw Promises or callbacks)
@@ -410,4 +600,4 @@ This constitution supersedes all other development practices and guidelines. All
 - Technical debt MUST be tracked and addressed systematically
 - Regular constitutional reviews MUST occur quarterly
 
-**Version**: 1.2.1 | **Ratified**: 2025-12-08 | **Last Amended**: 2025-12-28
+**Version**: 1.2.2 | **Ratified**: 2025-12-08 | **Last Amended**: 2025-12-28
