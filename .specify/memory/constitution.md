@@ -1,6 +1,39 @@
 <!--
 SYNC IMPACT REPORT
 ===================
+Version Change: 1.2.0 → 1.2.1
+Rationale: Add API Design Patterns section from prompts/constitution.md to standardize response formats and authentication patterns
+Date: 2025-12-28
+
+Changes Made:
+1. Added "API Design Patterns" section to Technology Stack & Standards
+2. Standardized response format: ALL API endpoints MUST return {data: T} wrapper
+3. Defined frontend API client unwrapping pattern
+4. Mandated defensive empty list handling in frontend components
+5. Codified centralized auth utilities usage pattern from lib/auth
+6. Documented family context resolution for new users without custom:familyId
+7. Standardized error response format with proper status codes
+
+Impact:
+- All API responses MUST use consistent {data: T} format
+- Frontend clients MUST unwrap response.data
+- Empty arrays MUST be handled defensively with fallbacks
+- Authentication MUST use shared utilities (no custom implementations)
+- Error responses MUST follow consistent format
+
+Templates Impact:
+- plan-template.md: ✅ No changes needed (API patterns are implementation details)
+- spec-template.md: ✅ No changes needed
+- tasks-template.md: ✅ Tasks should reference API pattern standards
+- All templates will automatically enforce API design patterns
+
+Breaking Changes: No - these patterns codify existing best practices
+Migration Required: No - existing code already follows these patterns
+
+---
+
+PREVIOUS VERSION: 1.2.0
+===================
 Version Change: 1.1.0 → 1.2.0
 Rationale: Codify component library strategy to eliminate code duplication and ensure visual consistency
 Date: 2025-12-26
@@ -255,6 +288,72 @@ Follow-up TODOs: None - all templates are aligned with constitution principles
 - UI MUST meet WCAG 2.1 AA color-contrast requirements; white-on-white or other low-contrast text/background combinations are prohibited and form elements MUST retain visible focus states
 - Automated accessibility checks (e.g., axe) MUST run in CI for new or changed pages/components and block merges on failures
 
+### API Design Patterns
+
+- **Response Format**: ALL API endpoints MUST return responses wrapped in a `data` field:
+  ```typescript
+  // ✅ CORRECT - Backend response format
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      data: {
+        items: [],
+        totalCount: 0
+      }
+    })
+  };
+  
+  // ❌ WRONG - Missing data wrapper
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      items: [],
+      totalCount: 0
+    })
+  };
+  ```
+- **Frontend API Client**: All API clients MUST expect and unwrap the `{data: T}` format:
+  ```typescript
+  const response: ApiSuccess<T> = await response.json();
+  return response.data; // Unwrap and return inner object
+  ```
+- **Empty List Handling**: Frontend components MUST handle empty arrays defensively:
+  ```typescript
+  // ✅ CORRECT - Defensive with fallback
+  const items = response.items || [];
+  
+  // ❌ WRONG - Assumes array always exists
+  const items = response.items;
+  ```
+- **Authentication**: ALWAYS use centralized auth utilities from `lib/auth`:
+  ```typescript
+  // ✅ CORRECT - Use shared auth utilities
+  import { getUserContext, requireAdmin } from '../lib/auth';
+  const userContext = getUserContext(event, logger);
+  
+  // ❌ WRONG - Custom auth implementation
+  const userContext = event.requestContext.authorizer;
+  ```
+- **Family Context Resolution**: For new users without `custom:familyId` in JWT:
+  ```typescript
+  // Query Member table first to get familyId
+  const member = await memberModel.getByMemberId(userContext.userId);
+  if (!member) {
+    throw new Error('User must be member of a family');
+  }
+  const familyId = member.familyId;
+  ```
+- **Error Responses**: Use consistent error format with proper status codes:
+  ```typescript
+  return {
+    statusCode: 400,
+    body: JSON.stringify({
+      error: 'Validation failed',
+      details: zodError.errors
+    })
+  };
+  ```
+
 ## Development Workflow
 
 ### Code Review Requirements
@@ -311,4 +410,4 @@ This constitution supersedes all other development practices and guidelines. All
 - Technical debt MUST be tracked and addressed systematically
 - Regular constitutional reviews MUST occur quarterly
 
-**Version**: 1.2.0 | **Ratified**: 2025-12-08 | **Last Amended**: 2025-12-26
+**Version**: 1.2.1 | **Ratified**: 2025-12-08 | **Last Amended**: 2025-12-28
