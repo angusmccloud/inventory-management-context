@@ -8,6 +8,8 @@ Auto-generated from all feature plans. Last updated: 2025-12-08
 - TypeScript 5.x with strict mode (frontend & backend) (006-nfc-inventory-tap)
 - Amazon DynamoDB (single-table design, extends existing InventoryManagement table) (006-nfc-inventory-tap)
 - Amazon DynamoDB (single-table design pattern, extends existing table from 001) (004-suggester-workflow)
+- TypeScript 5 (strict mode) + Next.js 16 App Router, Tailwind CSS 3.4, React 18 (009-theme-color-update)
+- N/A (frontend-only changes) (009-theme-color-update)
 
 - TypeScript 5 with strict mode enabled (001-family-inventory-mvp)
 
@@ -27,9 +29,9 @@ npm test && npm run lint
 TypeScript 5 with strict mode enabled: Follow standard conventions
 
 ## Recent Changes
+- 009-theme-color-update: Added TypeScript 5 (strict mode) + Next.js 16 App Router, Tailwind CSS 3.4, React 18
 - 004-suggester-workflow: Added TypeScript 5 with strict mode enabled
 - 006-nfc-inventory-tap: Added TypeScript 5.x with strict mode (frontend & backend)
-- 008-common-components: Added TypeScript 5.x with strict mode enabled + Next.js 16 (App Router), React 19, Tailwind CSS 3.x, existing theme system (`lib/theme.ts`)
 
 
 <!-- MANUAL ADDITIONS START -->
