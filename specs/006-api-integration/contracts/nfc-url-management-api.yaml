@@ -1,0 +1,377 @@
+openapi: 3.0.3
+info:
+  title: NFC URL Management API
+  description: |
+    Authenticated API for family admins to create, view, rotate, and manage
+    NFC URLs for inventory items. Requires authentication via JWT bearer token.
+  version: 1.0.0
+  contact:
+    name: Inventory Management System
+    url: https://inventoryhq.io
+
+servers:
+  - url: https://api.inventoryhq.io
+    description: Production API
+  - url: http://localhost:3001
+    description: Local development
+
+paths:
+  /api/items/{itemId}/nfc-urls:
+    get:
+      summary: List NFC URLs for an item
+      description: |
+        Returns all NFC URLs (active and inactive) for a specific inventory item.
+        Requires admin role.
+      operationId: listNfcUrls
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: UUID of the inventory item
+          schema:
+            type: string
+            format: uuid
+            example: 'd5e8f9a0-1234-4567-89ab-cdef01234567'
+      responses:
+        '200':
+          description: List of NFC URLs for the item
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - itemId
+                  - itemName
+                  - urls
+                properties:
+                  itemId:
+                    type: string
+                    format: uuid
+                    example: 'd5e8f9a0-1234-4567-89ab-cdef01234567'
+                  itemName:
+                    type: string
+                    example: 'Paper Towels'
+                  urls:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NFCUrl'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+    post:
+      summary: Create new NFC URL for an item
+      description: |
+        Generates a new cryptographically random URL ID and associates it with
+        the inventory item. Returns the full URL for programming NFC tags.
+        Requires admin role.
+      operationId: createNfcUrl
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: UUID of the inventory item
+          schema:
+            type: string
+            format: uuid
+            example: 'd5e8f9a0-1234-4567-89ab-cdef01234567'
+      responses:
+        '201':
+          description: NFC URL created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NFCUrl'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+  /api/items/{itemId}/nfc-urls/{urlId}/rotate:
+    post:
+      summary: Rotate (deactivate) an NFC URL
+      description: |
+        Deactivates the specified URL (sets isActive = false) and creates a new
+        URL for the same item. Use when a URL is compromised or needs to be changed.
+        Requires admin role.
+      operationId: rotateNfcUrl
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: UUID of the inventory item
+          schema:
+            type: string
+            format: uuid
+            example: 'd5e8f9a0-1234-4567-89ab-cdef01234567'
+        - name: urlId
+          in: path
+          required: true
+          description: Base62-encoded URL ID to rotate
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9]{22}$'
+            example: '2gSZw8ZQPb7D5kN3X8mQ7'
+      responses:
+        '200':
+          description: URL rotated successfully, new URL returned
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - oldUrl
+                  - newUrl
+                properties:
+                  oldUrl:
+                    $ref: '#/components/schemas/NFCUrl'
+                  newUrl:
+                    $ref: '#/components/schemas/NFCUrl'
+                  message:
+                    type: string
+                    example: 'URL rotated successfully. Old URL is now inactive.'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+  /api/nfc-urls:
+    get:
+      summary: List all NFC URLs for family
+      description: |
+        Returns all NFC URLs across all inventory items for the authenticated
+        user's family. Includes both active and inactive URLs.
+        Requires admin role.
+      operationId: listAllNfcUrls
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by status (active, inactive, or all)
+          schema:
+            type: string
+            enum: [active, inactive, all]
+            default: active
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of results to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: nextToken
+          in: query
+          required: false
+          description: Pagination token from previous response
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of NFC URLs for the family
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - urls
+                properties:
+                  urls:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NFCUrlWithItem'
+                  nextToken:
+                    type: string
+                    nullable: true
+                    description: Token for next page (null if no more results)
+                  totalCount:
+                    type: integer
+                    description: Total number of URLs (all pages)
+                    example: 42
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    NFCUrl:
+      type: object
+      required:
+        - urlId
+        - itemId
+        - familyId
+        - fullUrl
+        - isActive
+        - createdAt
+        - accessCount
+      properties:
+        urlId:
+          type: string
+          pattern: '^[a-zA-Z0-9]{22}$'
+          description: Base62-encoded URL ID
+          example: '2gSZw8ZQPb7D5kN3X8mQ7'
+        itemId:
+          type: string
+          format: uuid
+          example: 'd5e8f9a0-1234-4567-89ab-cdef01234567'
+        familyId:
+          type: string
+          format: uuid
+          example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+        fullUrl:
+          type: string
+          format: uri
+          description: Complete URL for programming NFC tags
+          example: 'https://inventoryhq.io/t/2gSZw8ZQPb7D5kN3X8mQ7'
+        isActive:
+          type: boolean
+          description: false if URL has been rotated
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-12-26T10:00:00Z'
+        createdBy:
+          type: string
+          format: uuid
+          description: memberId who created the URL
+          example: '550e8400-e29b-41d4-a716-446655440000'
+        lastAccessedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When URL was last used (null if never accessed)
+          example: '2025-12-26T15:30:00Z'
+        accessCount:
+          type: integer
+          minimum: 0
+          description: Number of times URL has been accessed
+          example: 12
+        rotatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When URL was deactivated (null if still active)
+          example: null
+        rotatedBy:
+          type: string
+          format: uuid
+          nullable: true
+          description: memberId who rotated the URL (null if still active)
+          example: null
+
+    NFCUrlWithItem:
+      allOf:
+        - $ref: '#/components/schemas/NFCUrl'
+        - type: object
+          required:
+            - itemName
+          properties:
+            itemName:
+              type: string
+              description: Name of the inventory item (denormalized)
+              example: 'Paper Towels'
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+        - code
+      properties:
+        error:
+          type: string
+          example: 'Validation error'
+        message:
+          type: string
+          example: 'Item not found'
+        code:
+          type: string
+          enum:
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - NOT_FOUND
+            - VALIDATION_ERROR
+            - ITEM_NOT_FOUND
+            - URL_NOT_FOUND
+            - DATABASE_ERROR
+            - INTERNAL_ERROR
+          example: 'ITEM_NOT_FOUND'
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Validation error'
+            message: 'Invalid item ID format'
+            code: 'VALIDATION_ERROR'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Unauthorized'
+            message: 'Valid JWT bearer token required'
+            code: 'UNAUTHORIZED'
+
+    Forbidden:
+      description: Insufficient permissions (admin role required)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Forbidden'
+            message: 'Admin role required for this operation'
+            code: 'FORBIDDEN'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Not found'
+            message: 'Item not found or does not belong to your family'
+            code: 'ITEM_NOT_FOUND'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token from AWS Cognito. Must include custom:familyId and custom:role claims.
+        Lambda authorizer validates token and injects context.
+
+security:
+  - bearerAuth: []

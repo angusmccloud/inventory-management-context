@@ -1,0 +1,230 @@
+openapi: 3.0.3
+info:
+  title: NFC Inventory Adjustment API
+  description: |
+    Unauthenticated API for adjusting inventory quantities via NFC tag taps.
+    URL ID acts as bearer token (possession = authorization).
+  version: 1.0.0
+  contact:
+    name: Inventory Management System
+    url: https://inventoryhq.io
+
+servers:
+  - url: https://inventoryhq.io
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+
+paths:
+  /t/{urlId}:
+    get:
+      summary: Load NFC adjustment page
+      description: |
+        Loads the NFC inventory adjustment page, applies default adjustment (-1),
+        and displays item info with +/- buttons for additional adjustments.
+        
+        This endpoint returns HTML (not JSON) and is accessed via browser when
+        user taps an NFC tag. The page automatically applies a -1 adjustment
+        on load using client-side JavaScript that calls POST /api/adjust/{urlId}.
+      operationId: getNfcPage
+      parameters:
+        - name: urlId
+          in: path
+          required: true
+          description: 22-character base62-encoded URL ID (acts as bearer token)
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9]{22}$'
+            example: '2gSZw8ZQPb7D5kN3X8mQ7'
+      responses:
+        '200':
+          description: NFC adjustment page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+                example: |
+                  <!DOCTYPE html>
+                  <html>
+                  <head><title>Paper Towels - Inventory</title></head>
+                  <body>
+                    <h1>Paper Towels</h1>
+                    <p>Took 1 — now down to 3</p>
+                    <button>+</button>
+                    <button>-</button>
+                  </body>
+                  </html>
+        '404':
+          description: URL ID not found or inactive
+          content:
+            text/html:
+              schema:
+                type: string
+                example: |
+                  <!DOCTYPE html>
+                  <html>
+                  <head><title>URL Not Found</title></head>
+                  <body>
+                    <h1>This URL is no longer active</h1>
+                    <p>The tag may have been rotated. Please contact your family admin.</p>
+                  </body>
+                  </html>
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/adjust/{urlId}:
+    post:
+      summary: Adjust inventory quantity
+      description: |
+        Applies an inventory adjustment (+1 or -1) for the item associated with
+        the URL ID. Called by NFC page JavaScript (both on initial load and
+        when +/- buttons are pressed).
+        
+        This is the core API that enforces atomicity, prevents negative quantities,
+        and triggers low-stock notifications.
+      operationId: adjustInventory
+      parameters:
+        - name: urlId
+          in: path
+          required: true
+          description: 22-character base62-encoded URL ID
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9]{22}$'
+            example: '2gSZw8ZQPb7D5kN3X8mQ7'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - delta
+              properties:
+                delta:
+                  type: integer
+                  enum: [-1, 1]
+                  description: Adjustment amount (-1 to decrease, +1 to increase)
+                  example: -1
+      responses:
+        '200':
+          description: Adjustment applied successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - itemName
+                  - newQuantity
+                  - delta
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  itemName:
+                    type: string
+                    example: 'Paper Towels'
+                  newQuantity:
+                    type: integer
+                    minimum: 0
+                    example: 3
+                  delta:
+                    type: integer
+                    example: -1
+                  message:
+                    type: string
+                    example: 'Took 1 Paper Towel — now down to 3'
+                  warning:
+                    type: string
+                    nullable: true
+                    example: 'Low stock: Only 3 left'
+                    description: Present if item is below threshold after adjustment
+        '400':
+          description: Invalid request (delta not -1 or +1, or would go below 0)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidDelta:
+                  summary: Invalid delta value
+                  value:
+                    error: 'Invalid adjustment'
+                    message: 'Delta must be -1 or +1'
+                    code: 'INVALID_DELTA'
+                belowZero:
+                  summary: Would go below zero
+                  value:
+                    error: 'Invalid adjustment'
+                    message: 'Quantity cannot go below 0'
+                    code: 'BELOW_MINIMUM'
+                    currentQuantity: 0
+        '404':
+          description: URL ID not found or inactive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: 'URL not found'
+                message: 'This URL is no longer active. It may have been rotated.'
+                code: 'URL_NOT_FOUND'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - urlIdAuth: []
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+        - code
+      properties:
+        error:
+          type: string
+          description: Error category
+          example: 'Invalid adjustment'
+        message:
+          type: string
+          description: Human-readable error message
+          example: 'Quantity cannot go below 0'
+        code:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - INVALID_DELTA
+            - BELOW_MINIMUM
+            - URL_NOT_FOUND
+            - ITEM_NOT_FOUND
+            - DATABASE_ERROR
+            - INTERNAL_ERROR
+          example: 'BELOW_MINIMUM'
+        currentQuantity:
+          type: integer
+          nullable: true
+          description: Current quantity (for BELOW_MINIMUM errors)
+          example: 0
+
+  securitySchemes:
+    urlIdAuth:
+      type: apiKey
+      in: path
+      name: urlId
+      description: |
+        URL ID acts as bearer token. Possession of the URL grants access to
+        adjust the associated inventory item. No additional authentication required.
+
+security:
+  - urlIdAuth: []

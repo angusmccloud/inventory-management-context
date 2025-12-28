@@ -62,6 +62,71 @@ Create a constitution for a modern web application with the following specificat
 - Implement code splitting and lazy loading
 - Configure Lambda cold start optimization
 
+## API Design Patterns
+- **Response Format**: ALL API endpoints MUST return responses wrapped in a `data` field:
+  ```typescript
+  // ✅ CORRECT - Backend response format
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      data: {
+        items: [],
+        totalCount: 0
+      }
+    })
+  };
+  
+  // ❌ WRONG - Missing data wrapper
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      items: [],
+      totalCount: 0
+    })
+  };
+  ```
+- **Frontend API Client**: All API clients MUST expect and unwrap the `{data: T}` format:
+  ```typescript
+  const response: ApiSuccess<T> = await response.json();
+  return response.data; // Unwrap and return inner object
+  ```
+- **Empty List Handling**: Frontend components MUST handle empty arrays defensively:
+  ```typescript
+  // ✅ CORRECT - Defensive with fallback
+  const items = response.items || [];
+  
+  // ❌ WRONG - Assumes array always exists
+  const items = response.items;
+  ```
+- **Authentication**: ALWAYS use centralized auth utilities from `lib/auth`:
+  ```typescript
+  // ✅ CORRECT - Use shared auth utilities
+  import { getUserContext, requireAdmin } from '../lib/auth';
+  const userContext = getUserContext(event, logger);
+  
+  // ❌ WRONG - Custom auth implementation
+  const userContext = event.requestContext.authorizer;
+  ```
+- **Family Context Resolution**: For new users without `custom:familyId` in JWT:
+  ```typescript
+  // Query Member table first to get familyId
+  const member = await memberModel.getByMemberId(userContext.userId);
+  if (!member) {
+    throw new Error('User must be member of a family');
+  }
+  const familyId = member.familyId;
+  ```
+- **Error Responses**: Use consistent error format with proper status codes:
+  ```typescript
+  return {
+    statusCode: 400,
+    body: JSON.stringify({
+      error: 'Validation failed',
+      details: zodError.errors
+    })
+  };
+  ```
+
 ## Security Standards
 - Never commit secrets or API keys
 - Use AWS Secrets Manager or Parameter Store for sensitive data
