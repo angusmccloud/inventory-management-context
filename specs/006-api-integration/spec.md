@@ -1,244 +1,203 @@
-# Feature Specification: API Integration for Automated Inventory Updates
+# Feature Specification: NFC Inventory Tap
 
-**Feature Branch**: `006-api-integration`
-**Created**: December 9, 2025
-**Status**: Specification Complete
-**Parent Feature**: `001-family-inventory-mvp`
+**Feature Branch**: `006-nfc-inventory-tap`  
+**Created**: December 26, 2025  
+**Status**: Draft  
+**Input**: NFC-based household inventory adjustment via passive tags and web interface
 
 ## Purpose and Problem Statement
 
-Tech-savvy families want to automate inventory tracking by integrating external systems (such as NFC scanning devices, smart home integrations, or custom scripts) that can programmatically update inventory quantities when items are consumed. Without API access, families must manually update quantities every time an item is used, creating friction and reducing the likelihood of maintaining accurate inventory.
+Households want to track inventory usage with minimal friction. Current methods require users to open an app, navigate to the correct item, and manually adjust the quantity. This creates resistance to consistent tracking, especially for frequently used items.
 
-This feature enables external systems to authenticate per family and programmatically decrease inventory quantities, triggering the existing low-stock notification system when items fall below thresholds. By providing secure, authenticated API access, families can reduce manual entry burden and maintain more accurate real-time inventory tracking.
+This feature allows any household member to update inventory by simply tapping an NFC tag attached to an item with their phone. The tap opens a web page at inventoryhq.io that immediately applies a default adjustment (e.g., -1) and displays clear feedback. The page also provides buttons for additional adjustments without requiring authentication or app installation.
 
-The goal is to enable automation for families who want it while maintaining security through per-family authentication and preventing unauthorized access or abuse.
+The goal is to make inventory tracking as simple as possible for household use, prioritizing usability and convenience over strong security guarantees.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing
 
-### User Story 7 - API Integration for Automated Inventory Updates (Priority: P2)
+### User Story 1 - Quick Inventory Adjustment via NFC Tap (Priority: P1)
 
-External systems (e.g., NFC scanning devices, smart home integrations, custom scripts) can authenticate per family and programmatically decrease inventory quantities, enabling automated tracking when items are consumed.
+A household member taps an NFC tag attached to an item with their phone, and the browser opens a page that immediately adjusts the inventory and shows clear feedback about what changed.
 
-**Why this priority**: This is an advanced automation feature. The system provides value without it, but it reduces manual entry burden for tech-savvy families who want to integrate inventory tracking into their existing workflows or smart home systems.
+**Why this priority**: This is the core value proposition - enabling frictionless inventory tracking. Without this working, the feature provides no value.
 
-**Independent Test**: Can be tested by making authenticated API calls to decrement item quantities and verifying the inventory reflects the changes and triggers appropriate low-stock notifications.
+**Independent Test**: Can be fully tested by programming an NFC tag with a URL, tapping it with any phone, and verifying the page opens, applies an adjustment, and displays the correct feedback.
 
 **Acceptance Scenarios**:
 
-1. **Given** an external system with valid family API credentials, **When** it sends a request to decrement an item quantity, **Then** the quantity is reduced by the specified amount
-2. **Given** an API request to decrement quantity, **When** the new quantity falls below threshold, **Then** a low-stock notification is generated
-3. **Given** an invalid or unauthenticated API request, **When** it attempts to modify inventory, **Then** the request is rejected with appropriate error
-4. **Given** a valid API key, **When** an external system attempts to access another family's inventory, **Then** the request is rejected
-5. **Given** an API request to decrement quantity below zero, **When** the request is processed, **Then** the quantity is set to zero and an error is returned
-6. **Given** multiple rapid API requests from the same key, **When** rate limits are exceeded, **Then** subsequent requests are rejected until the rate limit window resets
+1. **Given** a passive NFC tag programmed with a valid inventory URL, **When** a user taps the tag with their phone, **Then** the browser opens to inventoryhq.io/t/{urlId}
+2. **Given** the NFC page loads, **When** the page renders, **Then** it automatically applies a default inventory adjustment (-1) without user action
+3. **Given** the adjustment is applied, **When** the page displays feedback, **Then** it shows the item name, the change made (e.g., "Took 1 Paper Towel"), and the new current quantity
+4. **Given** the page is displayed, **When** the user views the interface, **Then** they see + and - buttons for making additional adjustments
+5. **Given** the item quantity is 0, **When** an adjustment would reduce it below 0, **Then** the quantity remains at 0 and the page displays an appropriate message
+
+---
+
+### User Story 2 - Additional Adjustments from NFC Page (Priority: P2)
+
+After tapping an NFC tag, a user can make additional inventory adjustments from the same page without reloading or tapping again.
+
+**Why this priority**: While the immediate adjustment (P1) is the core feature, allowing multiple adjustments in one session improves the user experience for bulk consumption (e.g., took 3 rolls of paper towels).
+
+**Independent Test**: After opening an NFC page, press the + or - buttons multiple times and verify each button press applies an immediate adjustment and updates the displayed quantity.
+
+**Acceptance Scenarios**:
+
+1. **Given** an NFC page is displayed, **When** the user presses the - button, **Then** the inventory decreases by 1 and the displayed quantity updates immediately
+2. **Given** an NFC page is displayed, **When** the user presses the + button, **Then** the inventory increases by 1 and the displayed quantity updates immediately
+3. **Given** the user makes multiple adjustments, **When** each button is pressed, **Then** each adjustment is applied atomically without page reload
+4. **Given** the quantity is 0, **When** the user presses the - button, **Then** the quantity remains at 0 and feedback indicates no change occurred
+5. **Given** the user makes rapid successive button presses, **When** adjustments are processed, **Then** all adjustments are applied correctly without loss or duplication
+
+---
+
+### User Story 3 - NFC URL Management for Items (Priority: P2)
+
+A family admin can generate, view, and rotate NFC URLs for inventory items to enable tag programming and handle compromised URLs.
+
+**Why this priority**: This enables the feature but is administrative. Users need to set up tags once, and rotation is only needed if a URL is compromised. Core value is delivered by P1 and P2.
+
+**Independent Test**: From the inventory management interface, generate a new NFC URL for an item, verify it can be copied, used to program a tag, and optionally rotated if needed.
+
+**Acceptance Scenarios**:
+
+1. **Given** a family admin views an inventory item, **When** they request an NFC URL, **Then** the system generates a unique, random, non-guessable URL ID
+2. **Given** an NFC URL exists for an item, **When** the admin views the item, **Then** they can see the full URL (inventoryhq.io/t/{urlId})
+3. **Given** an NFC URL is displayed, **When** the admin interacts with it, **Then** they can copy it to the clipboard for programming NFC tags
+4. **Given** an NFC URL may be compromised, **When** the admin requests rotation, **Then** a new URL is generated and the old one becomes inactive
+5. **Given** multiple NFC URLs may exist for an item, **When** any valid URL is used, **Then** it correctly adjusts the same inventory item
+6. **Given** an NFC URL is rotated, **When** the old URL is accessed, **Then** the page displays an error message indicating the URL is no longer active
 
 ---
 
 ### Edge Cases
 
-- **Negative Quantities**: What happens when an API request attempts to decrement an inventory item quantity below zero?
-- **Rate Limiting**: How should rate limiting be handled to prevent abuse or accidental overload?
-- **API Key Compromise**: What happens if an API key is compromised or needs to be revoked immediately?
-- **API Key Management**: How are API keys created, rotated, and revoked by family admins?
-- **Concurrent API Requests**: How does the system handle multiple simultaneous API requests updating the same inventory item?
-- **Invalid Item References**: What happens when an API request references a non-existent or archived inventory item?
-- **Cross-Family Access Attempts**: How does the system prevent API keys from accessing inventory items belonging to other families?
+- **Unknown URL**: What happens when a user taps a tag with an invalid or non-existent urlId?
+- **Minimum Quantity**: How does the system prevent inventory quantity from going below zero?
+- **Concurrent Adjustments**: What happens when multiple users adjust the same item simultaneously via different NFC tags or the web interface?
+- **Inactive URLs**: What happens when a user taps a tag with a rotated/inactive URL?
+- **Item Deletion**: What happens to NFC URLs when an inventory item is archived or deleted?
+- **Rate Limiting**: Should there be any protection against rapid repeated taps or bot abuse?
+- **Tag Reprogramming**: Can a physical NFC tag be reprogrammed with a new URL if needed?
 
-## Requirements *(mandatory)*
+## Requirements
 
 ### Functional Requirements
 
-#### API Authentication (US7)
+#### NFC URL Generation and Management (US3)
 
-- **FR-040**: System MUST provide an authenticated API for external integrations
-- **FR-041**: System MUST support per-family authentication using API keys
-- **FR-042**: System MUST allow family admins to generate new API keys for their family
-- **FR-043**: System MUST allow family admins to view all active API keys for their family
-- **FR-044**: System MUST allow family admins to revoke API keys immediately
-- **FR-045**: System MUST include the familyId in API key metadata to enforce family isolation
-- **FR-046**: System MUST reject API requests with invalid, expired, or revoked API keys
-- **FR-047**: System MUST reject API requests attempting to access resources outside the authenticated family
+- **FR-001**: System MUST generate a unique, cryptographically random, non-guessable URL ID for each NFC URL
+- **FR-002**: URL ID MUST be sufficiently long and random to prevent guessing or enumeration attacks
+- **FR-003**: System MUST store a mapping between URL ID and inventory item (itemId and familyId)
+- **FR-004**: System MUST allow multiple NFC URLs to map to the same inventory item
+- **FR-005**: System MUST allow family admins to view existing NFC URLs for their items
+- **FR-006**: System MUST provide a way to copy NFC URLs to clipboard for tag programming
+- **FR-007**: System MUST allow family admins to rotate (regenerate) NFC URLs for their items
+- **FR-008**: System MUST deactivate old URL IDs when a new URL is generated via rotation
+- **FR-009**: System MUST NOT derive URL IDs from itemId or familyId (must be independent random values)
 
-#### API Operations (US7)
+#### NFC Page Experience (US1, US2)
 
-- **FR-048**: API MUST allow decrementing inventory item quantities by a specified amount
-- **FR-049**: API MUST validate that the item exists and belongs to the authenticated family before modification
-- **FR-050**: API MUST prevent quantity from going below zero (set to zero if decrement would be negative)
-- **FR-051**: API MUST trigger low-stock notifications when decrements cause threshold violations
-- **FR-052**: API MUST return clear error messages for invalid requests (item not found, insufficient permissions, validation failures)
-- **FR-053**: API MUST support idempotency to prevent duplicate operations from repeated requests
+- **FR-010**: System MUST serve a web page at https://inventoryhq.io/t/{urlId} for valid URL IDs
+- **FR-011**: Page MUST automatically apply a default inventory adjustment (-1) when loaded
+- **FR-012**: Page MUST display the item name associated with the URL ID
+- **FR-013**: Page MUST display a clear message describing the change made (e.g., "Took 1 Paper Towel — now down to 3")
+- **FR-014**: Page MUST display the current inventory quantity after the adjustment
+- **FR-015**: Page MUST provide + and - buttons for making additional adjustments
+- **FR-016**: Each button press MUST apply an immediate adjustment (+1 or -1) without page reload
+- **FR-017**: Page MUST update the displayed quantity and feedback message after each adjustment
+- **FR-018**: Page MUST work without requiring authentication or login
+- **FR-019**: Page MUST work without requiring app installation
+- **FR-020**: Page MUST work on any phone that can open web pages from NFC tags
 
-#### Security & Rate Limiting (US7)
+#### Inventory Adjustment Logic (US1, US2)
 
-- **FR-054**: System MUST implement rate limiting per API key to prevent abuse
-- **FR-055**: System MUST log all API requests with timestamp, API key, operation, and result for audit purposes
-- **FR-056**: System MUST use secure API key generation (cryptographically random, sufficient entropy)
-- **FR-057**: System MUST store API keys securely (hashed, not plain text)
-- **FR-058**: System MUST enforce HTTPS for all API requests
-- **FR-059**: System MUST provide rate limit information in API responses (remaining requests, reset time)
+- **FR-021**: System MUST enforce a minimum inventory quantity of 0 (cannot go negative)
+- **FR-022**: System MUST handle concurrent adjustments atomically to prevent race conditions
+- **FR-023**: When quantity is 0 and a decrease is requested, system MUST keep quantity at 0 and display appropriate feedback
+- **FR-024**: Each adjustment MUST be applied immediately and persist to the database
+- **FR-025**: Adjustments MUST trigger existing low-stock notification logic if thresholds are crossed
+- **FR-026**: System MUST support adjustments via both NFC page and existing authenticated web interface without conflicts
 
-#### API Key Management (US7)
+#### Error Handling (US1, US3)
 
-- **FR-060**: System MUST allow admins to assign descriptive names to API keys for identification
-- **FR-061**: System MUST display when each API key was created and last used
-- **FR-062**: System MUST support API key rotation without service interruption
-- **FR-063**: System MUST limit the number of active API keys per family to prevent resource exhaustion
+- **FR-027**: System MUST display a simple error page for unknown or invalid URL IDs
+- **FR-028**: System MUST display a simple error page for inactive (rotated) URL IDs
+- **FR-029**: Error pages MUST be user-friendly and avoid exposing system internals
+- **FR-030**: System MUST log all NFC page accesses and adjustments for troubleshooting
+- **FR-031**: System MUST handle cases where the associated inventory item no longer exists (archived/deleted)
 
-#### Non-Functional & Compliance
+#### Security and Abuse Prevention (US1, US2, US3)
 
-- **FR-064**: Any UI for API key management MUST meet WCAG 2.1 AA color-contrast standards and maintain visible focus states; low-contrast (e.g., white-on-white) inputs are prohibited
-- **FR-065**: Automated accessibility checks (e.g., axe) MUST run in CI for new or changed API-key management pages/components and block merges on failures
-- **FR-066**: CI MUST run `npm run type-check` and fail the pipeline on any TypeScript errors for this feature
-- **FR-067**: CI MUST run the Vite production build via `npm run build` and block merges on build failures for this feature
+- **FR-032**: URL IDs MUST be treated as shared secrets (possession of URL grants access)
+- **FR-033**: System MUST use HTTPS for all NFC page requests
+- **FR-034**: System MAY implement basic rate limiting to prevent bot abuse (but no strict requirement for household use)
+- **FR-035**: System MUST allow URL rotation to handle compromised URLs
+- **FR-036**: System MUST enforce family isolation (URL ID maps to specific family's item)
+- **FR-037**: System MUST NOT require user accounts, sessions, or cookies for NFC page functionality
+
+#### Non-Functional Requirements
+
+- **FR-038**: NFC page load time MUST be under 2 seconds on standard mobile connections
+- **FR-039**: NFC page MUST be mobile-responsive and usable on phone screens
+- **FR-040**: + and - buttons MUST be large enough for easy tapping (minimum 44x44px touch targets)
+- **FR-041**: Feedback messages MUST be clear and use plain language
+- **FR-042**: Page MUST work on both iOS and Android phones
+- **FR-043**: Any UI components MUST meet WCAG 2.1 AA color-contrast standards
+- **FR-044**: CI MUST run TypeScript type checking and fail on errors
+- **FR-045**: CI MUST run production build and block merges on build failures
 
 ### Key Entities
 
-**APIKey**: A credential that allows external systems to authenticate and access family inventory programmatically.
+**NFCUrl**: A unique URL that maps to an inventory item and enables unauthenticated adjustments.
 
-**Attributes** (extends data model):
-- `apiKeyId`: Unique identifier (UUID)
-- `familyId`: Reference to the family (enforces isolation)
-- `keyHash`: Hashed version of the API key (for secure storage)
-- `keyPrefix`: First 8 characters of key (for display/identification)
-- `name`: Descriptive name assigned by admin (e.g., "NFC Scanner", "Smart Home Integration")
-- `status`: Key status ('active' or 'revoked')
-- `createdBy`: Reference to the Member (admin) who created the key
-- `createdAt`: Timestamp when key was created
-- `lastUsedAt`: Timestamp of last successful API request (null if never used)
-- `revokedAt`: Timestamp when key was revoked (null if active)
-- `revokedBy`: Reference to the Member who revoked the key (null if active)
+**Attributes**:
+- `urlId`: Unique, random, non-guessable identifier (URL path segment)
+- `itemId`: Reference to the inventory item
+- `familyId`: Reference to the family (for isolation)
+- `isActive`: Boolean indicating if the URL is currently valid (false after rotation)
+- `createdAt`: Timestamp of URL generation
+- `lastAccessedAt`: Timestamp of most recent access
 
-**Relationships**:
-- Belongs to one Family
-- Created by one Member (admin role)
-- Optionally revoked by one Member (admin role)
+**InventoryItem**: (extends existing entity)
+- No schema changes required
+- Multiple NFC URLs can reference the same item
 
-**State Transitions**:
-- Created: `status` = 'active', plain key returned once to user
-- Used: `lastUsedAt` updated on each successful request
-- Revoked: `status` = 'revoked', `revokedAt` and `revokedBy` set, key immediately invalid
-
-**Security Considerations**:
-- Plain text API key shown only once at creation
-- Stored as hash (bcrypt or similar) in database
-- Key prefix stored for identification in UI
-- All API requests validated against hash
-
-## Success Criteria *(mandatory)*
+## Success Criteria
 
 ### Measurable Outcomes
 
-- **SC-001**: External systems can successfully authenticate and decrement inventory quantities with 99.9% success rate for valid requests
-- **SC-002**: API requests are processed within 500ms for 95th percentile
-- **SC-003**: Low-stock notifications are triggered within 5 seconds of API-driven quantity changes that violate thresholds
-- **SC-004**: Zero successful cross-family access attempts (100% isolation enforcement)
-- **SC-005**: Rate limiting prevents abuse while allowing legitimate automation (e.g., 100 requests per minute per key)
-- **SC-006**: API key revocation takes effect immediately (within 1 second)
-- **SC-007**: All API operations are logged with complete audit trail for security review
-- **SC-008**: Families using API integration report 80% reduction in manual inventory updates
-
-## Out of Scope
-
-The following capabilities are explicitly excluded from this specification:
-
-### Excluded from This Feature
-
-- Webhook callbacks or event streaming to external systems
-- Real-time WebSocket connections for live inventory updates
-- API endpoints for creating or modifying inventory items (only quantity decrements)
-- API endpoints for reading inventory data (read-only access)
-- OAuth 2.0 or other complex authentication flows (API keys only for MVP)
-- API versioning (single version for MVP)
-- GraphQL API (REST only for MVP)
-- Batch operations (single item updates only)
-- API endpoints for shopping list management
-- API endpoints for notification management
-- API endpoints for member management
-- Automatic API key expiration or rotation policies
-- API usage analytics or dashboards
-- Third-party API marketplace or directory
-
-### Handled by Other Features
-
-- Family and member management → See `001-family-inventory-mvp`
-- Inventory item creation and management → See `001-family-inventory-mvp`
-- Low-stock notification generation → See `001-family-inventory-mvp`
-- Member role-based permissions → See `003-member-management` (planned)
+- **SC-001**: Users can tap an NFC tag and see inventory adjustment feedback in under 3 seconds
+- **SC-002**: 95% of NFC page loads complete successfully without errors
+- **SC-003**: Inventory adjustments via NFC are atomic and prevent concurrent update conflicts
+- **SC-004**: NFC page works on any smartphone (iOS and Android) without app installation
+- **SC-005**: Family admins can generate and copy an NFC URL in under 10 seconds
+- **SC-006**: Users can make additional adjustments from the NFC page without reloading (under 1 second per adjustment)
+- **SC-007**: Invalid or inactive URLs display a clear error message within 2 seconds
 
 ## Assumptions
 
-- Only family admins can create and manage API keys (not suggesters)
-- External systems are responsible for storing and securing their API keys
-- Families will use API integration for consumption tracking, not for bulk data import/export
-- API keys are long-lived credentials (no automatic expiration in MVP)
-- Rate limiting is sufficient to prevent abuse without requiring more complex throttling
-- HTTPS is enforced at the infrastructure level (API Gateway, load balancer)
-- API requests are synchronous (no async job processing needed for MVP)
-- External systems will handle retry logic for failed requests
-- Families understand the security implications of API keys and will protect them appropriately
-- API key compromise is rare and can be mitigated through immediate revocation
-- The API is primarily for automation, not for building third-party applications
+- Users have NFC-enabled smartphones (standard on modern iOS and Android devices)
+- Users can program passive NFC tags with URLs (via standard NFC writing apps)
+- Physical NFC tags are purchased separately (not provided by the system)
+- Household members understand that anyone with the URL can adjust inventory (acceptable trade-off for convenience)
+- Basic rate limiting is sufficient for household use (not expecting bot attacks)
+- Users will attach physical NFC tags to items or storage locations themselves
 
 ## Dependencies
 
-### From Parent Feature (001-family-inventory-mvp)
+- Existing inventory item management system (from MVP)
+- Existing DynamoDB data model (extends with NFCUrl entity)
+- Existing low-stock notification system (triggered by adjustments)
+- Domain: inventoryhq.io must be configured to serve the NFC pages
 
-- Family entity and family isolation mechanisms
-- Member entity with role-based permissions (admin only for API key management)
-- InventoryItem entity with quantity and threshold attributes
-- Notification generation system for low-stock alerts
-- Authentication and authorization system
-- DynamoDB single-table design and access patterns
+## Out of Scope
 
-### External Dependencies
-
-- API Gateway or equivalent for HTTPS enforcement and routing
-- Rate limiting service or middleware
-- Secure random number generation for API key creation
-- Cryptographic hashing library (bcrypt, argon2, or similar)
-- Audit logging infrastructure
-- Web hosting infrastructure (from parent feature)
-
-### Data Model Dependencies
-
-This feature requires a new APIKey entity to be added to the data model defined in [`001-family-inventory-mvp/data-model.md`](../001-family-inventory-mvp/data-model.md).
-
-**Proposed Key Structure**:
-- PK: `FAMILY#{familyId}`
-- SK: `APIKEY#{apiKeyId}`
-- GSI2PK: `FAMILY#{familyId}#APIKEYS`
-- GSI2SK: `STATUS#{status}#CREATED#{createdAt}`
-
-## Risk Considerations
-
-- **API Key Compromise**: If an API key is leaked, unauthorized parties could modify inventory
-  - *Mitigation*: Immediate revocation capability, audit logging, rate limiting, family isolation enforcement
-
-- **Rate Limit Bypass**: Attackers might attempt to bypass rate limits using multiple keys
-  - *Mitigation*: Limit number of active keys per family, monitor for suspicious patterns, IP-based rate limiting as secondary defense
-
-- **Accidental Data Corruption**: Buggy external systems could corrupt inventory data
-  - *Mitigation*: Prevent negative quantities, comprehensive audit logs for rollback, clear API documentation
-
-- **Performance Impact**: High-volume API usage could impact system performance
-  - *Mitigation*: Rate limiting, async notification processing, database query optimization, caching
-
-- **Security Misunderstanding**: Families may not understand API key security implications
-  - *Mitigation*: Clear documentation, warnings during key creation, best practices guide, key naming for tracking
-
-- **Cross-Family Data Leakage**: Implementation bugs could allow cross-family access
-  - *Mitigation*: Strict family isolation validation, comprehensive integration tests, security audit
-
----
-
-## Related Features
-
-This specification builds upon and relates to other features in the family inventory management system:
-
-| Feature ID | Name | Relationship | Status |
-|------------|------|--------------|--------|
-| `001-family-inventory-mvp` | Family Inventory MVP | **Parent** - Provides foundation (Family, Member, InventoryItem, Notification entities) | Implementation Complete |
-| `002-shopping-lists` | Shopping List Management | **Sibling** - Could be extended with API access in future | Planned |
-| `003-member-management` | Family Member Management | **Dependency** - Provides admin role enforcement for API key management | Planned |
-
-**Note**: This specification focuses solely on API-driven inventory quantity decrements. Future enhancements could include read-only API access, shopping list API endpoints, or webhook notifications.
+- Native mobile app development (all web-based)
+- Active NFC tags or custom hardware
+- Per-tag authentication or encryption
+- Detailed audit trails of who made adjustments (no user attribution)
+- Integration with external inventory management systems
+- Automatic tag programming (users program tags manually)
+- Support for older phones without NFC capability
+- QR code alternative (may be considered in future, but NFC-only for this feature)
