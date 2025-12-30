@@ -1,6 +1,38 @@
 <!--
 SYNC IMPACT REPORT
 ===================
+Version Change: 1.2.2 → 1.2.3
+Rationale: Add mandatory pre-completion checks for frontend tasks to prevent deployment failures
+Date: 2025-12-30
+
+Changes Made:
+1. Added "Pre-Completion Checks (Frontend)" section under Development Workflow
+2. Mandated four required checks before marking frontend tasks complete:
+   - `npx tsc --noEmit` for comprehensive type checking
+   - `npm run build` for production build validation
+   - `npm test` for test suite execution
+   - `npm run lint` for code style validation
+3. Emphasized that development servers are lenient and may hide production errors
+
+Impact:
+- Frontend tasks CANNOT be marked complete without running all four checks
+- Reduces deployment failures from undetected TypeScript errors
+- Catches unused imports, type mismatches, and build-specific errors
+- Enforces production-ready code before task completion
+
+Templates Impact:
+- plan-template.md: ✅ No changes needed
+- spec-template.md: ✅ No changes needed
+- tasks-template.md: ✅ Task completion should reference pre-completion checks
+- All templates will automatically enforce pre-completion check requirements
+
+Breaking Changes: No - codifies best practices that should already be followed
+Migration Required: No - establishes workflow requirement for future work
+
+---
+
+PREVIOUS VERSION: 1.2.2
+===================
 Version Change: 1.2.1 → 1.2.2
 Rationale: Add implementation patterns from Spec004 learnings: type system hierarchy, security layers, DynamoDB patterns, error handling, and type validation
 Date: 2025-12-28
@@ -564,6 +596,33 @@ interface ShoppingListItem {
 - Code coverage MUST meet requirements (80% for critical paths)
 - Security audit MUST show no high-severity vulnerabilities
 
+### Pre-Completion Checks (Frontend)
+
+**Before marking any frontend task as complete, the following scripts MUST be run and pass:**
+
+1. **Type Check**: `npx tsc --noEmit`
+   - Validates ALL TypeScript errors across the entire codebase
+   - Catches unused imports, type mismatches, missing properties
+   - More comprehensive than build-time type checking
+   - MUST show zero errors before task completion
+
+2. **Production Build**: `npm run build`
+   - Validates that production build compiles successfully
+   - Ensures Next.js can generate static/dynamic pages
+   - Catches build-specific errors that may not appear in development
+   - MUST complete successfully with no errors
+
+3. **Test Suite**: `npm test`
+   - Runs all unit and integration tests
+   - Required by Testing Excellence principle (III)
+   - MUST pass with minimum 80% coverage for critical paths
+
+4. **Linting** (if configured): `npm run lint`
+   - Validates code style and catches common errors
+   - MUST pass with no errors (warnings acceptable with justification)
+
+**Rationale**: Development servers (`npm run dev`) are lenient and may not catch errors that will block production deployment. Running these checks locally before marking work complete prevents deployment failures and reduces iteration cycles. TypeScript's `--noEmit` flag is especially critical as it performs comprehensive type checking that may be skipped during incremental builds.
+
 ### Deployment Process
 
 - Infrastructure changes MUST be reviewed separately from application code when possible
@@ -600,4 +659,4 @@ This constitution supersedes all other development practices and guidelines. All
 - Technical debt MUST be tracked and addressed systematically
 - Regular constitutional reviews MUST occur quarterly
 
-**Version**: 1.2.2 | **Ratified**: 2025-12-08 | **Last Amended**: 2025-12-28
+**Version**: 1.2.3 | **Ratified**: 2025-12-08 | **Last Amended**: 2025-12-30
