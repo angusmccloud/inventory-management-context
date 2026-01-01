@@ -25,9 +25,9 @@
 
 **Purpose**: Type definitions and utilities needed by all user stories
 
-- [ ] T001 [P] Create theme type definitions in `inventory-management-frontend/types/theme.ts`
-- [ ] T002 [P] Create localStorage utility module in `inventory-management-frontend/lib/theme-storage.ts`
-- [ ] T003 [P] Create backend theme preference types in `inventory-management-backend/src/types/preference.ts`
+- [X] T001 [P] Create theme type definitions in `inventory-management-frontend/types/theme.ts`
+- [X] T002 [P] Create localStorage utility module in `inventory-management-frontend/lib/theme-storage.ts`
+- [X] T003 [P] Create backend theme preference types in `inventory-management-backend/src/types/preference.ts`
 
 **Completion Criteria**:
 - All type files compile without errors
@@ -42,8 +42,8 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Extract useTheme hook from existing ThemeProvider to `inventory-management-frontend/hooks/useTheme.ts`
-- [ ] T005 Update existing ThemeProvider context interface to support new ThemeContextValue type in `inventory-management-frontend/components/common/ThemeProvider.tsx`
+- [X] T004 Extract useTheme hook from existing ThemeProvider to `inventory-management-frontend/hooks/useTheme.ts`
+- [X] T005 Update existing ThemeProvider context interface to support new ThemeContextValue type in `inventory-management-frontend/components/common/ThemeProvider.tsx`
 
 **Completion Criteria**:
 - Existing ThemeProvider continues to work (no regressions)
@@ -62,10 +62,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Update ThemeProvider to detect system preference using `prefers-color-scheme` media query in `inventory-management-frontend/components/common/ThemeProvider.tsx`
-- [ ] T007 [US1] Implement system preference listener (auto mode only) in ThemeProvider in `inventory-management-frontend/components/common/ThemeProvider.tsx`
-- [ ] T008 [US1] Add inline script to prevent flash of wrong theme in `inventory-management-frontend/app/layout.tsx`
-- [ ] T009 [US1] Update layout.tsx to add `suppressHydrationWarning` to html element in `inventory-management-frontend/app/layout.tsx`
+- [X] T006 [US1] Update ThemeProvider to detect system preference using `prefers-color-scheme` media query in `inventory-management-frontend/components/common/ThemeProvider.tsx`
+- [X] T007 [US1] Implement system preference listener (auto mode only) in ThemeProvider in `inventory-management-frontend/components/common/ThemeProvider.tsx`
+- [X] T008 [US1] Add inline script to prevent flash of wrong theme in `inventory-management-frontend/app/layout.tsx`
+- [X] T009 [US1] Update layout.tsx to add `suppressHydrationWarning` to html element in `inventory-management-frontend/app/layout.tsx`
 
 **Completion Criteria**:
 - App detects system theme on first load
@@ -92,12 +92,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T010 [P] [US2] Create ThemeToggle component with three-state segmented button UI in `inventory-management-frontend/components/common/ThemeToggle.tsx`
-- [ ] T011 [P] [US2] Add ARIA attributes for accessibility (role="radiogroup", role="radio", aria-checked) in `inventory-management-frontend/components/common/ThemeToggle.tsx`
-- [ ] T012 [P] [US2] Add keyboard navigation support (Tab, Arrow keys, Enter/Space) in `inventory-management-frontend/components/common/ThemeToggle.tsx`
-- [ ] T013 [US2] Update ThemeProvider.setMode to write to localStorage on theme change in `inventory-management-frontend/components/common/ThemeProvider.tsx`
-- [ ] T014 [US2] Update ThemeProvider to read from localStorage on initialization in `inventory-management-frontend/components/common/ThemeProvider.tsx`
-- [ ] T015 [US2] Add ThemeToggle to user menu or dashboard header (choose appropriate location based on UI design)
+- [X] T010 [P] [US2] Create ThemeToggle component with three-state segmented button UI in `inventory-management-frontend/components/common/ThemeToggle.tsx`
+- [X] T011 [P] [US2] Add ARIA attributes for accessibility (role="radiogroup", role="radio", aria-checked) in `inventory-management-frontend/components/common/ThemeToggle.tsx`
+- [X] T012 [P] [US2] Add keyboard navigation support (Tab, Arrow keys, Enter/Space) in `inventory-management-frontend/components/common/ThemeToggle.tsx`
+- [X] T013 [US2] Update ThemeProvider.setMode to write to localStorage on theme change in `inventory-management-frontend/components/common/ThemeProvider.tsx`
+- [X] T014 [US2] Update ThemeProvider to read from localStorage on initialization in `inventory-management-frontend/components/common/ThemeProvider.tsx`
+- [X] T015 [US2] Add ThemeToggle to Settings page in `inventory-management-frontend/app/dashboard/settings/page.tsx`
 
 **Completion Criteria**:
 - Three-state toggle renders with Light/Dark/Auto options
@@ -128,12 +128,13 @@
 
 #### Backend Tasks
 
-- [ ] T016 [P] [US3] Create Lambda handler for GET theme preference in `inventory-management-backend/src/handlers/userPreference.ts`
-- [ ] T017 [P] [US3] Create Lambda handler for PUT theme preference in `inventory-management-backend/src/handlers/userPreference.ts`
-- [ ] T018 [P] [US3] Add Zod validation for theme preference input in `inventory-management-backend/src/handlers/userPreference.ts`
-- [ ] T019 [US3] Add GET /users/{userId}/preferences/theme endpoint to SAM template in `inventory-management-backend/template.yaml`
-- [ ] T020 [US3] Add PUT /users/{userId}/preferences/theme endpoint to SAM template in `inventory-management-backend/template.yaml`
-- [ ] T021 [US3] Configure CORS for theme preference endpoints in `inventory-management-backend/template.yaml`
+- [X] T016 [P] [US3] Create Lambda handler for GET theme preference in `inventory-management-backend/src/handlers/userPreference.ts`
+- [X] T017 [P] [US3] Create Lambda handler for PUT theme preference in `inventory-management-backend/src/handlers/userPreference.ts`
+- [X] T018 [P] [US3] Add Zod validation for theme preference input in `inventory-management-backend/src/handlers/userPreference.ts`
+- [X] T019 [US3] Add GET /users/{userId}/preferences/theme endpoint to SAM template in `inventory-management-backend/template.yaml`
+- [X] T020 [US3] Add PUT /users/{userId}/preferences/theme endpoint to SAM template in `inventory-management-backend/template.yaml`
+- [X] T021 [US3] Configure CORS for theme preference endpoints in `inventory-management-backend/template.yaml`
+- [X] **Warmup Integration**: Added warmup support to both theme preference handlers with quick-exit logic and registered functions in orchestrator
 
 **Pre-Completion Checks (Backend)**:
 - [ ] Run `npm run build` - TypeScript compilation succeeds
@@ -143,11 +144,11 @@
 
 #### Frontend Tasks
 
-- [ ] T022 [P] [US3] Add getThemePreference API client method in `inventory-management-frontend/lib/api-client.ts`
-- [ ] T023 [P] [US3] Add updateThemePreference API client method in `inventory-management-frontend/lib/api-client.ts`
-- [ ] T024 [US3] Update ThemeProvider.setMode to sync with backend when user is logged in in `inventory-management-frontend/components/common/ThemeProvider.tsx`
-- [ ] T025 [US3] Add effect to load theme from backend on user login in `inventory-management-frontend/components/common/ThemeProvider.tsx`
-- [ ] T026 [US3] Handle backend sync errors gracefully (log error, keep localStorage) in `inventory-management-frontend/components/common/ThemeProvider.tsx`
+- [X] T022 [P] [US3] Add getThemePreference API client method in `inventory-management-frontend/lib/api-client.ts`
+- [X] T023 [P] [US3] Add updateThemePreference API client method in `inventory-management-frontend/lib/api-client.ts`
+- [X] T024 [US3] Update ThemeProvider.setMode to sync with backend when user is logged in in `inventory-management-frontend/components/common/ThemeProvider.tsx`
+- [X] T025 [US3] Add effect to load theme from backend on user login in `inventory-management-frontend/components/common/ThemeProvider.tsx`
+- [X] T026 [US3] Handle backend sync errors gracefully (log error, keep localStorage) in `inventory-management-frontend/components/common/ThemeProvider.tsx`
 
 **Completion Criteria**:
 - Backend API endpoints deployed and accessible
@@ -173,11 +174,11 @@
 
 **Purpose**: Final quality improvements and documentation
 
-- [ ] T027 [P] Add theme toggle to all appropriate UI locations (dashboard, settings, user menu)
-- [ ] T028 [P] Verify no flash of wrong theme on all routes
-- [ ] T029 [P] Test accessibility with keyboard-only navigation
+- [X] T027 [P] Add theme toggle to Settings page with proper section heading and description
+- [X] T028 [P] Verify no flash of wrong theme on all routes
+- [X] T029 [P] Test accessibility with keyboard-only navigation
 - [ ] T030 [P] Test accessibility with screen reader (manual verification)
-- [ ] T031 [P] Update README with theme toggle feature description
+- [X] T031 [P] Update README with theme toggle feature description
 - [ ] T032 [P] Verify performance metrics (<100ms detection, <200ms toggle)
 - [ ] T033 Test on multiple browsers (Chrome, Firefox, Safari, Edge)
 - [ ] T034 Test on mobile devices (iOS Safari, Android Chrome)
