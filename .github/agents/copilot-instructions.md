@@ -13,6 +13,8 @@ Auto-generated from all feature plans. Last updated: 2025-12-08
 - TypeScript 5 with strict mode + Next.js 16 App Router, React 19, AWS SDK v3 (010-streamline-quantity-controls)
 - Amazon DynamoDB (existing inventory items) (010-streamline-quantity-controls)
 - TypeScript 5 with strict mode + Next.js 16 (App Router), React 18, Tailwind CSS 3.x (011-mobile-responsive-ui)
+- TypeScript 5 (strict mode), Node.js 24.x LTS + Next.js 16 App Router, React 18 (013-url-path-cleanup)
+- N/A (frontend-only routing changes) (013-url-path-cleanup)
 
 - TypeScript 5 with strict mode enabled (001-family-inventory-mvp)
 
@@ -32,9 +34,9 @@ npm test && npm run lint
 TypeScript 5 with strict mode enabled: Follow standard conventions
 
 ## Recent Changes
+- 013-url-path-cleanup: Added TypeScript 5 (strict mode), Node.js 24.x LTS + Next.js 16 App Router, React 18
 - 011-mobile-responsive-ui: Added TypeScript 5 with strict mode + Next.js 16 (App Router), React 18, Tailwind CSS 3.x
 - 010-streamline-quantity-controls: Added TypeScript 5 with strict mode + Next.js 16 App Router, React 19, AWS SDK v3
-- 009-theme-color-update: Added TypeScript 5 (strict mode) + Next.js 16 App Router, Tailwind CSS 3.4, React 18
 
 
 <!-- MANUAL ADDITIONS START -->
