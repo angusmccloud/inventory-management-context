@@ -1,6 +1,100 @@
 <!--
 SYNC IMPACT REPORT
 ===================
+Version Change: 1.2.5 → 1.2.6
+Rationale: Add User Preference Storage Pattern to DynamoDB Best Practices - codifies Member entity for user settings
+Date: 2026-01-01
+
+Changes Made:
+1. Added "User Preference Storage (Member Entity)" to DynamoDB Patterns section
+2. Documented that user preferences (theme, language, etc.) MUST be stored on Member entity
+3. Specified correct PK/SK pattern for Member records: PK=FAMILY#{familyId}, SK=MEMBER#{memberId}
+4. Prohibited creation of separate USER# entity types for user settings
+5. Required familyId from JWT context for all Member entity queries
+6. Defined Member entity fields including optional themePreference
+
+Impact:
+- User preference handlers MUST query Member records, not non-existent USER records
+- Theme preferences stored as optional field on Member entity (defaults to 'auto')
+- Consistent entity patterns: one member record per family membership
+- Authentication pattern: extract familyId from JWT via getUserContext helper
+- Member entity type includes themePreference field for type safety
+
+Templates Impact:
+- plan-template.md: ✅ No changes needed (implementation detail)
+- spec-template.md: ✅ No changes needed
+- tasks-template.md: ✅ Backend tasks should reference Member entity for user settings
+- All templates will automatically enforce Member entity usage for preferences
+
+Breaking Changes: No - fixes incorrect USER# pattern before it spreads
+Migration Required: Yes - theme handlers updated to use correct Member entity pattern
+
+---
+
+PREVIOUS VERSION: 1.2.5
+===================
+Version Change: 1.2.3 → 1.2.5
+Rationale: Add API Response Standards to enforce shared response utilities and prevent CORS errors
+Date: 2026-01-01
+
+Changes Made:
+1. Added "API Response Standards (MANDATORY)" to AWS Best Practices (Section IV)
+2. Mandated use of successResponse/errorResponse utilities from lib/response.js
+3. Prohibited manual construction of response objects with CORS headers
+4. Documented CORS configuration location (SAM template InventoryApi.Cors)
+5. Specified response utility signatures and automatic header inclusion
+
+Impact:
+- All Lambda handlers MUST use successResponse() and errorResponse() utilities
+- CORS headers automatically applied - no manual override needed
+- Prevents CORS configuration drift and response format inconsistencies
+- Security headers (X-Content-Type-Options, X-Frame-Options, etc.) applied automatically
+- Ensures consistent error response format across all endpoints
+
+Templates Impact:
+- plan-template.md: ✅ No changes needed (implementation detail)
+- spec-template.md: ✅ No changes needed
+- tasks-template.md: ✅ Backend tasks should reference response utilities
+- All templates will automatically enforce response standards
+
+Breaking Changes: No - codifies existing best practice pattern
+Migration Required: No - existing functions use response utilities (new handlers updated)
+
+---
+
+PREVIOUS VERSION: 1.2.4
+===================
+Version Change: 1.2.3 → 1.2.4
+Rationale: Codify Lambda warmup pattern to reduce cold starts and ensure consistent performance
+Date: 2026-01-01
+
+Changes Made:
+1. Added Lambda warmup requirement to AWS Best Practices (Section IV)
+2. Mandated warmup quick-exit logic for ALL new Lambda functions
+3. Required registration in warmup orchestrator for all backend handlers
+4. Specified warmup implementation pattern (handleWarmup/warmupResponse utilities)
+5. Documented performance benefits (reduced cold starts, consistent response times)
+
+Impact:
+- All new Lambda functions MUST include warmup support from day one
+- Handlers MUST implement quick-exit logic using handleWarmup() at function start
+- Functions MUST be registered in src/handlers/warmup/orchestrator.ts
+- Prevents cold start performance degradation as system scales
+- Ensures consistent sub-200ms response times for API endpoints
+
+Templates Impact:
+- plan-template.md: ✅ No changes needed (implementation detail)
+- spec-template.md: ✅ No changes needed
+- tasks-template.md: ✅ Backend tasks should include warmup integration step
+- All templates will automatically enforce warmup requirements for backend work
+
+Breaking Changes: No - codifies existing best practice pattern
+Migration Required: No - existing functions already implement warmup pattern
+
+---
+
+PREVIOUS VERSION: 1.2.3
+===================
 Version Change: 1.2.2 → 1.2.3
 Rationale: Add mandatory pre-completion checks for frontend tasks to prevent deployment failures
 Date: 2025-12-30
@@ -253,8 +347,21 @@ Follow-up TODOs: None - all templates are aligned with constitution principles
 - IAM roles MUST follow least-privilege principle
 - All resources MUST be tagged appropriately for cost tracking
 - Avoid DynamoDB scans; use queries with proper indexes
+- **Lambda Warmup (MANDATORY)**: All Lambda functions MUST implement warmup support:
+  - Import `handleWarmup` and `warmupResponse` from `lib/warmup.js`
+  - Add quick-exit logic at the start of handler: `if (handleWarmup(event, context)) return warmupResponse();`
+  - Include `Context` parameter in handler signature: `async (event, context) => {}`
+  - Register function name in `src/handlers/warmup/orchestrator.ts` FUNCTION_NAMES array
+  - Pattern ensures execution contexts stay warm, reducing cold starts from 2-5s to <200ms
+- **API Response Standards (MANDATORY)**: All Lambda handlers MUST use shared response utilities:
+  - Import `successResponse` and `errorResponse` from `lib/response.js`
+  - NEVER manually construct response objects with CORS headers
+  - Success: `return successResponse(data)` or `return successResponse(statusCode, data, message)`
+  - Error: `return errorResponse(statusCode, errorCode, message, details?)`
+  - Utilities automatically include CORS headers, security headers, and proper content-type
+  - CORS is configured centrally in SAM template (`InventoryApi.Cors`) - do NOT override in handlers
 
-**Rationale**: Following AWS best practices ensures security, cost optimization, and maintainability. The modular SDK v3 reduces Lambda bundle sizes, improving cold start performance.
+**Rationale**: Following AWS best practices ensures security, cost optimization, and maintainability. The modular SDK v3 reduces Lambda bundle sizes, improving cold start performance. Lambda warmup is critical for production systems, ensuring consistent response times and preventing cold start performance degradation as the system scales.
 
 ### V. Security First
 
@@ -418,6 +525,15 @@ const isAdmin = userContext?.role === 'admin';
   - All queries MUST filter by `familyId` for family isolation
   - Use GSI2 for low-stock queries and shopping list filtering
 
+- **User Preference Storage (Member Entity)**: User preferences MUST be stored on Member entity, NOT separate USER records
+  - Member records use `PK=FAMILY#{familyId}`, `SK=MEMBER#{memberId}`
+  - User preferences (theme, language, etc.) are optional fields on Member entity
+  - Theme preference: `themePreference?: 'light' | 'dark' | 'auto'` (defaults to 'auto')
+  - Extract familyId from JWT via `getUserContext(event, logger)` helper
+  - Do NOT create separate USER# entity types for user settings
+  - Query pattern: `GetCommand({ Key: { PK: FAMILY#{familyId}, SK: MEMBER#{memberId} } })`
+  - Update pattern: `UpdateCommand({ Key: {...}, UpdateExpression: 'SET themePreference = :theme, updatedAt = :now' })`
+
 **Example - Atomic Transaction**:
 ```typescript
 import { TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
@@ -431,7 +547,43 @@ const command = new TransactWriteCommand({
 await docClient.send(command);
 ```
 
-**Rationale**: KeyBuilder utilities prevent key format errors, atomic transactions prevent partial writes that corrupt data relationships, and schema compliance ensures all records work correctly with query patterns and application code.
+**Example - User Preference Query**:
+```typescript
+import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { getUserContext } from '../lib/auth.js';
+
+// Get theme preference
+const userContext = getUserContext(event, logger);
+const result = await docClient.send(
+  new GetCommand({
+    TableName: TABLE_NAME,
+    Key: {
+      PK: `FAMILY#${userContext.familyId}`,
+      SK: `MEMBER#${userContext.memberId}`,
+    },
+  })
+);
+const theme = result.Item?.themePreference || 'auto';
+
+// Update theme preference
+await docClient.send(
+  new UpdateCommand({
+    TableName: TABLE_NAME,
+    Key: {
+      PK: `FAMILY#${userContext.familyId}`,
+      SK: `MEMBER#${userContext.memberId}`,
+    },
+    UpdateExpression: 'SET themePreference = :theme, updatedAt = :now',
+    ConditionExpression: 'attribute_exists(PK)', // Ensure member exists
+    ExpressionAttributeValues: {
+      ':theme': 'dark',
+      ':now': new Date().toISOString(),
+    },
+  })
+);
+```
+
+**Rationale**: KeyBuilder utilities prevent key format errors, atomic transactions prevent partial writes that corrupt data relationships, and schema compliance ensures all records work correctly with query patterns and application code. Member entity consolidates all user data in one place, avoiding entity proliferation and simplifying queries.
 
 ### Error Handling Patterns
 

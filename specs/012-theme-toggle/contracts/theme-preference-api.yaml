@@ -1,0 +1,276 @@
+openapi: 3.0.3
+info:
+  title: Theme Preference API
+  description: API for managing user theme preferences (light/dark mode)
+  version: 1.0.0
+  contact:
+    name: Inventory HQ Support
+    email: support@inventoryhq.io
+
+servers:
+  - url: https://api.inventoryhq.io/dev
+    description: Development
+  - url: https://api.inventoryhq.io/prod
+    description: Production
+
+security:
+  - BearerAuth: []
+
+paths:
+  /users/{userId}/preferences/theme:
+    get:
+      summary: Get user's theme preference
+      description: |
+        Retrieves the authenticated user's theme preference. If no preference 
+        is set, defaults to 'auto' (follow system preference).
+      operationId: getThemePreference
+      tags:
+        - Theme
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID (extracted from JWT, must match authenticated user)
+          schema:
+            type: string
+            example: "user-123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Theme preference retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThemePreferenceResponse'
+              examples:
+                light:
+                  summary: User prefers light mode
+                  value:
+                    data:
+                      theme: light
+                dark:
+                  summary: User prefers dark mode
+                  value:
+                    data:
+                      theme: dark
+                auto:
+                  summary: User prefers to follow system
+                  value:
+                    data:
+                      theme: auto
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Update user's theme preference
+      description: |
+        Updates the authenticated user's theme preference. The preference 
+        will be persisted and synced across all devices where the user is logged in.
+      operationId: updateThemePreference
+      tags:
+        - Theme
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID (extracted from JWT, must match authenticated user)
+          schema:
+            type: string
+            example: "user-123e4567-e89b-12d3-a456-426614174000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateThemeRequest'
+            examples:
+              setLight:
+                summary: Set theme to light mode
+                value:
+                  theme: light
+              setDark:
+                summary: Set theme to dark mode
+                value:
+                  theme: dark
+              setAuto:
+                summary: Set theme to follow system
+                value:
+                  theme: auto
+      responses:
+        '200':
+          description: Theme preference updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThemePreferenceResponse'
+              examples:
+                updated:
+                  summary: Theme updated to dark mode
+                  value:
+                    data:
+                      theme: dark
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        AWS Cognito JWT token. The token must include the `custom:userId` claim
+        which is used to authenticate the user and access their preferences.
+
+  schemas:
+    ThemeMode:
+      type: string
+      enum:
+        - light
+        - dark
+        - auto
+      description: |
+        Theme preference mode:
+        - `light`: Always use light theme
+        - `dark`: Always use dark theme
+        - `auto`: Follow system preference (prefers-color-scheme)
+      example: auto
+
+    ThemePreferenceResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - theme
+          properties:
+            theme:
+              $ref: '#/components/schemas/ThemeMode'
+
+    UpdateThemeRequest:
+      type: object
+      required:
+        - theme
+      properties:
+        theme:
+          $ref: '#/components/schemas/ThemeMode'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: ValidationError
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid theme value. Must be 'light', 'dark', or 'auto'.
+        correlationId:
+          type: string
+          description: Unique ID for tracing this error
+          example: "abc123-def456-ghi789"
+        details:
+          type: object
+          description: Additional error details (e.g., validation failures)
+
+  responses:
+    BadRequest:
+      description: Invalid request (e.g., invalid theme value)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidTheme:
+              summary: Invalid theme value
+              value:
+                error: ValidationError
+                message: Invalid theme value. Must be 'light', 'dark', or 'auto'.
+                correlationId: "abc123-def456-ghi789"
+                details:
+                  field: theme
+                  received: "blue"
+                  expected: ["light", "dark", "auto"]
+
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            noToken:
+              summary: No authentication token provided
+              value:
+                error: Unauthorized
+                message: Authentication token required
+                correlationId: "abc123-def456-ghi789"
+
+    Forbidden:
+      description: User is not authorized to access this resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            wrongUser:
+              summary: User attempting to access another user's preferences
+              value:
+                error: Forbidden
+                message: You can only access your own preferences
+                correlationId: "abc123-def456-ghi789"
+
+    NotFound:
+      description: User not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            userNotFound:
+              summary: User does not exist
+              value:
+                error: NotFound
+                message: User not found
+                correlationId: "abc123-def456-ghi789"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            serverError:
+              summary: Unexpected error occurred
+              value:
+                error: InternalServerError
+                message: An unexpected error occurred
+                correlationId: "abc123-def456-ghi789"
+
+tags:
+  - name: Theme
+    description: Theme preference management
+
+externalDocs:
+  description: Feature Specification
+  url: https://github.com/angusmccloud/inventory-management-context/tree/main/specs/012-theme-toggle
