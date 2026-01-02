@@ -1,0 +1,452 @@
+openapi: 3.0.3
+info:
+  title: Dashboard Management API
+  description: Admin-only API for creating, updating, and managing inventory dashboards
+  version: 1.0.0
+
+servers:
+  - url: https://api.inventoryhq.io
+    description: Production API
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/dashboards:
+    get:
+      summary: List all dashboards for family
+      description: Returns all dashboards (active and inactive) for the authenticated user's family
+      operationId: listDashboards
+      tags:
+        - Dashboards
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: includeInactive
+          in: query
+          description: Include inactive (rotated/deleted) dashboards
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successfully retrieved dashboards
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      dashboards:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Dashboard'
+                      totalCount:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create a new dashboard
+      description: Creates a new dashboard for the family (admin only)
+      operationId: createDashboard
+      tags:
+        - Dashboards
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDashboardRequest'
+      responses:
+        '201':
+          description: Dashboard created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Dashboard'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/dashboards/{dashboardId}:
+    get:
+      summary: Get dashboard details
+      description: Returns dashboard configuration (admin only)
+      operationId: getDashboard
+      tags:
+        - Dashboards
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DashboardId'
+      responses:
+        '200':
+          description: Successfully retrieved dashboard
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Dashboard'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      summary: Update dashboard
+      description: Updates dashboard title and/or item/location selections (admin only)
+      operationId: updateDashboard
+      tags:
+        - Dashboards
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DashboardId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDashboardRequest'
+      responses:
+        '200':
+          description: Dashboard updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Dashboard'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Delete dashboard
+      description: Marks dashboard as inactive (admin only). Dashboard URL will return 404.
+      operationId: deleteDashboard
+      tags:
+        - Dashboards
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DashboardId'
+      responses:
+        '204':
+          description: Dashboard deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/dashboards/{dashboardId}/rotate:
+    post:
+      summary: Rotate dashboard URL
+      description: Deactivates current dashboard URL and creates a new one with same configuration (admin only)
+      operationId: rotateDashboard
+      tags:
+        - Dashboards
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DashboardId'
+      responses:
+        '200':
+          description: Dashboard URL rotated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Dashboard URL rotated successfully"
+                      oldDashboardId:
+                        type: string
+                        example: "f47ac10b-58cc-4372-a567-0e02b2c3d479_7pQm3nX8kD5wZ2gS9YbN4"
+                      newDashboard:
+                        $ref: '#/components/schemas/Dashboard'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    DashboardId:
+      name: dashboardId
+      in: path
+      description: Dashboard ID (format familyId_randomString)
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}_[a-zA-Z0-9]{22}$'
+        example: "f47ac10b-58cc-4372-a567-0e02b2c3d479_7pQm3nX8kD5wZ2gS9YbN4"
+
+  schemas:
+    Dashboard:
+      type: object
+      required:
+        - dashboardId
+        - familyId
+        - title
+        - type
+        - isActive
+        - createdAt
+        - createdBy
+        - accessCount
+        - version
+      properties:
+        dashboardId:
+          type: string
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479_7pQm3nX8kD5wZ2gS9YbN4"
+        familyId:
+          type: string
+          format: uuid
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Pantry & Fridge Inventory"
+        type:
+          type: string
+          enum: [location, items]
+          example: "location"
+        locationIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 10
+          description: "Required if type='location', must be undefined if type='items'"
+          example: ["loc-a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
+        itemIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 100
+          description: "Required if type='items', must be undefined if type='location'"
+          example: ["item-d5e8f9a0-1234-4567-89ab-cdef01234567"]
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-02T10:00:00Z"
+        createdBy:
+          type: string
+          format: uuid
+          example: "member-550e8400-e29b-41d4-a716-446655440000"
+        lastAccessedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-01-02T15:30:00Z"
+        accessCount:
+          type: integer
+          minimum: 0
+          example: 25
+        rotatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-01-02T16:00:00Z"
+        rotatedBy:
+          type: string
+          format: uuid
+          nullable: true
+          example: "member-550e8400-e29b-41d4-a716-446655440000"
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-01-02T17:00:00Z"
+        deletedBy:
+          type: string
+          format: uuid
+          nullable: true
+          example: "member-550e8400-e29b-41d4-a716-446655440000"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-01-02T10:00:00Z"
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+
+    CreateDashboardRequest:
+      type: object
+      required:
+        - title
+        - type
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Pantry & Fridge Inventory"
+        type:
+          type: string
+          enum: [location, items]
+          example: "location"
+        locationIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 10
+          description: "Required if type='location'"
+          example: ["loc-a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
+        itemIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 100
+          description: "Required if type='items'"
+          example: ["item-d5e8f9a0-1234-4567-89ab-cdef01234567"]
+
+    UpdateDashboardRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Updated Pantry Inventory"
+        locationIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 10
+          description: "Only valid if dashboard type='location'"
+          example: ["loc-a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
+        itemIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 100
+          description: "Only valid if dashboard type='items'"
+          example: ["item-d5e8f9a0-1234-4567-89ab-cdef01234567"]
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: "INVALID_REQUEST"
+            message:
+              type: string
+              example: "Title is required"
+            details:
+              type: object
+              additionalProperties: true
+            correlationId:
+              type: string
+              format: uuid
+              example: "req-123e4567-e89b-12d3-a456-426614174000"
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Insufficient permissions (admin role required)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Dashboard not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

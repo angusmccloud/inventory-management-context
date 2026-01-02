@@ -1,0 +1,265 @@
+openapi: 3.0.3
+info:
+  title: Dashboard Public Access API
+  description: Unauthenticated API for viewing dashboards and adjusting quantities
+  version: 1.0.0
+
+servers:
+  - url: https://inventoryhq.io
+    description: Public website
+
+paths:
+  /d/{dashboardId}:
+    get:
+      summary: Get dashboard with items
+      description: Returns dashboard configuration and current item list (unauthenticated)
+      operationId: getDashboardPublic
+      tags:
+        - Public Dashboard
+      parameters:
+        - $ref: '#/components/parameters/DashboardId'
+      responses:
+        '200':
+          description: Successfully retrieved dashboard
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      dashboard:
+                        $ref: '#/components/schemas/PublicDashboard'
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DashboardItem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/public/dashboards/{dashboardId}/items/{itemId}/adjust:
+    post:
+      summary: Adjust item quantity
+      description: Adjusts inventory quantity for an item on a dashboard (unauthenticated)
+      operationId: adjustItemQuantity
+      tags:
+        - Public Dashboard
+      parameters:
+        - $ref: '#/components/parameters/DashboardId'
+        - name: itemId
+          in: path
+          description: Inventory item UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustQuantityRequest'
+      responses:
+        '200':
+          description: Quantity adjusted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      itemId:
+                        type: string
+                        format: uuid
+                        example: "item-d5e8f9a0-1234-4567-89ab-cdef01234567"
+                      newQuantity:
+                        type: integer
+                        minimum: 0
+                        example: 5
+                      adjustment:
+                        type: integer
+                        example: -1
+                      message:
+                        type: string
+                        example: "Took 1 Paper Towel — now down to 5"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/public/dashboards/{dashboardId}/access:
+    post:
+      summary: Record dashboard access
+      description: Increments access counter and updates lastAccessedAt (called on page load)
+      operationId: recordDashboardAccess
+      tags:
+        - Public Dashboard
+      parameters:
+        - $ref: '#/components/parameters/DashboardId'
+      responses:
+        '204':
+          description: Access recorded successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  parameters:
+    DashboardId:
+      name: dashboardId
+      in: path
+      description: Dashboard ID (format familyId_randomString)
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}_[a-zA-Z0-9]{22}$'
+        example: "f47ac10b-58cc-4372-a567-0e02b2c3d479_7pQm3nX8kD5wZ2gS9YbN4"
+
+  schemas:
+    PublicDashboard:
+      type: object
+      required:
+        - dashboardId
+        - title
+        - type
+      properties:
+        dashboardId:
+          type: string
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479_7pQm3nX8kD5wZ2gS9YbN4"
+        title:
+          type: string
+          example: "Pantry & Fridge Inventory"
+        type:
+          type: string
+          enum: [location, items]
+          example: "location"
+        itemCount:
+          type: integer
+          minimum: 0
+          example: 15
+          description: "Total number of items on dashboard"
+
+    DashboardItem:
+      type: object
+      required:
+        - itemId
+        - name
+        - quantity
+        - lowStockThreshold
+        - isLowStock
+      properties:
+        itemId:
+          type: string
+          format: uuid
+          example: "item-d5e8f9a0-1234-4567-89ab-cdef01234567"
+        name:
+          type: string
+          example: "Paper Towels"
+        quantity:
+          type: integer
+          minimum: 0
+          example: 3
+        unit:
+          type: string
+          nullable: true
+          example: "rolls"
+        locationId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "loc-a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        locationName:
+          type: string
+          nullable: true
+          example: "Pantry"
+        lowStockThreshold:
+          type: integer
+          minimum: 0
+          example: 2
+        isLowStock:
+          type: boolean
+          example: false
+          description: "true if quantity < lowStockThreshold"
+
+    AdjustQuantityRequest:
+      type: object
+      required:
+        - adjustment
+      properties:
+        adjustment:
+          type: integer
+          example: -1
+          description: "Quantity adjustment (+1 or -1 typically)"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: "DASHBOARD_NOT_FOUND"
+            message:
+              type: string
+              example: "Dashboard not found or has been deactivated"
+            correlationId:
+              type: string
+              format: uuid
+              example: "req-123e4567-e89b-12d3-a456-426614174000"
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Dashboard or item not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "DASHBOARD_NOT_FOUND"
+              message: "This dashboard link is invalid or does not exist."
+
+    Gone:
+      description: Dashboard has been deactivated (rotated or deleted)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "DASHBOARD_INACTIVE"
+              message: "This dashboard link has been deactivated. Please request a new link from your family admin."
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
