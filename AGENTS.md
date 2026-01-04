@@ -67,3 +67,10 @@ This ensures Cursor, Roo Code, and GitHub Copilot all receive the same guideline
 
 **Quick Reference**: See `.specify/AGENT-SYNC-QUICK-REFERENCE.md`
 **Full Documentation**: See `.specify/docs/agent-context-sync.md`
+
+## Active Technologies
+- TypeScript 5 (strict) with Node.js 20 Lambda runtimes + Next.js 16 App Router, AWS Lambda handlers, DynamoDB Document Client, SES/email service, background job scheduler (CloudWatch Events + Lambda) (001-notification-preferences)
+- DynamoDB single-table design (Member + Notification entities) (001-notification-preferences)
+
+## Recent Changes
+- 001-notification-preferences: Added TypeScript 5 (strict) with Node.js 20 Lambda runtimes + Next.js 16 App Router, AWS Lambda handlers, DynamoDB Document Client, SES/email service, background job scheduler (CloudWatch Events + Lambda)
