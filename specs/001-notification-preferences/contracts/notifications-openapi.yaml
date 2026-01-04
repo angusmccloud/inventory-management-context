@@ -1,0 +1,190 @@
+openapi: 3.0.3
+info:
+  title: Notification Preference & Delivery API
+  version: 1.0.0
+  description: |
+    Contracts supporting per-user notification preferences, unsubscribe workflow,
+    and administrative delivery preview for Notification Preference Management feature.
+servers:
+  - url: https://api.example.com
+paths:
+  /notifications/preferences:
+    get:
+      summary: Retrieve current member notification preferences
+      tags: [NotificationPreferences]
+      responses:
+        '200':
+          description: Preference matrix for the authenticated member
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPreferencesResponse'
+        '401':
+          description: Authentication required
+    patch:
+      summary: Update notification preferences for the authenticated member
+      tags: [NotificationPreferences]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePreferencesRequest'
+      responses:
+        '200':
+          description: Updated matrix snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPreferencesResponse'
+        '400':
+          description: Validation errors (unknown type/channel, invalid frequency)
+        '409':
+          description: Version conflict / optimistic locking failure
+  /notifications/unsubscribe:
+    post:
+      summary: Apply unsubscribe-all change via one-click email token
+      tags: [NotificationPreferences]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnsubscribeRequest'
+      responses:
+        '204':
+          description: Unsubscribe applied
+        '400':
+          description: Missing or malformed token
+        '410':
+          description: Token expired or already redeemed
+  /notifications/delivery-queue:
+    get:
+      summary: Administrative preview of pending notifications per job type
+      tags: [NotificationOperations]
+      parameters:
+        - name: jobType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [IMMEDIATE, DAILY, WEEKLY]
+        - name: scheduledFor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Optional window to inspect; defaults to next scheduled run
+      responses:
+        '200':
+          description: Pending delivery snapshot with counts and sample data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryQueueResponse'
+        '403':
+          description: Requires admin privileges
+components:
+  schemas:
+    Frequency:
+      type: string
+      enum: [NONE, IMMEDIATE, DAILY, WEEKLY]
+    Channel:
+      type: string
+      enum: [EMAIL, IN_APP, SMS, PUSH]
+    NotificationType:
+      type: string
+      enum: [LOW_STOCK, SUGGESTION]
+      description: Future types allowed; validation occurs server-side
+    PreferenceEntry:
+      type: object
+      properties:
+        channel:
+          $ref: '#/components/schemas/Channel'
+        frequency:
+          $ref: '#/components/schemas/Frequency'
+      required: [channel, frequency]
+    NotificationPreference:
+      type: object
+      properties:
+        notificationType:
+          $ref: '#/components/schemas/NotificationType'
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreferenceEntry'
+      required: [notificationType, entries]
+    GetPreferencesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            preferences:
+              type: array
+              items:
+                $ref: '#/components/schemas/NotificationPreference'
+            defaultFrequency:
+              $ref: '#/components/schemas/Frequency'
+            unsubscribeAllEmail:
+              type: boolean
+            timezone:
+              type: string
+            lastUpdatedAt:
+              type: string
+              format: date-time
+      required: [data]
+    UpdatePreferencesRequest:
+      type: object
+      properties:
+        preferences:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationPreference'
+        unsubscribeAllEmail:
+          type: boolean
+        expectedVersion:
+          type: integer
+          description: Member record version for optimistic locking
+      required: [preferences, expectedVersion]
+    UnsubscribeRequest:
+      type: object
+      properties:
+        token:
+          type: string
+      required: [token]
+    DeliveryQueueResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            jobType:
+              type: string
+            scheduledFor:
+              type: string
+              format: date-time
+            totalPendingMembers:
+              type: integer
+            totalNotifications:
+              type: integer
+            sampleNotifications:
+              type: array
+              items:
+                type: object
+                properties:
+                  memberId:
+                    type: string
+                  notificationId:
+                    type: string
+                  type:
+                    $ref: '#/components/schemas/NotificationType'
+                  channel:
+                    $ref: '#/components/schemas/Channel'
+                  createdAt:
+                    type: string
+                    format: date-time
+            notes:
+              type: string
+      required: [data]
