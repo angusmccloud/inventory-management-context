@@ -71,6 +71,8 @@ This ensures Cursor, Roo Code, and GitHub Copilot all receive the same guideline
 ## Active Technologies
 - TypeScript 5 (strict) with Node.js 20 Lambda runtimes + Next.js 16 App Router, AWS Lambda handlers, DynamoDB Document Client, SES/email service, background job scheduler (CloudWatch Events + Lambda) (001-notification-preferences)
 - DynamoDB single-table design (Member + Notification entities) (001-notification-preferences)
+- TypeScript 5.x (strict) targeting Node.js 20.x Lambda runtimes and Next.js 16 App Router + Next.js 16 + React 18, AWS Lambda + API Gateway, AWS SDK v3 DynamoDB Document Client, Cognito user pools, Zod validation, shared UI component library (Dialog, List, Button) (001-pending-invite-join)
+- DynamoDB single-table (Family, Member, Invitation, InviteDecisionLog records share table) (001-pending-invite-join)
 
 ## Recent Changes
 - 001-notification-preferences: Added TypeScript 5 (strict) with Node.js 20 Lambda runtimes + Next.js 16 App Router, AWS Lambda handlers, DynamoDB Document Client, SES/email service, background job scheduler (CloudWatch Events + Lambda)
