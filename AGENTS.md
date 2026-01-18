@@ -35,6 +35,7 @@ SpecKit commands are available for multiple AI assistants:
 - **Roo Code**: `.roo/commands/`
 - **Cursor**: `.cursor/commands/`
 - **GitHub Copilot**: `.github/prompts/` and `.github/agents/`
+- **Claude**: `.claude/commands/`
 
 Available commands:
 - `speckit.constitution` - Create/update project constitution
@@ -63,7 +64,7 @@ When adding shared context that should apply to all AI agents:
 1. **Edit the shared source**: `.specify/memory/agent-shared-context.md`
 2. **Run the sync script**: `.specify/scripts/bash/sync-agent-contexts.sh`
 
-This ensures Cursor, Roo Code, and GitHub Copilot all receive the same guidelines.
+This ensures Cursor, Roo Code, GitHub Copilot, and Claude all receive the same guidelines.
 
 **Quick Reference**: See `.specify/AGENT-SYNC-QUICK-REFERENCE.md`
 **Full Documentation**: See `.specify/docs/agent-context-sync.md`

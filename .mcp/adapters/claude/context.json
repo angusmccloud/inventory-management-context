@@ -1,0 +1,60 @@
+{
+  "projectName": "ATL Inventory Management",
+  "description": "Family inventory management system with AWS backend",
+  "contextFiles": [
+    {
+      "path": "../../../.specify/memory/constitution.md",
+      "description": "Technical constitution and architecture decisions"
+    },
+    {
+      "path": "../../../AGENTS.md",
+      "description": "Agent guidance and SpecKit workflow"
+    },
+    {
+      "path": "../../../.claude/config.md",
+      "description": "Claude-specific configuration"
+    },
+    {
+      "path": "../../../.specify/memory/agent-shared-context.md",
+      "description": "Shared context for all AI agents"
+    }
+  ],
+  "commands": [
+    {
+      "name": "speckit.constitution",
+      "path": "../../../.claude/commands/speckit.constitution.md"
+    },
+    {
+      "name": "speckit.specify",
+      "path": "../../../.claude/commands/speckit.specify.md"
+    },
+    {
+      "name": "speckit.clarify",
+      "path": "../../../.claude/commands/speckit.clarify.md"
+    },
+    {
+      "name": "speckit.plan",
+      "path": "../../../.claude/commands/speckit.plan.md"
+    },
+    {
+      "name": "speckit.tasks",
+      "path": "../../../.claude/commands/speckit.tasks.md"
+    },
+    {
+      "name": "speckit.checklist",
+      "path": "../../../.claude/commands/speckit.checklist.md"
+    },
+    {
+      "name": "speckit.analyze",
+      "path": "../../../.claude/commands/speckit.analyze.md"
+    },
+    {
+      "name": "speckit.implement",
+      "path": "../../../.claude/commands/speckit.implement.md"
+    },
+    {
+      "name": "speckit.taskstoissues",
+      "path": "../../../.claude/commands/speckit.taskstoissues.md"
+    }
+  ]
+}

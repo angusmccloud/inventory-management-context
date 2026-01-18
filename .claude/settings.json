@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/connortyrrell/Repos/inventory-management/**)"
+    ],
+    "additionalDirectories": [
+      "/Users/connortyrrell/Repos/inventory-management/inventory-management-frontend/components/shopping-list"
+    ]
+  }
+}
