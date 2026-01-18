@@ -88,19 +88,26 @@ case $TOOL in
         
     claude)
         echo "📝 Installing Claude adapter..."
-        
-        # Create Claude config directory if needed
-        mkdir -p ~/.config/claude/projects
-        
-        # Install config
-        cp "$ADAPTER_DIR/context.json" ~/.config/claude/projects/atl-inventory.json
-        echo "   ✅ Claude config installed"
-        
+
+        # Claude configuration is already in the context repository
+        echo "   ℹ️  Claude configuration exists in .claude/ directory"
+        echo "   ℹ️  Commands available in .claude/commands/"
+        echo "   ℹ️  Main config at .claude/config.md"
+
+        # Optionally copy context.json to user config if needed
+        if [ -f "$ADAPTER_DIR/context.json" ]; then
+            mkdir -p ~/.config/claude/projects
+            cp "$ADAPTER_DIR/context.json" ~/.config/claude/projects/atl-inventory.json
+            echo "   ✅ Claude project config installed to ~/.config/claude/projects/"
+        fi
+
         echo ""
         echo "✅ Claude configured successfully!"
         echo ""
-        echo "Configuration file:"
-        echo "   ~/.config/claude/projects/atl-inventory.json"
+        echo "Configuration files:"
+        echo "   inventory-management-context/.claude/config.md"
+        echo "   inventory-management-context/.claude/commands/"
+        echo "   ~/.config/claude/projects/atl-inventory.json (optional)"
         ;;
         
     codeium)

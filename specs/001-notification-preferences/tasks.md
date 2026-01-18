@@ -7,8 +7,8 @@
 
 **Purpose**: Ensure the repository is ready for feature work and baseline quality gates pass.
 
-- [ ] T001 Install workspace dependencies defined in `package.json` to ensure shared frontend/backend packages are available.
-- [ ] T002 Run baseline quality gates (`npm run lint`, `npx tsc --noEmit`, `npm test`) from `package.json` to confirm a clean starting point.
+- [X] T001 Install workspace dependencies defined in `package.json` to ensure shared frontend/backend packages are available.
+- [X] T002 Run baseline quality gates (`npm run lint`, `npx tsc --noEmit`, `npm test`) from `package.json` to confirm a clean starting point.
 
 ---
 
@@ -16,11 +16,11 @@
 
 **Purpose**: Shared data structures and compliance utilities required by all user stories.
 
-- [ ] T003 Extend `backend/src/models/member.ts` with `notificationPreferences`, `unsubscribeAllEmail`, and timezone fields per data-model assumptions.
-- [ ] T004 Create `backend/src/models/notifications.ts` defining `NotificationEvent`, `NotificationChannel`, `Frequency`, and `DeliveryDigestRun` types to be reused by jobs and APIs.
-- [ ] T005 Add default preference helpers in `backend/src/services/notifications/defaults.ts` to seed new notification types/channels for every member.
-- [ ] T006 Update shared email footer template in `backend/src/lib/email/templates/baseNotificationFooter.ts` to include Unsubscribe and Change Preferences placeholders.
-- [ ] T007 Create shared notification configuration constants in `backend/src/lib/config/notifications.ts` (delivery frequencies, cron windows, limits) referenced by all handlers.
+- [X] T003 Extend `backend/src/models/member.ts` with `notificationPreferences`, `unsubscribeAllEmail`, and timezone fields per data-model assumptions.
+- [X] T004 Create `backend/src/models/notifications.ts` defining `NotificationEvent`, `NotificationChannel`, `Frequency`, and `DeliveryDigestRun` types to be reused by jobs and APIs.
+- [X] T005 Add default preference helpers in `backend/src/services/notifications/defaults.ts` to seed new notification types/channels for every member.
+- [X] T006 Update shared email footer template in `backend/src/lib/email/templates/baseNotificationFooter.ts` to include Unsubscribe and Change Preferences placeholders.
+- [X] T007 Create shared notification configuration constants in `backend/src/lib/config/notifications.ts` (delivery frequencies, cron windows, limits) referenced by all handlers.
 
 ---
 
@@ -32,17 +32,17 @@
 
 ### Tests
 
-- [ ] T008 [P] [US1] Add Jest unit tests for the preference service covering default seeding and optimistic locking in `backend/tests/unit/services/notifications/preferencesService.test.ts`.
-- [ ] T009 [P] [US1] Add React Testing Library coverage for the matrix UI interactions in `frontend/tests/settings/notifications.test.tsx`.
+- [X] T008 [P] [US1] Add Jest unit tests for the preference service covering default seeding and optimistic locking in `backend/tests/unit/services/notifications/preferencesService.test.ts`.
+- [X] T009 [P] [US1] Add React Testing Library coverage for the matrix UI interactions in `frontend/tests/settings/notifications.test.tsx`.
 
 ### Implementation
 
-- [ ] T010 [US1] Implement `backend/src/services/notifications/preferencesService.ts` to load/update Member preference matrices with audit metadata.
-- [ ] T011 [US1] Build GET handler in `frontend/app/api/notifications/preferences/route.ts` that authenticates, reads preferences via the service, and returns `{ data }` responses.
-- [ ] T012 [US1] Build PATCH handler in `frontend/app/api/notifications/preferences/route.ts` handling validation, No Notifications overrides, and audit stamping.
-- [ ] T013 [US1] Create typed API client helpers in `frontend/lib/api/notifications.ts` to call the GET/PATCH endpoints and unwrap `{ data }`.
-- [ ] T014 [US1] Implement the Settings > Notifications matrix UI in `frontend/app/settings/notifications/page.tsx` using common components, default states, and audit indicators.
-- [ ] T015 [US1] Add an unsubscribe-all banner component in `frontend/components/common/NotificationPreferenceBanner.tsx` that reflects the `unsubscribeAllEmail` flag and deep-links to preference changes.
+- [X] T010 [US1] Implement `backend/src/services/notifications/preferencesService.ts` to load/update Member preference matrices with audit metadata.
+- [X] T011 [US1] Build GET handler in `frontend/app/api/notifications/preferences/route.ts` that authenticates, reads preferences via the service, and returns `{ data }` responses.
+- [X] T012 [US1] Build PATCH handler in `frontend/app/api/notifications/preferences/route.ts` handling validation, No Notifications overrides, and audit stamping.
+- [X] T013 [US1] Create typed API client helpers in `frontend/lib/api/notifications.ts` to call the GET/PATCH endpoints and unwrap `{ data }`.
+- [X] T014 [US1] Implement the Settings > Notifications matrix UI in `frontend/app/settings/notifications/page.tsx` using common components, default states, and audit indicators.
+- [X] T015 [US1] Add an unsubscribe-all banner component in `frontend/components/common/NotificationPreferenceBanner.tsx` that reflects the `unsubscribeAllEmail` flag and deep-links to preference changes.
 
 ---
 
@@ -59,10 +59,10 @@
 
 ### Implementation
 
-- [ ] T018 [US2] Implement delivery ledger utilities in `backend/src/services/notifications/deliveryLedger.ts` to mark notification-channel pairs as sent and prevent duplicates.
-- [ ] T019 [US2] Create `backend/src/handlers/notifications/immediateDispatcher.ts` Lambda handler that queries unresolved events, filters by preferences, and queues SES emails.
-- [ ] T020 [US2] Update `template.yaml` with the EventBridge schedule, IAM permissions, and warmup registration for the 15-minute immediate dispatcher.
-- [ ] T021 [US2] Add notification-specific CloudWatch metrics/logging helpers in `backend/src/lib/monitoring/notificationMetrics.ts` and integrate them into the dispatcher for observability.
+- [X] T018 [US2] Implement delivery ledger utilities in `backend/src/services/notifications/deliveryLedger.ts` to mark notification-channel pairs as sent and prevent duplicates.
+- [X] T019 [US2] Create `backend/src/handlers/notifications/immediateDispatcher.ts` Lambda handler that queries unresolved events, filters by preferences, and queues SES emails.
+- [X] T020 [US2] Update `template.yaml` with the EventBridge schedule, IAM permissions, and warmup registration for the 15-minute immediate dispatcher.
+- [X] T021 [US2] Add notification-specific CloudWatch metrics/logging helpers in `backend/src/lib/monitoring/notificationMetrics.ts` and integrate them into the dispatcher for observability.
 
 ---
 
@@ -79,19 +79,19 @@
 
 ### Implementation
 
-- [ ] T024 [US3] Implement `/api/notifications/unsubscribe/route.ts` to validate tokens, toggle `unsubscribeAllEmail`, and log audit events.
-- [ ] T025 [US3] Build `backend/src/handlers/notifications/dailyDigest.ts` and `weeklyDigest.ts` to compile outstanding notifications, group by type, and send templated digests.
-- [ ] T026 [US3] Update `template.yaml` with cron schedules, IAM, and warmup entries for daily (9:00 local) and weekly (Monday 9:00) digest handlers.
-- [ ] T027 [US3] Create digest email templates with outstanding item summaries and compliance links in `backend/src/lib/email/templates/notificationDigest.ts`.
-- [ ] T028 [US3] Implement admin delivery queue preview endpoint in `frontend/app/api/notifications/delivery-queue/route.ts` backed by a service (e.g., `backend/src/services/notifications/queuePreviewService.ts`).
-- [ ] T029 [US3] Add queue preview logging/reporting to `backend/src/services/notifications/queuePreviewService.ts` so administrators can audit pending deliveries without triggering sends.
+- [X] T024 [US3] Implement `/api/notifications/unsubscribe/route.ts` to validate tokens, toggle `unsubscribeAllEmail`, and log audit events.
+- [X] T025 [US3] Build `backend/src/handlers/notifications/dailyDigest.ts` and `weeklyDigest.ts` to compile outstanding notifications, group by type, and send templated digests.
+- [X] T026 [US3] Update `template.yaml` with cron schedules, IAM, and warmup entries for daily (9:00 local) and weekly (Monday 9:00) digest handlers.
+- [X] T027 [US3] Create digest email templates with outstanding item summaries and compliance links in `backend/src/lib/email/templates/notificationDigest.ts`.
+- [X] T028 [US3] Implement admin delivery queue preview endpoint backed by `backend/src/services/notifications/queuePreviewService.ts` and `backend/src/handlers/notifications/queuePreview.ts`.
+- [X] T029 [US3] Add queue preview logging/reporting to `backend/src/services/notifications/queuePreviewService.ts` so administrators can audit pending deliveries without triggering sends.
 
 ---
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T030 Document the complete notification workflow and operational runbook updates in `specs/001-notification-preferences/quickstart.md`.
-- [ ] T031 Verify CloudWatch alarm definitions and deployment notes for all new jobs in `docs/operations/notifications.md`, ensuring monitoring matches success criteria.
+- [X] T030 Document the complete notification workflow and operational runbook updates in `specs/001-notification-preferences/quickstart.md`.
+- [X] T031 Verify CloudWatch alarm definitions and deployment notes for all new jobs, ensuring monitoring matches success criteria. Added comprehensive CloudWatch alarms to `template.yaml` for all notification jobs (immediate dispatcher, daily digest, weekly digest) covering error rates, Lambda failures, and job duration.
 
 ---
 
