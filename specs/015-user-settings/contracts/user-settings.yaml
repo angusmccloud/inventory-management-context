@@ -1,0 +1,255 @@
+openapi: 3.0.3
+info:
+  title: User Settings Controls API
+  version: '1.0.0'
+  description: |
+    Lambda-backed endpoints that power the User Settings tab. All responses serialize as `{ "data": ... }`
+    per constitution. Authentication occurs via existing Cognito-issued JWT; handlers verify the caller
+    matches the targeted member and log every sensitive action.
+servers:
+  - url: https://api.inventoryhq.io
+paths:
+  /user-settings/me:
+    get:
+      summary: Fetch the signed-in member's profile summary
+      tags: [UserSettings]
+      security:
+        - cognitoJwt: []
+      responses:
+        '200':
+          description: Profile summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSummaryResponse'
+  /user-settings/profile:
+    patch:
+      summary: Update display name fields
+      tags: [UserSettings]
+      security:
+        - cognitoJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Updated profile metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSummaryResponse'
+  /user-settings/email-change:
+    post:
+      summary: Request an email change (sends verification link)
+      tags: [UserSettings]
+      security:
+        - cognitoJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailChangeRequest'
+      responses:
+        '202':
+          description: Verification step issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncAcceptedResponse'
+  /user-settings/email-change/confirm:
+    post:
+      summary: Confirm an email change using the verification ticket
+      tags: [UserSettings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailChangeConfirmRequest'
+      responses:
+        '200':
+          description: Email updated and sessions rotated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSummaryResponse'
+  /user-settings/password-change:
+    post:
+      summary: Change password after verifying the current password
+      tags: [UserSettings]
+      security:
+        - cognitoJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+      responses:
+        '200':
+          description: Password rotated; sessions revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordChangeResponse'
+  /user-settings/deletion:
+    post:
+      summary: Initiate account deletion and verification ticket
+      tags: [UserSettings]
+      security:
+        - cognitoJwt: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountDeletionRequest'
+      responses:
+        '202':
+          description: Confirmation ticket issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncAcceptedResponse'
+  /user-settings/deletion/confirm:
+    post:
+      summary: Confirm irreversible account deletion (handles family cascade)
+      tags: [UserSettings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountDeletionConfirmRequest'
+      responses:
+        '200':
+          description: Account (and possibly family) deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionResultResponse'
+
+components:
+  securitySchemes:
+    cognitoJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProfileSummaryResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            memberId:
+              type: string
+            displayName:
+              type: string
+            primaryEmail:
+              type: string
+              format: email
+            passwordUpdatedAt:
+              type: string
+              format: date-time
+            pendingEmail:
+              type: string
+              nullable: true
+            pendingDeletion:
+              type: boolean
+            lastAuditEvent:
+              type: string
+              format: date-time
+          required: [memberId, displayName, primaryEmail, passwordUpdatedAt, pendingDeletion]
+    UpdateProfileRequest:
+      type: object
+      required: [displayName]
+      properties:
+        displayName:
+          type: string
+          minLength: 2
+          maxLength: 50
+        currentPassword:
+          type: string
+          description: Optional extra verification toggle controlled by feature flag
+    EmailChangeRequest:
+      type: object
+      required: [currentPassword, newEmail]
+      properties:
+        currentPassword:
+          type: string
+        newEmail:
+          type: string
+          format: email
+    EmailChangeConfirmRequest:
+      type: object
+      required: [ticketId]
+      properties:
+        ticketId:
+          type: string
+    PasswordChangeRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 12
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$'
+    PasswordChangeResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            passwordUpdatedAt:
+              type: string
+              format: date-time
+            sessionsRevoked:
+              type: boolean
+          required: [passwordUpdatedAt, sessionsRevoked]
+    AccountDeletionRequest:
+      type: object
+      required: [currentPassword]
+      properties:
+        currentPassword:
+          type: string
+        acknowledgementText:
+          type: string
+          enum: ['DELETE']
+    AccountDeletionConfirmRequest:
+      type: object
+      required: [ticketId]
+      properties:
+        ticketId:
+          type: string
+    DeletionResultResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            memberDeleted:
+              type: boolean
+            familyDeleted:
+              type: boolean
+            deletionReceiptId:
+              type: string
+          required: [memberDeleted, familyDeleted]
+    AsyncAcceptedResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            ticketId:
+              type: string
+            expiresAt:
+              type: string
+              format: date-time
+          required: [ticketId, expiresAt]

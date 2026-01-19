@@ -36,6 +36,7 @@ SpecKit commands are available for multiple AI assistants:
 - **Cursor**: `.cursor/commands/`
 - **GitHub Copilot**: `.github/prompts/` and `.github/agents/`
 - **Claude**: `.claude/commands/`
+- **Codex**: `.codex/prompts/`
 
 Available commands:
 - `speckit.constitution` - Create/update project constitution
@@ -69,11 +70,27 @@ This ensures Cursor, Roo Code, GitHub Copilot, and Claude all receive the same g
 **Quick Reference**: See `.specify/AGENT-SYNC-QUICK-REFERENCE.md`
 **Full Documentation**: See `.specify/docs/agent-context-sync.md`
 
+# IMPORTANT: Multi-folder workspace
+
+This VS Code workspace has 3 folders and they are ONE project:
+
+- inventory-management-context (specs)
+- inventory-management-backend (implementation)
+- inventory-management-frontend (implementation)
+
+When answering or making changes:
+- ALWAYS search/read across ALL THREE folders
+- You MAY edit files in backend and frontend without asking
+- Context defines the contract; backend/frontend must conform
+- Do not assume the current folder is the whole project
+
 ## Active Technologies
 - TypeScript 5 (strict) with Node.js 20 Lambda runtimes + Next.js 16 App Router, AWS Lambda handlers, DynamoDB Document Client, SES/email service, background job scheduler (CloudWatch Events + Lambda) (001-notification-preferences)
 - DynamoDB single-table design (Member + Notification entities) (001-notification-preferences)
 - TypeScript 5.x (strict) targeting Node.js 20.x Lambda runtimes and Next.js 16 App Router + Next.js 16 + React 18, AWS Lambda + API Gateway, AWS SDK v3 DynamoDB Document Client, Cognito user pools, Zod validation, shared UI component library (Dialog, List, Button) (001-pending-invite-join)
 - DynamoDB single-table (Family, Member, Invitation, InviteDecisionLog records share table) (001-pending-invite-join)
+- TypeScript 5.x (strict), React 18, Node.js 20 Lambda runtimes (015-user-settings)
+- DynamoDB single-table design (FAMILY#/MEMBER# records for profile + ownership data) with encrypted backups governed by GDPR retention rules (015-user-settings)
 
 ## Recent Changes
 - 001-notification-preferences: Added TypeScript 5 (strict) with Node.js 20 Lambda runtimes + Next.js 16 App Router, AWS Lambda handlers, DynamoDB Document Client, SES/email service, background job scheduler (CloudWatch Events + Lambda)
