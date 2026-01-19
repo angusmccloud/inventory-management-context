@@ -6,7 +6,7 @@ info:
     Management System with shopping list functionality.
     
     **Feature**: 002-shopping-lists  
-    **Parent Feature**: 001-family-inventory-mvp
+    **Parent Feature**: 016-family-inventory-mvp
     
     ## Authorization
     - All endpoints require JWT authentication via AWS Cognito

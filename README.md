@@ -40,6 +40,9 @@ This separation provides clear boundaries between configuration/tooling, backend
 - **[`AGENTS.md`](AGENTS.md)** - Guidance for AI assistants working with the codebase
 - **[`ONBOARDING.md`](ONBOARDING.md)** - Comprehensive onboarding guide for new developers
 
+### Active Feature Specs
+- **Pending Invite Join**: [spec](specs/016-pending-invite-join/spec.md) | [plan](specs/016-pending-invite-join/plan.md) | legacy references: `specs/001-pending-invite-join/`
+
 ### SpecKit Commands
 AI-assisted development commands available for multiple tools:
 - **`.roo/commands/`** - Roo Code SpecKit commands

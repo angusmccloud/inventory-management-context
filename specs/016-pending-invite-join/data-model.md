@@ -1,6 +1,6 @@
 # Data Model: Pending Invitation Onboarding
 
-**Feature**: 001-pending-invite-join  
+**Feature**: 016-pending-invite-join  
 **Date**: 2026-01-04  
 **Phase**: Phase 1 – Design
 

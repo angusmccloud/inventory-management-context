@@ -1,7 +1,7 @@
 # Implementation Plan: Pending Invitation Onboarding
 
-**Branch**: `001-pending-invite-join` | **Date**: 2026-01-04 | **Spec**: [specs/001-pending-invite-join/spec.md](specs/001-pending-invite-join/spec.md)
-**Input**: Feature specification from `/specs/001-pending-invite-join/spec.md`
+**Branch**: `016-pending-invite-join` | **Date**: 2026-01-04 | **Spec**: [specs/016-pending-invite-join/spec.md](specs/016-pending-invite-join/spec.md)
+**Input**: Feature specification from `/specs/016-pending-invite-join/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 

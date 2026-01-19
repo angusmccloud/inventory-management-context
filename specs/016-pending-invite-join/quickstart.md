@@ -63,3 +63,23 @@ This guide shows how to intercept new signups who did not follow an invite link,
 - [ ] New Next.js route and shared components committed with strict typing
 - [ ] Jest + RTL coverage ≥80% on new modules
 - [ ] Manual verification notes captured for QA handoff
+
+---
+
+## Runbook: Pending Invite Support
+
+### Common Checks
+1. Confirm the user is authenticated and the ID token includes the expected email.
+2. Check the `GET /pending-invitations` response payload and verify `decisionToken` is present.
+3. Verify DynamoDB invitation items include `GSI2PK=IDENTITY#<normalized-email>` and `GSI2SK` starts with `STATUS#PENDING#`.
+4. Confirm the pending-invite route renders the list and blocks navigation until an action is taken.
+
+### Troubleshooting
+- **No invites shown**: Validate the invite record exists and the email normalization matches (lowercase, trimmed).
+- **Accept fails with 409**: The invite is no longer pending or the member already exists.
+- **Decline-all loops**: Ensure the response redirect path is `/family/create` and the frontend route exists.
+- **Missing decision logs**: Check `InviteDecisionLog` items under `PK=FAMILY#<familyId>` and CloudWatch logs for decision entries.
+
+### Observability
+- Track `PendingInvites.LookupDuration` and `PendingInvites.DecisionDuration` CloudWatch metrics for p95 performance.
+- Review structured logs for `Pending invite lookup` and `Pending invite decision` events, including `durationMs` and `decisionId`.
