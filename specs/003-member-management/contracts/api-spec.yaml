@@ -6,7 +6,7 @@ info:
     Management System with member management functionality.
     
     **Feature**: 003-member-management  
-    **Parent Feature**: 001-family-inventory-mvp
+    **Parent Feature**: 016-family-inventory-mvp
     
     ## Authorization
     - Most endpoints require JWT authentication via AWS Cognito

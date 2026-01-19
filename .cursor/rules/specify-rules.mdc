@@ -4,7 +4,7 @@ Auto-generated from all feature plans. Last updated: 2025-12-08
 
 ## Active Technologies
 
-- TypeScript 5 with strict mode enabled (001-family-inventory-mvp)
+- TypeScript 5 with strict mode enabled (016-family-inventory-mvp)
 
 ## Project Structure
 
@@ -23,7 +23,7 @@ TypeScript 5 with strict mode enabled: Follow standard conventions
 
 ## Recent Changes
 
-- 001-family-inventory-mvp: Added TypeScript 5 with strict mode enabled
+- 016-family-inventory-mvp: Added TypeScript 5 with strict mode enabled
 
 <!-- MANUAL ADDITIONS START -->
 

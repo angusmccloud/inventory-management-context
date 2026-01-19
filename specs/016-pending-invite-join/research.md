@@ -77,3 +77,18 @@
 - Automatically replacing the family membership whenever a new invite is accepted — rejected because it violates UX + compliance requirements.
 - Disallowing acceptance entirely if the user already belongs to a family — rejected because legitimate scenarios (caregivers switching households) would be blocked and support would remain manual.
 - Supporting multi-family membership immediately — rejected for MVP scope; we document the optional flag but keep it disabled.
+
+---
+
+## Validation Results (T036)
+
+**Backend**
+- `npm run lint` (timed out at 10s). Output includes many existing Prettier and parser errors across unrelated files.
+- `npm test` failed with existing failures (user-settings mocks, suggestions handlers, NFC handlers, shopping list handler tests).
+- `npm run build` failed in `src/handlers/notifications/immediateDispatcher.ts` with existing strictness issues.
+
+**Frontend**
+- `npm run type-check` passed.
+- `npm run lint` failed with Next.js error: `Invalid project directory provided, no such directory: .../lint`.
+- `npm test` failed with existing missing module path for `app/t/[urlId]/page` and other unrelated test expectations.
+- `npm run build` passed with warning about workspace root lockfiles.
